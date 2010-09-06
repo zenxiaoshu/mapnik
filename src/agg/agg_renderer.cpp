@@ -32,6 +32,7 @@
 #include <mapnik/font_set.hpp>
 #include <mapnik/parse_path.hpp>
 #include <mapnik/text_path.hpp>
+#include <mapnik/request.hpp>
 
 // agg
 #define AGG_RENDERING_BUFFER row_ptr_cache<int8u>
@@ -108,22 +109,22 @@ private:
 
 
 template <typename T>
-agg_renderer<T>::agg_renderer(Map const& m, T & pixmap, double scale_factor, unsigned offset_x, unsigned offset_y)
-    : feature_style_processor<agg_renderer>(m, scale_factor),
+agg_renderer<T>::agg_renderer(Map const& m, T & pixmap, request const& r, double scale_factor, unsigned offset_x, unsigned offset_y)
+    : feature_style_processor<agg_renderer>(m, r, scale_factor),
       pixmap_(pixmap),
       width_(pixmap_.width()),
       height_(pixmap_.height()),
       scale_factor_(scale_factor),
-      t_(m.width(),m.height(),m.get_current_extent(),offset_x,offset_y),
+      t_(r.width(),r.height(),r.get_current_extent(),offset_x,offset_y),
       font_engine_(),
       font_manager_(font_engine_),
-      detector_(box2d<double>(-m.buffer_size(), -m.buffer_size(), m.width() + m.buffer_size() ,m.height() + m.buffer_size())),
+      detector_(box2d<double>(-r.buffer_size(), -r.buffer_size(), r.width() + r.buffer_size(), r.height() + r.buffer_size())),
       ras_ptr(new rasterizer)
 {
-    boost::optional<color> const& bg = m.background();
+    boost::optional<color> const& bg = r.background();
     if (bg) pixmap_.set_background(*bg);
     
-    boost::optional<std::string> const& image_filename = m.background_image();
+    boost::optional<std::string> const& image_filename = r.background_image();
     if (image_filename)
     {
         boost::optional<mapnik::image_ptr> bg_image = mapnik::image_cache::instance()->find(*image_filename,true);
@@ -147,7 +148,7 @@ agg_renderer<T>::agg_renderer(Map const& m, T & pixmap, double scale_factor, uns
         }
     }
 #ifdef MAPNIK_DEBUG
-    std::clog << "scale=" << m.scale() << "\n";
+    std::clog << "scale=" << r.scale() << "\n";
 #endif
 }
 
@@ -155,7 +156,7 @@ template <typename T>
 agg_renderer<T>::~agg_renderer() {}
 
 template <typename T>
-void agg_renderer<T>::start_map_processing(Map const& map)
+void agg_renderer<T>::start_map_processing(request const& r)
 {
 #ifdef MAPNIK_DEBUG
     std::clog << "start map processing bbox="
@@ -165,7 +166,7 @@ void agg_renderer<T>::start_map_processing(Map const& map)
 }
 
 template <typename T>
-void agg_renderer<T>::end_map_processing(Map const& )
+void agg_renderer<T>::end_map_processing(request const& r)
 {
 #ifdef MAPNIK_DEBUG
     std::clog << "end map processing\n";

@@ -27,6 +27,7 @@
 
 // mapnik
 #include <mapnik/config.hpp>
+#include <mapnik/request.hpp>
 #include <mapnik/feature_style_processor.hpp>
 #include <mapnik/font_engine_freetype.hpp>
 #include <mapnik/label_collision_detector.hpp>
@@ -47,10 +48,10 @@ class MAPNIK_DECL agg_renderer : public feature_style_processor<agg_renderer<T> 
 {
      
 public:
-    agg_renderer(Map const& m, T & pixmap, double scale_factor=1.0, unsigned offset_x=0, unsigned offset_y=0);
+    agg_renderer(Map const& m, T & pixmap, request const& m, double scale_factor=1.0, unsigned offset_x=0, unsigned offset_y=0);
     ~agg_renderer();
-    void start_map_processing(Map const& map);
-    void end_map_processing(Map const& map);
+    void start_map_processing(request const& m);
+    void end_map_processing(request const& m);
     void start_layer_processing(layer const& lay);
     void end_layer_processing(layer const& lay);
     void process(point_symbolizer const& sym,

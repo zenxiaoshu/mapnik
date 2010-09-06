@@ -65,6 +65,7 @@ void export_glyph_symbolizer();
 
 #include <mapnik/version.hpp>
 #include <mapnik/map.hpp>
+#include <mapnik/request.hpp>
 #include <mapnik/agg_renderer.hpp>
 #ifdef HAVE_CAIRO
 #include <mapnik/cairo_renderer.hpp>
@@ -82,10 +83,17 @@ static Pycairo_CAPI_t *Pycairo_CAPI;
 
 void render(const mapnik::Map& map,mapnik::image_32& image, double scale_factor = 1.0 , unsigned offset_x = 0u , unsigned offset_y = 0u)
 {
+    mapnik::request r(map.width(),map.height());
+    r.set_srs(map.srs());
+    //r.set_buffer_size(128);
+    boost::optional<mapnik::color> const& bg = map.background();
+    if (bg) r.set_background(*bg);
+    r.zoom_to_box(map.get_current_extent());
+
     Py_BEGIN_ALLOW_THREADS
         try
         {
-            mapnik::agg_renderer<mapnik::image_32> ren(map,image,scale_factor,offset_x, offset_y);
+            mapnik::agg_renderer<mapnik::image_32> ren(map,image,r,scale_factor,offset_x, offset_y);
             ren.apply();
         }
         catch (...)
@@ -94,7 +102,23 @@ void render(const mapnik::Map& map,mapnik::image_32& image, double scale_factor 
                 throw;
         }
     Py_END_ALLOW_THREADS
+}
+
+void render7(const mapnik::Map& map,mapnik::image_32& image, mapnik::request r, double scale_factor = 1.0 , unsigned offset_x = 0u , unsigned offset_y = 0u)
+{
+    Py_BEGIN_ALLOW_THREADS
+        try
+        {
+            mapnik::agg_renderer<mapnik::image_32> ren(map,image,r,scale_factor,offset_x, offset_y);
+            ren.apply();
         }
+        catch (...)
+        {
+            Py_BLOCK_THREADS
+                throw;
+        }
+    Py_END_ALLOW_THREADS
+}
 
 #if defined(HAVE_CAIRO) && defined(HAVE_PYCAIRO)
 
@@ -168,6 +192,7 @@ void render6(const mapnik::Map& map,PycairoContext* context)
 
 #endif
 
+/*
 void render_tile_to_file(const mapnik::Map& map, 
                          unsigned offset_x, unsigned offset_y,
                          unsigned width, unsigned height,
@@ -178,6 +203,7 @@ void render_tile_to_file(const mapnik::Map& map,
     render(map,image,1.0,offset_x, offset_y);
     mapnik::save_to_file(image.data(),file,format);
 }
+*/
 
 void render_to_file1(const mapnik::Map& map,
                      const std::string& filename,
@@ -194,7 +220,13 @@ void render_to_file1(const mapnik::Map& map,
     else 
     {
         mapnik::image_32 image(map.width(),map.height());
-        render(map,image,1.0,0,0);
+        mapnik::request r(map.width(),map.height());
+        r.set_srs(map.srs());
+        //r.set_buffer_size(128);
+        boost::optional<mapnik::color> const& bg = map.background();
+        if (bg) r.set_background(*bg);
+        r.zoom_to_box(map.get_current_extent());
+        render7(map,image,r,1.0,0,0);
         mapnik::save_to_file(image,filename,format); 
     }
 }
@@ -213,7 +245,13 @@ void render_to_file2(const mapnik::Map& map,const std::string& filename)
     else 
     {
         mapnik::image_32 image(map.width(),map.height());
-        render(map,image,1.0,0,0);
+        mapnik::request r(map.width(),map.height());
+        r.set_srs(map.srs());
+        //r.set_buffer_size(128);
+        boost::optional<mapnik::color> const& bg = map.background();
+        if (bg) r.set_background(*bg);
+        r.zoom_to_box(map.get_current_extent());
+        render7(map,image,r,1.0,0,0);
         mapnik::save_to_file(image,filename); 
     }
 }
@@ -235,16 +273,24 @@ void render_to_file3(const mapnik::Map& map,
     else 
     {
         mapnik::image_32 image(map.width(),map.height());
-        render(map,image,scale_factor,0,0);
+        mapnik::request r(map.width(),map.height());
+        r.set_srs(map.srs());
+        //r.set_buffer_size(128);
+        boost::optional<mapnik::color> const& bg = map.background();
+        if (bg) r.set_background(*bg);
+        r.zoom_to_box(map.get_current_extent());
+        render7(map,image,r,scale_factor,0,0);
         mapnik::save_to_file(image,filename,format); 
     }
 }
 
 
+/*
 double scale_denominator(mapnik::Map const &map, bool geographic)
 {
     return mapnik::scale_denominator(map, geographic);
 }
+*/
 
 void translator(mapnik::config_error const & ex) {
     PyErr_SetString(PyExc_RuntimeError, ex.what());
@@ -398,11 +444,14 @@ BOOST_PYTHON_MODULE(_mapnik2)
         "\n"
         );
         
+    /*
     def("render_tile_to_file",&render_tile_to_file,
         "\n"
         "TODO\n"
         "\n"
         ); 
+        
+    */
 
     
     def("render", &render, render_overloads(
@@ -480,6 +529,9 @@ BOOST_PYTHON_MODULE(_mapnik2)
         );
 #endif
 
+    def("render",&render7);
+
+    /*
     def("scale_denominator", &scale_denominator,
         "\n"
         "Return the Map Scale Denominator.\n"
@@ -493,6 +545,7 @@ BOOST_PYTHON_MODULE(_mapnik2)
         ">>> scale_denominator(m,Projection(m.srs).geographic)\n"
         "\n"
         );
+    */
    
     def("load_map", & load_map, load_map_overloads());
 

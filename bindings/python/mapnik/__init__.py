@@ -689,5 +689,5 @@ __all__ = [
     'render', 'render_tile_to_file', 'render_to_file',
     #   other
     'register_plugins', 'register_fonts',
-    'scale_denominator',
+    #'scale_denominator',
     ]

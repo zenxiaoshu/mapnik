@@ -151,7 +151,7 @@ void export_map()
     using namespace boost::python;
    
     // aspect ratio fix modes
-    mapnik::enumeration_<mapnik::aspect_fix_mode_e>("aspect_fix_mode")
+    /*mapnik::enumeration_<mapnik::aspect_fix_mode_e>("aspect_fix_mode")
         .value("GROW_BBOX", mapnik::Map::GROW_BBOX)
         .value("GROW_CANVAS",mapnik::Map::GROW_CANVAS)
         .value("SHRINK_BBOX",mapnik::Map::SHRINK_BBOX)
@@ -161,7 +161,7 @@ void export_map()
         .value("ADJUST_CANVAS_WIDTH",mapnik::Map::ADJUST_CANVAS_WIDTH)
         .value("ADJUST_CANVAS_HEIGHT", mapnik::Map::ADJUST_CANVAS_HEIGHT)
         ;
-   
+    */
     python_optional<mapnik::color> ();
     class_<std::vector<layer> >("Layers")
         .def(vector_indexing_suite<std::vector<layer> >())
@@ -337,13 +337,13 @@ void export_map()
              ">>> m.scale()\n"
             )
 
-        .def("scale_denominator", &Map::scale_denominator,
+        /*.def("scale_denominator", &Map::scale_denominator,
              "Return the Map Scale Denominator.\n"
              "Usage:\n"
              "\n"
              ">>> m.scale_denominator()\n"
             )
-      
+        */
         .def("view_transform",&Map::view_transform,
              "Return the map ViewTransform object\n"
              "which is used internally to convert between\n"
@@ -402,7 +402,7 @@ void export_map()
         )
         
 
-        .add_property("aspect_fix_mode",
+        /*.add_property("aspect_fix_mode",
                       &Map::get_aspect_fix_mode,
                       &Map::set_aspect_fix_mode,
                       // TODO - how to add arg info to properties?
@@ -412,7 +412,7 @@ void export_map()
                       "\n"
                       ">>> m.aspect_fix_mode = aspect_fix_mode.GROW_BBOX\n"
             )      
-        
+        */
         .add_property("background",make_function
                       (&Map::background,return_value_policy<copy_const_reference>()),
                       &Map::set_background,

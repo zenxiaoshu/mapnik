@@ -77,8 +77,9 @@ class feature_style_processor
         proj_transform const& prj_trans_;
     };
 public:
-    explicit feature_style_processor(Map const& m, double scale_factor = 1.0)
+    explicit feature_style_processor(Map const& m, request const& r, double scale_factor = 1.0)
         : m_(m),
+          r_(r),
           scale_factor_(scale_factor) {}
     
     void apply()
@@ -87,11 +88,11 @@ public:
         //mapnik::wall_clock_progress_timer t(std::clog, "map rendering took: ");
 #endif          
         Processor & p = static_cast<Processor&>(*this);
-        p.start_map_processing(m_);
+        p.start_map_processing(r_);
                        
         try
         {
-            projection proj(m_.srs()); // map projection
+            projection proj(r_.srs()); // map projection
 
             Map::const_metawriter_iterator metaItr = m_.begin_metawriters();
             Map::const_metawriter_iterator metaItrEnd = m_.end_metawriters();
@@ -102,7 +103,7 @@ public:
                 metaItr->second->start(m_.metawriter_output_properties);
             }
 
-            double scale_denom = mapnik::scale_denominator(m_,proj.is_geographic());
+            double scale_denom = mapnik::scale_denominator(r_,proj.is_geographic());
             scale_denom *= scale_factor_;
 #ifdef MAPNIK_DEBUG
             std::clog << "scale denominator = " << scale_denom << "\n";
@@ -126,7 +127,7 @@ public:
             std::clog << "proj_init_error:" << ex.what() << "\n"; 
         }
         
-        p.end_map_processing(m_);
+        p.end_map_processing(r_);
     }   
 private:
     void apply_to_layer(layer const& lay, Processor & p, 
@@ -143,7 +144,7 @@ private:
         p.start_layer_processing(lay);
         if (ds)
         {
-            box2d<double> ext = m_.get_buffered_extent();
+            box2d<double> ext = r_.get_buffered_extent();
             projection proj1(lay.srs());
             proj_transform prj_trans(proj0,proj1);
 
@@ -175,7 +176,7 @@ private:
             prj_trans.forward(lx1,ly1,lz1);
             box2d<double> bbox(lx0,ly0,lx1,ly1);
             
-            query::resolution_type res(m_.width()/m_.get_current_extent().width(),m_.height()/m_.get_current_extent().height());
+            query::resolution_type res(r_.width()/r_.get_current_extent().width(),r_.height()/r_.get_current_extent().height());
             query q(bbox,res,scale_denom); //BBOX query
                            
             std::vector<feature_type_style*> active_styles;
@@ -356,6 +357,7 @@ private:
     } 
     
     Map const& m_;
+    request const& r_;
     double scale_factor_;
 };
 }

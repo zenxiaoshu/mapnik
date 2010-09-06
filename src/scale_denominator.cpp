@@ -23,7 +23,7 @@
 //$Id$
 #include <mapnik/scale_denominator.hpp>
 
-#include <mapnik/map.hpp>
+#include <mapnik/request.hpp>
 
 #include <cmath>
 
@@ -32,9 +32,9 @@ namespace mapnik {
 static const double pi = 3.14159265359; 
 static const double meters_per_degree = 6378137 * 2 * pi/ 360;
     
-double scale_denominator(Map const& map, bool geographic)
+double scale_denominator(request const& r, bool geographic)
 {
-    double denom = map.scale() / 0.00028;
+    double denom = r.scale() / 0.00028;
     if (geographic) denom *= meters_per_degree;
     return denom; 
 }

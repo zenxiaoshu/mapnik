@@ -97,6 +97,7 @@ else: # Linux and others
 source = Split(
     """
     color.cpp
+    request.cpp
     datasource_cache.cpp
     box2d.cpp
     expression_node.cpp

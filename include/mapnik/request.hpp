@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
-//$Id: map.hpp 39 2005-04-10 20:39:53Z pavlenko $
+//$Id: request.hpp 39 2005-04-10 20:39:53Z pavlenko $
 
-#ifndef MAP_HPP
-#define MAP_HPP
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -40,11 +40,11 @@
 
 namespace mapnik
 {
-class MAPNIK_DECL Map
+class MAPNIK_DECL request
 {       
 public:
 
-    /*enum aspect_fix_mode 
+    enum aspect_fix_mode 
     {
         // grow the width or height of the specified geo bbox to fill the map size. default behaviour.
         GROW_BBOX,
@@ -65,7 +65,7 @@ public:
         // 
         aspect_fix_mode_MAX
     };
-    */
+    
         
 private:
     static const unsigned MIN_MAPSIZE=16;
@@ -76,20 +76,20 @@ private:
     int buffer_size_;
     boost::optional<color> background_;
     boost::optional<std::string> background_image_;
-    std::map<std::string,feature_type_style> styles_;
-    std::map<std::string,metawriter_ptr> metawriters_;
-    std::map<std::string,font_set> fontsets_;
-    std::vector<layer> layers_;
-    //aspect_fix_mode aspectFixMode_;
+    //std::map<std::string,feature_type_style> styles_;
+    //std::map<std::string,metawriter_ptr> metawriters_;
+    //std::map<std::string,font_set> fontsets_;
+    //std::vector<layer> layers_;
+    aspect_fix_mode aspectFixMode_;
     box2d<double> currentExtent_;
         
 public:
 
-    typedef std::map<std::string,feature_type_style>::const_iterator const_style_iterator;
-    typedef std::map<std::string,feature_type_style>::iterator style_iterator;
-    typedef std::map<std::string,font_set>::const_iterator const_fontset_iterator;
-    typedef std::map<std::string,font_set>::iterator fontset_iterator;
-    typedef std::map<std::string,metawriter_ptr>::const_iterator const_metawriter_iterator;
+    //typedef std::map<std::string,feature_type_style>::const_iterator const_style_iterator;
+    //typedef std::map<std::string,feature_type_style>::iterator style_iterator;
+    //typedef std::map<std::string,font_set>::const_iterator const_fontset_iterator;
+    //typedef std::map<std::string,font_set>::iterator fontset_iterator;
+    //typedef std::map<std::string,metawriter_ptr>::const_iterator const_metawriter_iterator;
         
     /*! \brief Default constructor.
      *
@@ -98,57 +98,57 @@ public:
      *  - height = 400
      *  - projection = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
      */
-    Map();
+    request();
 
     /*! \brief Constructor
      *  @param width Initial map width.
      *  @param height Initial map height.
      *  @param srs Initial map projection.
      */
-    Map(int width, int height, std::string const& srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+    request(int width, int height, std::string const& srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
 
     /*! \brief Copy Constructur.
      *
      *  @param rhs Map to copy from.
      */
-    Map(const Map& rhs);
+    request(const request& rhs);
 
     /*! \brief Assignment operator
      *
      *  TODO: to be documented
      *  
      */
-    Map& operator=(const Map& rhs);
+    request& operator=(const request& rhs);
         
     /*! \brief Get all styles
      * @return Const reference to styles
      */
-    std::map<std::string,feature_type_style> const& styles() const; 
+    //std::map<std::string,feature_type_style> const& styles() const; 
         
     /*! \brief Get all styles 
      * @return Non-constant reference to styles
      */
-    std::map<std::string,feature_type_style> & styles();
+    //std::map<std::string,feature_type_style> & styles();
         
     /*! \brief Get first iterator in styles.
      *  @return Constant style iterator.
      */
-    const_style_iterator begin_styles() const;
+    //const_style_iterator begin_styles() const;
 
     /*! \brief Get last iterator in styles.
      *  @return Constant style iterator.
      */
-    const_style_iterator end_styles() const;
+    //const_style_iterator end_styles() const;
 
     /*! \brief Get first iterator in styles.
      *  @return Non-constant style iterator.
      */
-    style_iterator begin_styles();
+    //style_iterator begin_styles();
 
     /*! \brief Get last iterator in styles.
      *  @return Non-constant style iterator.
      */
-    style_iterator end_styles();
+    //style_iterator end_styles();
 
     /*! \brief Insert a style in the map.
      *  @param name The name of the style.
@@ -156,18 +156,18 @@ public:
      *  @return true If success.
      *  @return false If no success.
      */
-    bool insert_style(std::string const& name,feature_type_style const& style);
+    //bool insert_style(std::string const& name,feature_type_style const& style);
 
     /*! \brief Remove a style from the map.
      *  @param name The name of the style.
      */
-    void remove_style(const std::string& name);
+    //void remove_style(const std::string& name);
 
     /*! \brief Find a style.
      *  @param name The name of the style.
      *  @return The style if found. If not found return the default map style.
      */
-    boost::optional<feature_type_style const&> find_style(std::string const& name) const;
+    //boost::optional<feature_type_style const&> find_style(std::string const& name) const;
 
     /*! \brief Insert a metawriter in the map.
      *  @param name The name of the writer.
@@ -175,33 +175,33 @@ public:
      *  @return true If success.
      *  @return false If no success.
      */
-    bool insert_metawriter(std::string const& name, metawriter_ptr const& writer);
+    //bool insert_metawriter(std::string const& name, metawriter_ptr const& writer);
 
     /*! \brief Remove a metawriter from the map.
      *  @param name The name of the writer.
      */
-    void remove_metawriter(const std::string& name);
+    //void remove_metawriter(const std::string& name);
 
     /*! \brief Find a metawriter.
      *  @param name The name of the writer.
      *  @return The writer if found. If not found return 0.
      */
-    metawriter_ptr find_metawriter(std::string const& name) const;
+    //metawriter_ptr find_metawriter(std::string const& name) const;
 
     /*! \brief Get all metawriters.
      *  @return Const reference to metawriters.
      */
-    std::map<std::string,metawriter_ptr> const& metawriters() const;
+    //std::map<std::string,metawriter_ptr> const& metawriters() const;
 
     /*! \brief Get first iterator in metawriters.
      *  @return Constant metawriter iterator.
      */
-    const_metawriter_iterator begin_metawriters() const;
+    //const_metawriter_iterator begin_metawriters() const;
 
     /*! \brief Get last iterator in metawriters.
      *  @return Constant metawriter iterator.
      */
-    const_metawriter_iterator end_metawriters() const;
+    //const_metawriter_iterator end_metawriters() const;
         
     /*! \brief Insert a fontset into the map.
      *  @param name The name of the fontset.
@@ -209,63 +209,63 @@ public:
      *  @return true If success.
      *  @return false If failure.
      */
-    bool insert_fontset(std::string const& name, font_set const& fontset);
+    //bool insert_fontset(std::string const& name, font_set const& fontset);
        
     /*! \brief Find a fontset.
      *  @param name The name of the fontset.
      *  @return The fontset if found. If not found return the default map fontset.
      */
-    font_set const& find_fontset(std::string const& name) const;
+    //font_set const& find_fontset(std::string const& name) const;
 
     /*! \brief Get all fontsets
      * @return Const reference to fontsets
      */
-    std::map<std::string,font_set> const& fontsets() const;
+    //std::map<std::string,font_set> const& fontsets() const;
 
     /*! \brief Get all fontsets
      * @return Non-constant reference to fontsets
      */
-    std::map<std::string,font_set> & fontsets();
+    //std::map<std::string,font_set> & fontsets();
 
     /*! \brief Get number of all layers.
      */
-    size_t layer_count() const;
+    //size_t layer_count() const;
 
     /*! \brief Add a layer to the map.
      *  @param l The layer to add.
      */
-    void addLayer(const layer& l);
+    //void addLayer(const layer& l);
 
     /*! \brief Get a layer.
      *  @param index layer number.
      *  @return Constant layer.
      */
-    const layer& getLayer(size_t index) const;
+    //const layer& getLayer(size_t index) const;
 
     /*! \brief Get a layer.
      *  @param index layer number.
      *  @return Non-constant layer.
      */
-    layer& getLayer(size_t index);
+    //layer& getLayer(size_t index);
         
     /*! \brief Remove a layer.
      *  @param index layer number.
      */
-    void removeLayer(size_t index);
+    //void removeLayer(size_t index);
 
     /*! \brief Get all layers.
      *  @return Constant layers.
      */
-    std::vector<layer> const& layers() const;
+    //std::vector<layer> const& layers() const;
 
     /*! \brief Get all layers.
      *  @return Non-constant layers.
      */
-    std::vector<layer> & layers();
+    //std::vector<layer> & layers();
 
     /*! \brief Remove all layers and styles from the map.
      */
-    void remove_all();
+    //void remove_all();
 
     /*! \brief Get map width.
      */
@@ -344,7 +344,7 @@ public:
 
     /*! \brief Zoom the map to show all data.
      */
-    void zoom_all();
+    //void zoom_all();
 
     void pan(int x,int y);
 
@@ -365,7 +365,7 @@ public:
      */
     double scale() const;
         
-    //double scale_denominator() const;
+    double scale_denominator() const;
 
     CoordTransform view_transform() const;
         
@@ -380,7 +380,7 @@ public:
      * @param y The y coordinate where to query.
      * @return A Mapnik Featureset if successful otherwise will return NULL.
      */
-    featureset_ptr query_point(unsigned index, double x, double y) const;
+    //featureset_ptr query_point(unsigned index, double x, double y) const;
 
     /*!
      * @brief Query a Map layer (by layer index) for features
@@ -393,17 +393,17 @@ public:
      * @param y The y coordinate where to query.
      * @return A Mapnik Featureset if successful otherwise will return NULL.
      */
-    featureset_ptr query_map_point(unsigned index, double x, double y) const;
+    //featureset_ptr query_map_point(unsigned index, double x, double y) const;
 
     /*!
      * @brief Resolve names to object references for metawriters.
      */
-    void init_metawriters();
+    //void init_metawriters();
         
-    ~Map();
+    ~request();
 
-    //inline void set_aspect_fix_mode(aspect_fix_mode afm) { aspectFixMode_ = afm; }
-    //inline aspect_fix_mode get_aspect_fix_mode() const { return aspectFixMode_; }
+    inline void set_aspect_fix_mode(aspect_fix_mode afm) { aspectFixMode_ = afm; }
+    inline aspect_fix_mode get_aspect_fix_mode() const { return aspectFixMode_; }
 
     /*!
      * @brief Metawriter properties.
@@ -411,23 +411,23 @@ public:
      * These properties are defined by the user and are substituted in filenames,
      * sepcial columns in tables, etc.
      */
-    metawriter_property_map metawriter_output_properties;
+    //metawriter_property_map metawriter_output_properties;
 
     /*!
      * @brief Set a metawriter property.
      */
-    void set_metawriter_property(std::string name, std::string value);
+    //void set_metawriter_property(std::string name, std::string value);
 
     /*!
      * @brief Get a metawriter property.
      */
-    std::string get_metawriter_property(std::string name) const;
+    //std::string get_metawriter_property(std::string name) const;
 
 private:
-    //void fixAspectRatio();
+    void fixAspectRatio();
 };
    
-//DEFINE_ENUM(aspect_fix_mode_e,Map::aspect_fix_mode);
+DEFINE_ENUM(aspect_fix_mode_e,request::aspect_fix_mode);
 }
 
-#endif //MAP_HPP
+#endif //REQUEST_HPP
