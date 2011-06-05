@@ -24,6 +24,9 @@
 
 //mapnik
 #include <mapnik/enumeration.hpp>
+#include <mapnik/filter_factory.hpp>
+#include <mapnik/color.hpp>
+#include <mapnik/font_set.hpp>
 
 //stl
 #include <vector>
@@ -108,12 +111,46 @@ public:
     virtual bool next_position_only()=0;
     virtual ~text_placement_info() {}
 
-    /* NOTE: Values are public and non-virtual to avoid any performance problems. */
-    position displacement;
+    /* NOTE: Values are public and non-virtual to avoid any performance problems.
+             Make sure to add each new attribute in the constructor of this
+             class, too or you will run into problems.
+       TODO: Compare speed of current solutuion and adding all these parameters to a struct. */
+    expression_ptr name;
+
+    std::string face_name;
+    font_set fontset;
     unsigned text_size;
+
+    expression_ptr orientation;
+
+    position anchor;
+    position displacement;
+    label_placement_e label_p;
     horizontal_alignment_e halign;
     justify_alignment_e jalign;
     vertical_alignment_e valign;
+
+
+    unsigned line_spacing;
+    unsigned character_spacing;
+    unsigned label_spacing;
+    unsigned label_position_tolerance;
+    bool avoid_edges;
+    double minimum_distance;
+    double minimum_padding;
+    double max_char_angle_delta;
+    bool force_odd_labels;
+    bool overlap;
+    double text_opacity;
+    unsigned text_ratio;
+    bool wrap_before;
+    unsigned wrap_width;
+    unsigned char wrap_char;
+    text_transform_e text_transform;
+
+    color fill;
+    color halo_fill;
+    double halo_radius;
 };
 
 typedef boost::shared_ptr<text_placement_info> text_placement_info_ptr;
@@ -121,10 +158,9 @@ typedef boost::shared_ptr<text_placement_info> text_placement_info_ptr;
 class text_placements
 {
 public:
-    text_placements() :
-        text_size_(10), halign_(H_MIDDLE), jalign_(J_MIDDLE), valign_(V_MIDDLE) {}
+    text_placements();
     virtual text_placement_info_ptr get_placement_info() const =0;
-
+#if 0
     virtual void set_default_text_size(unsigned size) { text_size_ = size; }
     unsigned get_default_text_size() const { return text_size_; }
 
@@ -139,14 +175,46 @@ public:
 
     virtual void set_default_valign(vertical_alignment_e const& align) { valign_ = align;}
     vertical_alignment_e const& get_default_valign() { return valign_; }
+#endif
 
     virtual ~text_placements() {}
-protected:
-    unsigned text_size_;
-    position displacement_;
-    horizontal_alignment_e halign_;
-    justify_alignment_e jalign_;
-    vertical_alignment_e valign_;
+    expression_ptr name;
+
+    std::string face_name;
+    font_set fontset;
+    unsigned text_size;
+
+    expression_ptr orientation;
+
+    position anchor;
+    position displacement;
+    label_placement_e label_p;
+    horizontal_alignment_e halign;
+    justify_alignment_e jalign;
+    vertical_alignment_e valign;
+
+
+    unsigned line_spacing;
+    unsigned character_spacing;
+    unsigned label_spacing;
+    unsigned label_position_tolerance;
+    bool avoid_edges;
+    double minimum_distance;
+    double minimum_padding;
+    double max_char_angle_delta;
+    bool force_odd_labels;
+    bool overlap;
+    double text_opacity;
+    unsigned text_ratio;
+    bool wrap_before;
+    unsigned wrap_width;
+    unsigned char wrap_char;
+    text_transform_e text_transform;
+
+    color fill;
+    color halo_fill;
+    double halo_radius;
+
     friend class text_placement_info;
 };
 

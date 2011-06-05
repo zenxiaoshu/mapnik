@@ -37,15 +37,70 @@ using phoenix::push_back;
 using phoenix::ref;
 using qi::_1;
 
+text_placements::text_placements() :
+    text_size_(10),
+    anchor(0.0,0.5),
+    label_p(POINT_PLACEMENT),
+    halign(H_MIDDLE),
+    jalign(J_MIDDLE),
+    valign(V_MIDDLE),
+    line_spacing(0),
+    character_spacing(0),
+    label_spacing(0),
+    label_position_tolerance(0),
+    avoid_edges(false),
+    minimum_distance(0.0),
+    minimum_padding(0.0),
+    max_char_angle_delta(22.5 * M_PI/180.0),
+    force_odd_labels(false),
+    overlap(false),
+    text_opacity(1.0),
+    text_ratio(0),
+    wrap_before(false),
+    wrap_width(0),
+    wrap_char(' '),
+    text_transform(NONE),
+    fill(fill),
+    halo_fill(color(255,255,255)),
+    halo_radius(0),
+
+    placement_options_(placements)
+{
+}
+
 
 /************************************************************************/
 
 text_placement_info::text_placement_info(text_placements const* parent):
-    displacement(parent->displacement_),
-    text_size(parent->text_size_), halign(parent->halign_), jalign(parent->jalign_),
-    valign(parent->valign_)
+    name(parent->name),
+    face_name(parent->face_name),
+    text_size(parent->text_size),
+    anchor(parent->anchor),
+    displacement(parent->displacement),
+    label_p(parent->label_p),
+    halign(parent->halign),
+    jalign(parent->jalign),
+    valign(parent->valign),
+    line_spacing(parent->line_spacing),
+    character_spacing(parent->character_spacing),
+    label_spacing(parent->label_spacing),
+    label_position_tolerance(parent->label_position_tolerance),
+    avoid_edges(parent->avoid_edges),
+    minimum_distance(parent->minimum_distance),
+    minimum_padding(parent->minimum_padding),
+    max_char_angle_delta(parent->max_char_angle_delta),
+    force_odd_labels(parent->force_odd_labels),
+    overlap(parent->overlap),
+    text_opacity(parent->text_opacity),
+    text_ratio(parent->text_ratio),
+    wrap_before(parent->wrap_before),
+    wrap_width(parent->wrap_width),
+    wrap_char(parent->wrap_char),
+    text_transform(parent->text_transform),
+    fill(parent->fill),
+    halo_fill(parent->halo_fill),
+    halo_radius(parent->halo_radius)
 {
-
 }
 
 bool text_placement_info_dummy::next()
