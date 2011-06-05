@@ -125,7 +125,7 @@ public:
 
     position anchor;
     position displacement;
-    label_placement_e label_p;
+    label_placement_e label_placement;
     horizontal_alignment_e halign;
     justify_alignment_e jalign;
     vertical_alignment_e valign;
@@ -188,7 +188,7 @@ public:
 
     position anchor;
     position displacement;
-    label_placement_e label_p;
+    label_placement_e label_placement;
     horizontal_alignment_e halign;
     justify_alignment_e jalign;
     vertical_alignment_e valign;

@@ -322,12 +322,12 @@ double text_symbolizer::get_halo_radius() const
 
 void  text_symbolizer::set_label_placement(label_placement_e label_p)
 {
-    placement_options_->label_p = label_p;
+    placement_options_->label_placement = label_p;
 }
 
 label_placement_e  text_symbolizer::get_label_placement() const
 {
-    return placement_options_->label_p;
+    return placement_options_->label_placement;
 }
 
 void  text_symbolizer::set_anchor(double x, double y)

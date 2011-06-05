@@ -40,7 +40,7 @@ using qi::_1;
 text_placements::text_placements() :
     text_size(10),
     anchor(0.0,0.5),
-    label_p(POINT_PLACEMENT),
+    label_placement(POINT_PLACEMENT),
     halign(H_MIDDLE),
     jalign(J_MIDDLE),
     valign(V_MIDDLE),
@@ -75,7 +75,7 @@ text_placement_info::text_placement_info(text_placements const* parent):
     text_size(parent->text_size),
     anchor(parent->anchor),
     displacement(parent->displacement),
-    label_p(parent->label_p),
+    label_placement(parent->label_placement),
     halign(parent->halign),
     jalign(parent->jalign),
     valign(parent->valign),
