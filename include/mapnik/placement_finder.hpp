@@ -51,28 +51,17 @@ struct placement : boost::noncopyable
     string_info & info; // should only be used for finding placement. doesn't necessarily match placements.vertex() values
 
     double scale_factor_;
-    label_placement_e label_placement;
 
     std::queue< box2d<double> > envelopes;
 
     //output
     boost::ptr_vector<placement_element> placements;
 
-    int wrap_width;
-    bool wrap_before; // wraps text at wrap_char immediately before current word
-    unsigned char wrap_char;
-    int text_ratio;
-
-    int label_spacing; // distance between repeated labels on a single geometry
-    unsigned label_position_tolerance; //distance the label can be moved on the line to fit, if 0 the default is used
-    bool force_odd_labels; //Always try render an odd amount of labels
-
-    double max_char_angle_delta;
+    int label_spacing; //TODO: Scale factor
     double minimum_distance;
     double minimum_padding;
-    bool avoid_edges;
     bool has_dimensions;
-    bool allow_overlap;
+    bool allow_overlap; //Handle shield symbolizer
     std::pair<double, double> dimensions;
     bool collect_extents;
     box2d<double> extents;
@@ -113,7 +102,7 @@ private:
     //             otherwise it will autodetect the orientation.
     //             If >= 50% of the characters end up upside down, it will be retried the other way.
     //             RETURN: 1/-1 depending which way up the string ends up being.
-    std::auto_ptr<placement_element> get_placement_offset(placement & p,
+    std::auto_ptr<placement_element> get_placement_offset(placement & p, text_placement_info_ptr po,
                                                           const std::vector<vertex2d> & path_positions,
                                                           const std::vector<double> & path_distances,
                                                           int & orientation, unsigned index, double distance);
@@ -121,7 +110,7 @@ private:
     ///Tests wether the given placement_element be placed without a collision
     // Returns true if it can
     // NOTE: This edits p.envelopes so it can be used afterwards (you must clear it otherwise)
-    bool test_placement(placement & p, const std::auto_ptr<placement_element> & current_placement, const int & orientation);
+    bool test_placement(placement & p, text_placement_info_ptr po, const std::auto_ptr<placement_element> & current_placement, const int & orientation);
 
     ///Does a line-circle intersect calculation
     // NOTE: Follow the strict pre conditions

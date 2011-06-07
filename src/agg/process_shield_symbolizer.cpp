@@ -137,7 +137,6 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                         // for every vertex, try and place a shield/text
                         geom.rewind(0);
                         placement text_placement(info, sym, scale_factor_, w, h, false);
-                        text_placement.avoid_edges = sym.get_avoid_edges();
                         text_placement.allow_overlap = sym.get_allow_overlap();
                         if (writer.first)
                             text_placement.collect_extents =true; // needed for inmem metawriter
@@ -213,7 +212,6 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                     {
                         placement text_placement(info, sym, scale_factor_, w, h, true);
 
-                        text_placement.avoid_edges = sym.get_avoid_edges();
                         finder.find_point_placements<path_type>(text_placement, placement_options, path);
 
                         position const&  pos = sym.get_displacement();

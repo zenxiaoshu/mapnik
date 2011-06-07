@@ -55,18 +55,9 @@ placement::placement(string_info & info_,
                      bool has_dimensions_)
     : info(info_),
       scale_factor_(scale_factor),
-      label_placement(sym.get_label_placement()),
-      wrap_width(sym.get_wrap_width()),
-      wrap_before(sym.get_wrap_before()),
-      wrap_char(sym.get_wrap_char()),
-      text_ratio(sym.get_text_ratio()),
       label_spacing(scale_factor_ * sym.get_label_spacing()),
-      label_position_tolerance(sym.get_label_position_tolerance()),
-      force_odd_labels(sym.get_force_odd_labels()),
-      max_char_angle_delta(sym.get_max_char_angle_delta()),
       minimum_distance(scale_factor_ * sym.get_minimum_distance()),
       minimum_padding(scale_factor_ * sym.get_minimum_padding()),
-      avoid_edges(sym.get_avoid_edges()),
       has_dimensions(has_dimensions_),
       allow_overlap(false),
       dimensions(std::make_pair(w,h)),
@@ -79,18 +70,9 @@ placement::placement(string_info & info_,
                      double scale_factor)
     : info(info_),
       scale_factor_(scale_factor),
-      label_placement(sym.get_label_placement()),
-      wrap_width(sym.get_wrap_width()),
-      wrap_before(sym.get_wrap_before()),
-      wrap_char(sym.get_wrap_char()),
-      text_ratio(sym.get_text_ratio()),
       label_spacing(scale_factor_ * sym.get_label_spacing()),
-      label_position_tolerance(sym.get_label_position_tolerance()),
-      force_odd_labels(sym.get_force_odd_labels()),
-      max_char_angle_delta(sym.get_max_char_angle_delta()),
       minimum_distance(scale_factor_ * sym.get_minimum_distance()),
       minimum_padding(scale_factor_ * sym.get_minimum_padding()),
-      avoid_edges(sym.get_avoid_edges()),
       has_dimensions(false),
       allow_overlap(sym.get_allow_overlap()),
       dimensions(),
@@ -187,7 +169,7 @@ void placement_finder<DetectorT>::find_point_placements(placement & p, text_plac
     if (p.label_spacing > 0)
         num_labels = static_cast<int> (floor(total_distance / p.label_spacing));
 
-    if (p.force_odd_labels && num_labels%2 == 0)
+    if (po->force_odd_labels && num_labels%2 == 0)
         num_labels--;
     if (num_labels <= 0)
         num_labels = 1;
@@ -248,12 +230,12 @@ void placement_finder<DetectorT>::find_point_placement(placement & p,
 
     // check if we need to wrap the string
     double wrap_at = string_width + 1.0;
-    if (p.wrap_width && string_width > p.wrap_width)
+    if (po->wrap_width && string_width > po->wrap_width)
     {
-        if (p.text_ratio)
-            for (double i = 1.0; ((wrap_at = string_width/i)/(string_height*i)) > p.text_ratio && (string_width/i) > p.wrap_width; i += 1.0) ;
+        if (po->text_ratio)
+            for (double i = 1.0; ((wrap_at = string_width/i)/(string_height*i)) > po->text_ratio && (string_width/i) > po->wrap_width; i += 1.0) ;
         else
-            wrap_at = p.wrap_width;
+            wrap_at = po->wrap_width;
     }
 
     // work out where our line breaks need to be and the resultant width to the 'wrapped' string
@@ -279,7 +261,7 @@ void placement_finder<DetectorT>::find_point_placement(placement & p,
             unsigned c = ci.character;
             word_width += cwidth;
 
-            if ((c == p.wrap_char) || (c == '\n'))
+            if ((c == po->wrap_char) || (c == '\n'))
             {
                 last_wrap_char = ii;
                 last_wrap_char_width = cwidth;
@@ -289,8 +271,8 @@ void placement_finder<DetectorT>::find_point_placement(placement & p,
 
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
             if ((c == '\n') ||
-                (line_width > 0 && (((line_width - character_spacing) > wrap_at && !p.wrap_before) ||
-                                   ((line_width + word_width - character_spacing) > wrap_at && p.wrap_before)) ))
+                (line_width > 0 && (((line_width - character_spacing) > wrap_at && !po->wrap_before) ||
+                                   ((line_width + word_width - character_spacing) > wrap_at && po->wrap_before)) ))
             {
                 // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
                 line_width -= (last_wrap_char_width + character_spacing);
@@ -444,7 +426,7 @@ void placement_finder<DetectorT>::find_point_placement(placement & p,
                 return;
 
             // if avoid_edges test dimensions contains e 
-            if (p.avoid_edges && !dimensions_.contains(e))
+            if (po->avoid_edges && !dimensions_.contains(e))
                 return;
             
             if (p.minimum_padding > 0) 
@@ -533,7 +515,7 @@ void placement_finder<DetectorT>::find_line_placements(placement & p, text_place
     if (p.label_spacing > 0)
         num_labels = static_cast<int> (floor(total_distance / (p.label_spacing + string_width)));
 
-    if (p.force_odd_labels && num_labels%2 == 0)
+    if (po->force_odd_labels && num_labels%2 == 0)
         num_labels--;
     if (num_labels <= 0)
         num_labels = 1;
@@ -544,10 +526,10 @@ void placement_finder<DetectorT>::find_line_placements(placement & p, text_place
 
     //Calculate or read out the tolerance
     double tolerance_delta, tolerance;
-    if (p.label_position_tolerance > 0)
+    if (po->label_position_tolerance > 0)
     {
-        tolerance = p.label_position_tolerance;
-        tolerance_delta = std::max ( 1.0, p.label_position_tolerance/100.0 );
+        tolerance = po->label_position_tolerance;
+        tolerance_delta = std::max ( 1.0, po->label_position_tolerance/100.0 );
     }
     else
     {
@@ -582,7 +564,7 @@ void placement_finder<DetectorT>::find_line_placements(placement & p, text_place
                     {
                         //Record details for the start of the string placement
                         int orientation = 0;
-                        std::auto_ptr<placement_element> current_placement = get_placement_offset(p, path_positions, path_distances, orientation, index, segment_length - (distance - target_distance) + (diff*dir));
+                        std::auto_ptr<placement_element> current_placement = get_placement_offset(p, po, path_positions, path_distances, orientation, index, segment_length - (distance - target_distance) + (diff*dir));
 
                         //We were unable to place here
                         if (current_placement.get() == NULL)
@@ -609,7 +591,7 @@ void placement_finder<DetectorT>::find_line_placements(placement & p, text_place
                             }
                         }
 
-                        bool status = test_placement(p, current_placement, orientation);
+                        bool status = test_placement(p, po, current_placement, orientation);
 
                         if (status) //We have successfully placed one
                         {
@@ -644,7 +626,7 @@ void placement_finder<DetectorT>::find_line_placements(placement & p, text_place
 }
 
 template <typename DetectorT>
-std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offset(placement & p, const std::vector<vertex2d> &path_positions, const std::vector<double> &path_distances, int &orientation, unsigned index, double distance)
+std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offset(placement & p, text_placement_info_ptr po, const std::vector<vertex2d> &path_positions, const std::vector<double> &path_distances, int &orientation, unsigned index, double distance)
 {
     //Check that the given distance is on the given index and find the correct index and distance if not
     while (distance < 0 && index > 1)
@@ -771,8 +753,8 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
             angle_delta -= 2*M_PI;
         while (angle_delta < -M_PI)
             angle_delta += 2*M_PI;
-        if (p.max_char_angle_delta > 0 &&
-            fabs(angle_delta) > p.max_char_angle_delta)
+        if (po->max_char_angle_delta > 0 &&
+            fabs(angle_delta) > po->max_char_angle_delta)
         {
             //std::clog << "FAIL: Too Bendy!" << std::endl;
             return std::auto_ptr<placement_element>(NULL);
@@ -815,7 +797,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         if (!orientation_forced)
         {
             orientation = -orientation;
-            current_placement = get_placement_offset(p, path_positions, path_distances, orientation, initial_index, initial_distance);
+            current_placement = get_placement_offset(p, po, path_positions, path_distances, orientation, initial_index, initial_distance);
         }
         else
         {
@@ -829,7 +811,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
 }
 
 template <typename DetectorT>
-bool placement_finder<DetectorT>::test_placement(placement & p, const std::auto_ptr<placement_element> & current_placement, const int & orientation)
+bool placement_finder<DetectorT>::test_placement(placement & p, text_placement_info_ptr po, const std::auto_ptr<placement_element> & current_placement, const int & orientation)
 {
     std::pair<double, double> string_dimensions = p.info.get_dimensions();
 
@@ -880,7 +862,7 @@ bool placement_finder<DetectorT>::test_placement(placement & p, const std::auto_
             break;
         }
 
-        if (p.avoid_edges && !dimensions_.contains(e))
+        if (po->avoid_edges && !dimensions_.contains(e))
         {
             //std::clog << "Fail avoid edges" << std::endl;
             status = false;

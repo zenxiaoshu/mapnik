@@ -133,17 +133,17 @@ public:
 
     unsigned line_spacing;
     unsigned character_spacing;
-    unsigned label_spacing;
-    unsigned label_position_tolerance;
+    unsigned label_spacing; // distance between repeated labels on a single geometry
+    unsigned label_position_tolerance; //distance the label can be moved on the line to fit, if 0 the default is used
     bool avoid_edges;
     double minimum_distance;
     double minimum_padding;
     double max_char_angle_delta;
-    bool force_odd_labels;
+    bool force_odd_labels; //Always try render an odd amount of labels
     bool overlap;
     double text_opacity;
     unsigned text_ratio;
-    bool wrap_before;
+    bool wrap_before; // wraps text at wrap_char immediately before current word
     unsigned wrap_width;
     unsigned char wrap_char;
     text_transform_e text_transform;

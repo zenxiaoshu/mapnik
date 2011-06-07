@@ -97,7 +97,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             while (!placement_found && placements->next_position_only())
             {
                 placement text_placement(info, sym, scale_factor_);
-                text_placement.avoid_edges = placements->avoid_edges;
                 if (writer.first)
                     text_placement.collect_extents = true; // needed for inmem metawriter
 
