@@ -60,7 +60,7 @@ text_placements::text_placements() :
     wrap_width(0),
     wrap_char(' '),
     text_transform(NONE),
-    fill(fill),
+    fill(color(0,0,0)),
     halo_fill(color(255,255,255)),
     halo_radius(0)
 {
