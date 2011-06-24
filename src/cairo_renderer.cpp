@@ -1082,21 +1082,21 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
         text = UnicodeString( " " );  // TODO: fix->use 'space' as the text to render
     else
     {
-        expression_ptr name_expr = sym.get_name();
+        expression_ptr name_expr = p.name;
         if (!name_expr) return;
         value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
         text = result.to_unicode();
     }
 
-    if ( sym.get_text_transform() == UPPERCASE)
+    if ( p.text_transform == UPPERCASE)
     {
         text = text.toUpper();
     }
-    else if ( sym.get_text_transform() == LOWERCASE)
+    else if ( p.text_transform == LOWERCASE)
     {
         text = text.toLower();
     }
-    else if ( sym.get_text_transform() == CAPITALIZE)
+    else if ( p.text_transform == CAPITALIZE)
     {
         text = text.toTitle(NULL);
     }
@@ -1105,7 +1105,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
     boost::array<double,6> const& m = sym.get_transform();
     tr.load_from(&m[0]);
 
-    std::string filename = path_processor_type::evaluate( *sym.get_filename(), feature);
+    std::string filename = path_processor_type::evaluate(*sym.get_filename(), feature);
     boost::optional<marker_ptr> marker;
     if ( !filename.empty() )
     {
@@ -1120,13 +1120,13 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
     {
         face_set_ptr faces;
 
-        if (sym.get_fontset().size() > 0)
+        if (p.fontset.size() > 0)
         {
-            faces = font_manager_.get_face_set(sym.get_fontset());
+            faces = font_manager_.get_face_set(p.fontset);
         }
         else 
         {
-            faces = font_manager_.get_face_set(sym.get_face_name());
+            faces = font_manager_.get_face_set(p.face_name);
         }
 
         if (faces->size() > 0)
@@ -1151,7 +1151,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                 {
                     path_type path(t_, geom, prj_trans);
 
-                    label_placement_enum how_placed = sym.get_label_placement();
+                    label_placement_enum how_placed = p.label_placement;
                     if (how_placed == POINT_PLACEMENT || how_placed == VERTEX_PLACEMENT || how_placed == INTERIOR_PLACEMENT)
                     {
                         // for every vertex, try and place a shield/text
@@ -1159,7 +1159,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                         placement->init(&info, 1.0, w, h, false);
                         if (writer.first)
                             placement->collect_extents = true; // needed for inmem metawriter
-                        position const& pos = sym.get_displacement();
+                        position const& pos = p.displacement;
                         position const& shield_pos = sym.get_shield_displacement();
                         for( unsigned jj = 0; jj < geom.num_points(); jj++ )
                         {
@@ -1181,8 +1181,8 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
                             finder.find_point_placement(*placement,
                                                         label_x, label_y, 0.0,
-                                                        sym.get_line_spacing(),
-                                                        sym.get_character_spacing());
+                                                        p.line_spacing,
+                                                        p.character_spacing);
 
                             for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                             {
@@ -1210,7 +1210,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                     label_ext.init( floor(label_x - 0.5 * w), floor(label_y - 0.5 * h), ceil (label_x + 0.5 * w), ceil (label_y + 0.5 * h));
                                 }
 
-                                if ( sym.get_allow_overlap() || detector_.has_placement(label_ext) )
+                                if (p.allow_overlap || detector_.has_placement(label_ext))
                                 {
                                     render_marker(px,py,**marker, tr, sym.get_opacity());
 
@@ -1218,9 +1218,9 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                                      face_manager_,
                                                      faces,
                                                      p.text_size,
-                                                     sym.get_fill(),
-                                                     sym.get_halo_radius(),
-                                                     sym.get_halo_fill()
+                                                     p.fill,
+                                                     p.halo_radius,
+                                                     p.halo_fill
                                         );
                                     if (writer.first) {
                                         writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
@@ -1239,7 +1239,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
                         finder.find_point_placements<path_type>(*placement, path);
 
-                        position const&  pos = sym.get_displacement();
+                        position const&  pos = p.displacement;
                         for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                         {
                             double x = placement->placements[ii].starting_x;
@@ -1255,9 +1255,9 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                              face_manager_,
                                              faces,
                                              p.text_size,
-                                             sym.get_fill(),
-                                             sym.get_halo_radius(),
-                                             sym.get_halo_fill()
+                                             p.fill,
+                                             p.halo_radius,
+                                             p.halo_fill
                                 );
                             if (writer.first) writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
                         }
@@ -1520,20 +1520,20 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
     text_properties &p = placement->properties;
     while (!placement_found && placement->next())
     {
-        expression_ptr name_expr = sym.get_name();
+        expression_ptr name_expr = p.name;
         if (!name_expr) return;
         value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
         UnicodeString text = result.to_unicode();
 
-        if ( sym.get_text_transform() == UPPERCASE)
+        if (p.text_transform == UPPERCASE)
         {
             text = text.toUpper();
         }
-        else if ( sym.get_text_transform() == LOWERCASE)
+        else if (p.text_transform == LOWERCASE)
         {
             text = text.toLower();
         }
-        else if ( sym.get_text_transform() == CAPITALIZE)
+        else if (p.text_transform == CAPITALIZE)
         {
             text = text.toTitle(NULL);
         }
@@ -1542,18 +1542,18 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
 
         face_set_ptr faces;
 
-        if (sym.get_fontset().size() > 0)
+        if (p.fontset.size() > 0)
         {
-            faces = font_manager_.get_face_set(sym.get_fontset());
+            faces = font_manager_.get_face_set(p.fontset);
         }
         else
         {
-            faces = font_manager_.get_face_set(sym.get_face_name());
+            faces = font_manager_.get_face_set(p.face_name);
         }
 
         if (faces->size() == 0)
         {
-            throw config_error("Unable to find specified font face '" + sym.get_face_name() + "'");
+            throw config_error("Unable to find specified font face '" + p.face_name + "'");
         }
         cairo_context context(context_);
         string_info info(text);
@@ -1576,11 +1576,11 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                 if (writer.first)
                     placement->collect_extents = true; // needed for inmem metawriter
 
-                if (sym.get_label_placement() == POINT_PLACEMENT ||
-                        sym.get_label_placement() == INTERIOR_PLACEMENT)
+                if (p.label_placement == POINT_PLACEMENT ||
+                        p.label_placement == INTERIOR_PLACEMENT)
                 {
                     double label_x, label_y, z=0.0;
-                    if (sym.get_label_placement() == POINT_PLACEMENT)
+                    if (p.label_placement == POINT_PLACEMENT)
                         geom.label_position(&label_x, &label_y);
                     else
                         geom.label_interior_position(&label_x, &label_y);
@@ -1588,7 +1588,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                     t_.forward(&label_x,&label_y);
 
                     double angle = 0.0;
-                    expression_ptr angle_expr = sym.get_orientation();
+                    expression_ptr angle_expr = p.orientation;
                     if (angle_expr)
                     {
                         // apply rotation
@@ -1598,11 +1598,11 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
 
                     finder.find_point_placement(*placement,
                                                 label_x, label_y,
-                                                angle, sym.get_line_spacing(),
-                                                sym.get_character_spacing());
+                                                angle, p.line_spacing,
+                                                p.character_spacing);
                     finder.update_detector(*placement);
                 }
-                else if ( geom.num_points() > 1 && sym.get_label_placement() == LINE_PLACEMENT)
+                else if ( geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
                 {
                     path_type path(t_, geom, prj_trans);
                     finder.find_line_placements<path_type>(*placement, path);
@@ -1617,9 +1617,9 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                                      face_manager_,
                                      faces,
                                      p.text_size,
-                                     sym.get_fill(),
-                                     sym.get_halo_radius(),
-                                     sym.get_halo_fill()
+                                     p.fill,
+                                     p.halo_radius,
+                                     p.halo_fill
                                      );
                 }
 
