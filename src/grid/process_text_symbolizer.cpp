@@ -35,8 +35,8 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
     bool placement_found = false;
-    text_placement_info_ptr placement_options = sym.get_placement_options()->get_placement_info();
-    while (!placement_found && placement_options->next())
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    while (!placement_found && placement->next())
     {
         expression_ptr name_expr = sym.get_name();
         if (!name_expr) return;
@@ -76,7 +76,7 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
             throw config_error("Unable to find specified font face '" + sym.get_face_name() + "'");
         }
         text_renderer<T> ren(pixmap_, faces, *strk);
-        ren.set_pixel_size(placement_options->text_size * (scale_factor_ * (1.0/pixmap_.get_resolution())));
+        ren.set_pixel_size(placement->text_size * (scale_factor_ * (1.0/pixmap_.get_resolution())));
         ren.set_fill(fill);
         ren.set_halo_fill(sym.get_halo_fill());
         ren.set_halo_radius(sym.get_halo_radius() * scale_factor_);
@@ -94,9 +94,9 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
-            while (!placement_found && placement_options->next_position_only())
+            while (!placement_found && placement->next_position_only())
             {
-                placement text_placement(info, sym, scale_factor_);
+                placement->set_scale_factor(scale_factor_);
                 if (sym.get_label_placement() == POINT_PLACEMENT ||
                         sym.get_label_placement() == INTERIOR_PLACEMENT)
                 {
@@ -117,27 +117,27 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
                         angle = result.to_double();
                     }
 
-                    finder.find_point_placement(text_placement, placement_options,
+                    finder.find_point_placement(*placement,
                                                 label_x, label_y,
                                                 angle, sym.get_line_spacing(),
                                                 sym.get_character_spacing());
 
-                    finder.update_detector(text_placement);
+                    finder.update_detector(*placement);
                 }
                 else if ( geom.num_points() > 1 && sym.get_label_placement() == LINE_PLACEMENT)
                 {
                     path_type path(t_,geom,prj_trans);
-                    finder.find_line_placements<path_type>(text_placement, placement_options, path);
+                    finder.find_line_placements<path_type>(*placement, path);
                 }
 
-                if (!text_placement.placements.size()) continue;
+                if (!placement->placements.size()) continue;
                 placement_found = true;
 
-                for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ii)
+                for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
                 {
-                    double x = text_placement.placements[ii].starting_x;
-                    double y = text_placement.placements[ii].starting_y;
-                    ren.prepare_glyphs(&text_placement.placements[ii]);
+                    double x = placement->placements[ii].starting_x;
+                    double y = placement->placements[ii].starting_y;
+                    ren.prepare_glyphs(&(placement->placements[ii]));
                     ren.render_id(feature.id(),x,y,2);
                 }
             }

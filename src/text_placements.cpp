@@ -53,7 +53,7 @@ text_placements::text_placements() :
     minimum_padding(0.0),
     max_char_angle_delta(22.5 * M_PI/180.0),
     force_odd_labels(false),
-    overlap(false),
+    allow_overlap(false),
     text_opacity(1.0),
     text_ratio(0),
     wrap_before(false),
@@ -88,7 +88,7 @@ text_placement_info::text_placement_info(text_placements const* parent):
     minimum_padding(parent->minimum_padding),
     max_char_angle_delta(parent->max_char_angle_delta),
     force_odd_labels(parent->force_odd_labels),
-    overlap(parent->overlap),
+    allow_overlap(parent->allow_overlap),
     text_opacity(parent->text_opacity),
     text_ratio(parent->text_ratio),
     wrap_before(parent->wrap_before),
@@ -97,7 +97,11 @@ text_placement_info::text_placement_info(text_placements const* parent):
     text_transform(parent->text_transform),
     fill(parent->fill),
     halo_fill(parent->halo_fill),
-    halo_radius(parent->halo_radius)
+    halo_radius(parent->halo_radius),
+    scale_factor(1),
+    has_dimensions(false),
+    collect_extents(false)
+
 {
 }
 

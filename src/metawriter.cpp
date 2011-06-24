@@ -23,7 +23,7 @@
 // Mapnik
 #include <mapnik/metawriter.hpp>
 #include <mapnik/metawriter_json.hpp>
-#include <mapnik/placement_finder.hpp>
+#include <mapnik/text_placements.hpp>
 
 // Boost
 #include <boost/foreach.hpp>
@@ -164,7 +164,7 @@ void metawriter_json_stream::add_box(box2d<double> const &box, Feature const& fe
 
 }
 
-void metawriter_json_stream::add_text(placement const& p,
+void metawriter_json_stream::add_text(text_placement_info const& p,
     face_set_ptr face,
     Feature const& feature,
     CoordTransform const& t,

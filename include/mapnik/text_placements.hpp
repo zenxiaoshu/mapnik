@@ -27,10 +27,13 @@
 #include <mapnik/filter_factory.hpp>
 #include <mapnik/color.hpp>
 #include <mapnik/font_set.hpp>
+#include <mapnik/text_path.hpp>
+#include <mapnik/box2d.hpp>
 
 //stl
 #include <vector>
 #include <string>
+#include <queue>
 
 //boost
 #include <boost/tuple/tuple.hpp>
@@ -38,6 +41,10 @@
 #include <boost/utility.hpp>
 
 namespace mapnik {
+
+class text_placements;
+class string_info;
+typedef text_path placement_element;
 
 typedef boost::tuple<double,double> position;
 
@@ -94,8 +101,6 @@ enum text_transform
 
 DEFINE_ENUM( text_transform_e, text_transform );
 
-class text_placements;
-
 class text_placement_info : boost::noncopyable
 {
 public:
@@ -140,7 +145,7 @@ public:
     double minimum_padding;
     double max_char_angle_delta;
     bool force_odd_labels; //Always try render an odd amount of labels
-    bool overlap;
+    bool allow_overlap;
     double text_opacity;
     unsigned text_ratio;
     bool wrap_before; // wraps text at wrap_char immediately before current word
@@ -151,6 +156,21 @@ public:
     color fill;
     color halo_fill;
     double halo_radius;
+    double scale_factor;
+    bool has_dimensions;
+    std::pair<double, double> dimensions;
+    void set_scale_factor(double factor) { scale_factor = factor; }
+    double get_scale_factor() { return scale_factor; }
+    double get_actual_label_spacing() { return scale_factor * label_spacing; }
+    double get_actual_minimum_distance() { return scale_factor * minimum_distance; }
+    double get_actual_minimum_padding() { return scale_factor * minimum_padding; }
+
+    bool collect_extents;
+    string_info *info; // should only be used for finding placement. doesn't necessarily match placements.vertex() values
+    //Output
+    box2d<double> extents;
+    std::queue< box2d<double> > envelopes;
+    boost::ptr_vector<placement_element> placements;
 };
 
 typedef boost::shared_ptr<text_placement_info> text_placement_info_ptr;
@@ -160,22 +180,6 @@ class text_placements
 public:
     text_placements();
     virtual text_placement_info_ptr get_placement_info() const =0;
-#if 0
-    virtual void set_default_text_size(unsigned size) { text_size_ = size; }
-    unsigned get_default_text_size() const { return text_size_; }
-
-    virtual void set_default_displacement(position const& displacement) { displacement_ = displacement;}
-    position const& get_default_displacement() { return displacement_; }
-
-    virtual void set_default_halign(horizontal_alignment_e const& align) { halign_ = align;}
-    horizontal_alignment_e const& get_default_halign() { return halign_; }
-
-    virtual void set_default_jalign(justify_alignment_e const& align) { jalign_ = align;}
-    justify_alignment_e const& get_default_jalign() { return jalign_; }
-
-    virtual void set_default_valign(vertical_alignment_e const& align) { valign_ = align;}
-    vertical_alignment_e const& get_default_valign() { return valign_; }
-#endif
 
     virtual ~text_placements() {}
     expression_ptr name;
@@ -203,7 +207,7 @@ public:
     double minimum_padding;
     double max_char_angle_delta;
     bool force_odd_labels;
-    bool overlap;
+    bool allow_overlap;
     double text_opacity;
     unsigned text_ratio;
     bool wrap_before;

@@ -382,12 +382,12 @@ void text_symbolizer::set_minimum_padding(double distance)
  
 void text_symbolizer::set_allow_overlap(bool overlap)
 {
-    placement_options_->overlap = overlap;
+    placement_options_->allow_overlap = overlap;
 }
 
 bool text_symbolizer::get_allow_overlap() const
 {
-    return placement_options_->overlap;
+    return placement_options_->allow_overlap;
 }
 
 void text_symbolizer::set_text_opacity(double text_opacity)

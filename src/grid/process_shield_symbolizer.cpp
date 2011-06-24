@@ -47,9 +47,9 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
 
     bool placement_found = false;
 
-    text_placement_info_ptr placement_options = sym.get_placement_options()->get_placement_info();
-    placement_options->next();
-    placement_options->next_position_only();
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    placement->next();
+    placement->next_position_only();
 
     UnicodeString text;
     if( sym.get_no_text() )
@@ -137,8 +137,9 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
                     {
                         // for every vertex, try and place a shield/text
                         geom.rewind(0);
-                        placement text_placement(info, sym, scale_factor_, w, h, false);
-                        text_placement.allow_overlap = sym.get_allow_overlap();
+                        placement->set_scale_factor(scale_factor_);
+                        placement->dimensions = std::make_pair(w, h);
+                        placement->has_dimensions = false; //TODO: Why?
                         position const& pos = sym.get_displacement();
                         position const& shield_pos = sym.get_shield_displacement();
                         for( unsigned jj = 0; jj < geom.num_points(); jj++ )
@@ -159,16 +160,16 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
                             label_x += boost::get<0>(shield_pos);
                             label_y += boost::get<1>(shield_pos);
 
-                            finder.find_point_placement( text_placement, placement_options, label_x, label_y, 0.0,
+                            finder.find_point_placement(*placement, label_x, label_y, 0.0,
                                                          sym.get_line_spacing(),
                                                          sym.get_character_spacing());
 
                             // check to see if image overlaps anything too, there is only ever 1 placement found for points and verticies
-                            if( text_placement.placements.size() > 0)
+                            if( placement->placements.size() > 0)
                             {
                                 placement_found = true;
-                                double x = floor(text_placement.placements[0].starting_x);
-                                double y = floor(text_placement.placements[0].starting_y);
+                                double x = floor(placement->placements[0].starting_x);
+                                double y = floor(placement->placements[0].starting_y);
                                 int px;
                                 int py;
                                 box2d<double> label_ext;
@@ -194,10 +195,10 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
                                 {
                                     render_marker(feature,pixmap_.get_resolution(),px,py,**marker,tr,sym.get_opacity());
 
-                                    box2d<double> dim = ren.prepare_glyphs(&text_placement.placements[0]);
+                                    box2d<double> dim = ren.prepare_glyphs(&(placement->placements[0]));
                                     ren.render_id(feature.id(),x,y,2);
                                     detector_.insert(label_ext);
-                                    finder.update_detector(text_placement);
+                                    finder.update_detector(*placement);
                                 }
                             }
                         }
@@ -205,16 +206,18 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
 
                     else if (geom.num_points() > 1 && how_placed == LINE_PLACEMENT)
                     {
-                        placement text_placement(info, sym, scale_factor_, w, h, true);
+                        placement->set_scale_factor(scale_factor_);
+                        placement->dimensions = std::make_pair(w, h);
+                        placement->has_dimensions = true;
 
-                        finder.find_point_placements<path_type>(text_placement, placement_options, path);
+                        finder.find_point_placements<path_type>(*placement, path);
 
                         position const&  pos = sym.get_displacement();
-                        for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ ii)
+                        for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                         {
                             placement_found= true;
-                            double x = floor(text_placement.placements[ii].starting_x);
-                            double y = floor(text_placement.placements[ii].starting_y);
+                            double x = floor(placement->placements[ii].starting_x);
+                            double y = floor(placement->placements[ii].starting_y);
 
                             double lx = x - boost::get<0>(pos);
                             double ly = y - boost::get<1>(pos);
@@ -223,10 +226,10 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
 
                             render_marker(feature,pixmap_.get_resolution(),px,py,**marker,tr,sym.get_opacity());
 
-                            box2d<double> dim = ren.prepare_glyphs(&text_placement.placements[ii]);
+                            box2d<double> dim = ren.prepare_glyphs(&(placement->placements[ii]));
                             ren.render_id(feature.id(),x,y,2);
                         }
-                        finder.update_detector(text_placement);
+                        finder.update_detector(*placement);
                     }
                 }
             }

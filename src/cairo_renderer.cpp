@@ -1072,9 +1072,9 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 {
     typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
-    text_placement_info_ptr placement_options = sym.get_placement_options()->get_placement_info();
-    placement_options->next();
-    placement_options->next_position_only();
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    placement->next();
+    placement->next_position_only();
 
     UnicodeString text;
     if( sym.get_no_text() )
@@ -1135,7 +1135,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
             placement_finder<label_collision_detector4> finder(detector_);
 
-            faces->set_pixel_sizes(placement_options->text_size);
+            faces->set_pixel_sizes(placement->text_size);
             faces->get_string_info(info);
 
             int w = (*marker)->width();
@@ -1155,10 +1155,11 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                     {
                         // for every vertex, try and place a shield/text
                         geom.rewind(0);
-                        placement text_placement(info, sym, 1.0, w, h, false);
-                        text_placement.allow_overlap = sym.get_allow_overlap();
+                        placement->set_scale_factor(1.0);
+                        placement->dimensions = std::make_pair(w, h);
+                        placement->has_dimensions = false; //TODO: Why?
                         if (writer.first)
-                            text_placement.collect_extents = true; // needed for inmem metawriter
+                            placement->collect_extents = true; // needed for inmem metawriter
                         position const& pos = sym.get_displacement();
                         position const& shield_pos = sym.get_shield_displacement();
                         for( unsigned jj = 0; jj < geom.num_points(); jj++ )
@@ -1179,15 +1180,15 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                             label_x += boost::get<0>(shield_pos);
                             label_y += boost::get<1>(shield_pos);
 
-                            finder.find_point_placement(text_placement, placement_options,
+                            finder.find_point_placement(*placement,
                                                         label_x, label_y, 0.0,
                                                         sym.get_line_spacing(),
                                                         sym.get_character_spacing());
 
-                            for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ ii)
+                            for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                             {
-                                double x = text_placement.placements[ii].starting_x;
-                                double y = text_placement.placements[ii].starting_y;
+                                double x = placement->placements[ii].starting_x;
+                                double y = placement->placements[ii].starting_y;
 
                                 int px;
                                 int py;
@@ -1214,36 +1215,38 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                 {
                                     render_marker(px,py,**marker, tr, sym.get_opacity());
 
-                                    context.add_text(text_placement.placements[ii],
+                                    context.add_text(placement->placements[ii],
                                                      face_manager_,
                                                      faces,
-                                                     placement_options->text_size,
+                                                     placement->text_size,
                                                      sym.get_fill(),
                                                      sym.get_halo_radius(),
                                                      sym.get_halo_fill()
                                         );
                                     if (writer.first) {
                                         writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
-                                        writer.first->add_text(text_placement, faces, feature, t_, writer.second); //Only 1 placement
+                                        writer.first->add_text(*placement, faces, feature, t_, writer.second); //Only 1 placement
                                     }
                                     detector_.insert(label_ext);
                                 }
                             }
 
-                            finder.update_detector(text_placement);
+                            finder.update_detector(*placement);
                         }
                     }
                     else if (geom.num_points() > 1 && how_placed == LINE_PLACEMENT)
                     {
-                        placement text_placement(info, sym, 1.0, w, h, true);
+                        placement->set_scale_factor(1.0);
+                        placement->dimensions = std::make_pair(w, h);
+                        placement->has_dimensions = true;
 
-                        finder.find_point_placements<path_type>(text_placement, placement_options, path);
+                        finder.find_point_placements<path_type>(*placement, path);
 
                         position const&  pos = sym.get_displacement();
-                        for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ ii)
+                        for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                         {
-                            double x = text_placement.placements[ii].starting_x;
-                            double y = text_placement.placements[ii].starting_y;
+                            double x = placement->placements[ii].starting_x;
+                            double y = placement->placements[ii].starting_y;
                             double lx = x - boost::get<0>(pos);
                             double ly = y - boost::get<1>(pos);
                             int px=int(floor(lx - (0.5*w)));
@@ -1251,18 +1254,18 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
                             render_marker(px,py,**marker, tr, sym.get_opacity());
 
-                            context.add_text(text_placement.placements[ii],
+                            context.add_text(placement->placements[ii],
                                              face_manager_,
                                              faces,
-                                             placement_options->text_size,
+                                             placement->text_size,
                                              sym.get_fill(),
                                              sym.get_halo_radius(),
                                              sym.get_halo_fill()
                                 );
                             if (writer.first) writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
                         }
-                        finder.update_detector(text_placement);
-                        if (writer.first) writer.first->add_text(text_placement, faces, feature, t_, writer.second); //More than one placement
+                        finder.update_detector(*placement);
+                        if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second); //More than one placement
                     }
                 }
             }
@@ -1516,8 +1519,8 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
     typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
     bool placement_found = false;
-    text_placement_info_ptr placement_options = sym.get_placement_options()->get_placement_info();
-    while (!placement_found && placement_options->next())
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    while (!placement_found && placement->next())
     {
         expression_ptr name_expr = sym.get_name();
         if (!name_expr) return;
@@ -1557,7 +1560,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
         cairo_context context(context_);
         string_info info(text);
 
-        faces->set_pixel_sizes(placement_options->text_size);
+        faces->set_pixel_sizes(placement->text_size);
         faces->get_string_info(info);
 
         placement_finder<label_collision_detector4> finder(detector_);
@@ -1569,11 +1572,11 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue;// don't bother with empty geometries
-            while (!placement_found && placement_options->next_position_only())
+            while (!placement_found && placement->next_position_only())
             {
-                placement text_placement(info, sym, 1.0);
+                placement->set_scale_factor(1.0);
                 if (writer.first)
-                    text_placement.collect_extents = true; // needed for inmem metawriter
+                    placement->collect_extents = true; // needed for inmem metawriter
 
                 if (sym.get_label_placement() == POINT_PLACEMENT ||
                         sym.get_label_placement() == INTERIOR_PLACEMENT)
@@ -1595,34 +1598,34 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                         angle = result.to_double();
                     }
 
-                    finder.find_point_placement(text_placement, placement_options,
+                    finder.find_point_placement(*placement,
                                                 label_x, label_y,
                                                 angle, sym.get_line_spacing(),
                                                 sym.get_character_spacing());
-                    finder.update_detector(text_placement);
+                    finder.update_detector(*placement);
                 }
                 else if ( geom.num_points() > 1 && sym.get_label_placement() == LINE_PLACEMENT)
                 {
                     path_type path(t_, geom, prj_trans);
-                    finder.find_line_placements<path_type>(text_placement, placement_options, path);
+                    finder.find_line_placements<path_type>(*placement, path);
                 }
 
-                if (!text_placement.placements.size()) continue;
+                if (!placement->placements.size()) continue;
                 placement_found = true;
 
-                for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ii)
+                for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
                 {
-                    context.add_text(text_placement.placements[ii],
+                    context.add_text(placement->placements[ii],
                                      face_manager_,
                                      faces,
-                                     placement_options->text_size,
+                                     placement->text_size,
                                      sym.get_fill(),
                                      sym.get_halo_radius(),
                                      sym.get_halo_fill()
                                      );
                 }
 
-                if (writer.first) writer.first->add_text(text_placement, faces, feature, t_, writer.second);
+                if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
             }
         }
     }

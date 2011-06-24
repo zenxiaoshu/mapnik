@@ -35,51 +35,51 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
     bool placement_found = false;
-    text_placement_info_ptr placements = sym.get_placement_options()->get_placement_info();
-    while (!placement_found && placements->next())
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    while (!placement_found && placement->next())
     {
-        expression_ptr name_expr = placements->name;
+        expression_ptr name_expr = placement->name;
         if (!name_expr) return;
         value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
         UnicodeString text = result.to_unicode();
 
-        if (placements->text_transform == UPPERCASE)
+        if (placement->text_transform == UPPERCASE)
         {
             text = text.toUpper();
         }
-        else if (placements->text_transform == LOWERCASE)
+        else if (placement->text_transform == LOWERCASE)
         {
             text = text.toLower();
         }
-        else if (placements->text_transform == CAPITALIZE)
+        else if (placement->text_transform == CAPITALIZE)
         {
             text = text.toTitle(NULL);
         }
 
         if (text.length() <= 0) continue;
-        color const& fill = placements->fill;
+        color const& fill = placement->fill;
 
         face_set_ptr faces;
-        if (placements->fontset.size() > 0)
+        if (placement->fontset.size() > 0)
         {
-            faces = font_manager_.get_face_set(placements->fontset);
+            faces = font_manager_.get_face_set(placement->fontset);
         }
         else
         {
-            faces = font_manager_.get_face_set(placements->face_name);
+            faces = font_manager_.get_face_set(placement->face_name);
         }
 
         stroker_ptr strk = font_manager_.get_stroker();
         if (!(faces->size() > 0 && strk))
         {
-            throw config_error("Unable to find specified font face '" + placements->face_name + "'");
+            throw config_error("Unable to find specified font face '" + placement->face_name + "'");
         }
         text_renderer<T> ren(pixmap_, faces, *strk);
-        ren.set_pixel_size(placements->text_size * scale_factor_);
+        ren.set_pixel_size(placement->text_size * scale_factor_);
         ren.set_fill(fill);
-        ren.set_halo_fill(placements->halo_fill);
-        ren.set_halo_radius(placements->halo_radius * scale_factor_);
-        ren.set_opacity(placements->text_opacity);
+        ren.set_halo_fill(placement->halo_fill);
+        ren.set_halo_radius(placement->halo_radius * scale_factor_);
+        ren.set_opacity(placement->text_opacity);
 
         box2d<double> dims(0,0,width_,height_);
         placement_finder<label_collision_detector4> finder(detector_, dims);
@@ -94,19 +94,19 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
-            while (!placement_found && placements->next_position_only())
+            while (!placement_found && placement->next_position_only())
             {
-                placement text_placement(info, sym, scale_factor_);
+                placement->set_scale_factor(scale_factor_);
                 if (writer.first)
-                    text_placement.collect_extents = true; // needed for inmem metawriter
+                    placement->collect_extents = true; // needed for inmem metawriter
 
-                if (placements->label_placement == POINT_PLACEMENT ||
-                    placements->label_placement == INTERIOR_PLACEMENT)
+                if (placement->label_placement == POINT_PLACEMENT ||
+                    placement->label_placement == INTERIOR_PLACEMENT)
                 {
                     double label_x=0.0;
                     double label_y=0.0;
                     double z=0.0;
-                    if (placements->label_placement == POINT_PLACEMENT)
+                    if (placement->label_placement == POINT_PLACEMENT)
                         geom.label_position(&label_x, &label_y);
                     else
                         geom.label_interior_position(&label_x, &label_y);
@@ -114,7 +114,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                     t_.forward(&label_x,&label_y);
 
                     double angle = 0.0;
-                    expression_ptr angle_expr = placements->orientation;
+                    expression_ptr angle_expr = placement->orientation;
                     if (angle_expr)
                     {
                         // apply rotation
@@ -122,29 +122,29 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                         angle = result.to_double();
                     }
 
-                    finder.find_point_placement(text_placement, placements, label_x,label_y,
-                                                angle, placements->line_spacing,
-                                                placements->character_spacing);
-                    finder.update_detector(text_placement);
+                    finder.find_point_placement(*placement, label_x,label_y,
+                                                angle, placement->line_spacing,
+                                                placement->character_spacing);
+                    finder.update_detector(*placement);
                 }
-                else if ( geom.num_points() > 1 && placements->label_placement == LINE_PLACEMENT)
+                else if ( geom.num_points() > 1 && placement->label_placement == LINE_PLACEMENT)
                 {
                     path_type path(t_,geom,prj_trans);
-                    finder.find_line_placements<path_type>(text_placement, placements, path);
+                    finder.find_line_placements<path_type>(*placement, path);
                 }
 
-                if (!text_placement.placements.size()) continue;
+                if (!placement->placements.size()) continue;
                 placement_found = true;
 
-                for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ii)
+                for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
                 {
-                    double x = text_placement.placements[ii].starting_x;
-                    double y = text_placement.placements[ii].starting_y;
-                    ren.prepare_glyphs(&text_placement.placements[ii]);
+                    double x = placement->placements[ii].starting_x;
+                    double y = placement->placements[ii].starting_y;
+                    ren.prepare_glyphs(&(placement->placements[ii]));
                     ren.render(x,y);
                 }
 
-                if (writer.first) writer.first->add_text(text_placement, faces, feature, t_, writer.second);
+                if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
             }
         }
     }

@@ -46,7 +46,7 @@ public:
     virtual void add_box(box2d<double> const& box, Feature const& feature,
                          CoordTransform const& t,
                          metawriter_properties const& properties);
-    virtual void add_text(placement const& p,
+    virtual void add_text(text_placement_info const& p,
                           face_set_ptr face,
                           Feature const& feature,
                           CoordTransform const& t,
