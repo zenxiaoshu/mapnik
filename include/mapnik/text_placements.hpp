@@ -101,27 +101,8 @@ enum text_transform
 
 DEFINE_ENUM( text_transform_e, text_transform );
 
-class text_placement_info : boost::noncopyable
-{
-public:
-    text_placement_info(text_placements const* parent);
-    /** Get next placement.
-      * This function is also called before the first placement is tried. */
-    virtual bool next()=0;
-    /** Get next placement position.
-      * This function is also called before the first position is used.
-      * Each class has to return at least one position!
-      * If this functions returns false the placement data should be considered invalid!
-      */
-    virtual bool next_position_only()=0;
-    virtual ~text_placement_info() {}
-    void init(string_info *info_, double scale_factor_,
-              unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
-
-    /* NOTE: Values are public and non-virtual to avoid any performance problems.
-             Make sure to add each new attribute in the constructor of this
-             class, too or you will run into problems.
-       TODO: Compare speed of current solutuion and adding all these parameters to a struct. */
+struct text_properties {
+    text_properties();
     expression_ptr name;
 
     std::string face_name;
@@ -154,18 +135,37 @@ public:
     unsigned wrap_width;
     unsigned char wrap_char;
     text_transform_e text_transform;
-
     color fill;
     color halo_fill;
     double halo_radius;
+};
+
+class text_placement_info : boost::noncopyable
+{
+public:
+    text_placement_info(text_placements const* parent);
+    /** Get next placement.
+      * This function is also called before the first placement is tried. */
+    virtual bool next()=0;
+    /** Get next placement position.
+      * This function is also called before the first position is used.
+      * Each class has to return at least one position!
+      * If this functions returns false the placement data should be considered invalid!
+      */
+    virtual bool next_position_only()=0;
+    virtual ~text_placement_info() {}
+    void init(string_info *info_, double scale_factor_,
+              unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
+
+    text_properties properties;
     double scale_factor;
     bool has_dimensions;
     std::pair<double, double> dimensions;
     void set_scale_factor(double factor) { scale_factor = factor; }
     double get_scale_factor() { return scale_factor; }
-    double get_actual_label_spacing() { return scale_factor * label_spacing; }
-    double get_actual_minimum_distance() { return scale_factor * minimum_distance; }
-    double get_actual_minimum_padding() { return scale_factor * minimum_padding; }
+    double get_actual_label_spacing() { return scale_factor * properties.label_spacing; }
+    double get_actual_minimum_distance() { return scale_factor * properties.minimum_distance; }
+    double get_actual_minimum_padding() { return scale_factor * properties.minimum_padding; }
 
     bool collect_extents;
     string_info *info; // should only be used for finding placement. doesn't necessarily match placements.vertex() values
@@ -184,42 +184,7 @@ public:
     virtual text_placement_info_ptr get_placement_info() const =0;
 
     virtual ~text_placements() {}
-    expression_ptr name;
-
-    std::string face_name;
-    font_set fontset;
-    unsigned text_size;
-
-    expression_ptr orientation;
-
-    position anchor;
-    position displacement;
-    label_placement_e label_placement;
-    horizontal_alignment_e halign;
-    justify_alignment_e jalign;
-    vertical_alignment_e valign;
-
-
-    unsigned line_spacing;
-    unsigned character_spacing;
-    unsigned label_spacing;
-    unsigned label_position_tolerance;
-    bool avoid_edges;
-    double minimum_distance;
-    double minimum_padding;
-    double max_char_angle_delta;
-    bool force_odd_labels;
-    bool allow_overlap;
-    double text_opacity;
-    unsigned text_ratio;
-    bool wrap_before;
-    unsigned wrap_width;
-    unsigned char wrap_char;
-    text_transform_e text_transform;
-
-    color fill;
-    color halo_fill;
-    double halo_radius;
+    text_properties properties;
 
     friend class text_placement_info;
 };

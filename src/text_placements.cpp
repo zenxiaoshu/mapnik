@@ -37,7 +37,7 @@ using phoenix::push_back;
 using phoenix::ref;
 using qi::_1;
 
-text_placements::text_placements() :
+text_properties::text_properties() :
     text_size(10),
     anchor(0.0,0.5),
     label_placement(POINT_PLACEMENT),
@@ -66,38 +66,15 @@ text_placements::text_placements() :
 {
 }
 
+text_placements::text_placements() : properties()
+{
+}
+
 
 /************************************************************************/
 
 text_placement_info::text_placement_info(text_placements const* parent):
-    name(parent->name),
-    face_name(parent->face_name),
-    text_size(parent->text_size),
-    anchor(parent->anchor),
-    displacement(parent->displacement),
-    label_placement(parent->label_placement),
-    halign(parent->halign),
-    jalign(parent->jalign),
-    valign(parent->valign),
-    line_spacing(parent->line_spacing),
-    character_spacing(parent->character_spacing),
-    label_spacing(parent->label_spacing),
-    label_position_tolerance(parent->label_position_tolerance),
-    avoid_edges(parent->avoid_edges),
-    minimum_distance(parent->minimum_distance),
-    minimum_padding(parent->minimum_padding),
-    max_char_angle_delta(parent->max_char_angle_delta),
-    force_odd_labels(parent->force_odd_labels),
-    allow_overlap(parent->allow_overlap),
-    text_opacity(parent->text_opacity),
-    text_ratio(parent->text_ratio),
-    wrap_before(parent->wrap_before),
-    wrap_width(parent->wrap_width),
-    wrap_char(parent->wrap_char),
-    text_transform(parent->text_transform),
-    fill(parent->fill),
-    halo_fill(parent->halo_fill),
-    halo_radius(parent->halo_radius),
+    properties(parent->properties),
     scale_factor(1),
     has_dimensions(false),
     collect_extents(false)
@@ -139,10 +116,10 @@ bool text_placement_info_simple::next()
 {
     position_state = 0;
     if (state == 0) {
-        text_size = parent_->text_size;
+        properties.text_size = parent_->properties.text_size;
     } else {
         if (state > parent_->text_sizes_.size()) return false;
-        text_size = parent_->text_sizes_[state-1];
+        properties.text_size = parent_->text_sizes_[state-1];
     }
     state++;
     return true;
@@ -150,40 +127,42 @@ bool text_placement_info_simple::next()
 
 bool text_placement_info_simple::next_position_only()
 {
+    const position &pdisp = parent_->properties.displacement;
+    position &displacement = properties.displacement;
     if (position_state >= parent_->direction_.size()) return false;
     directions_t dir = parent_->direction_[position_state];
     switch (dir) {
     case EXACT_POSITION:
-        displacement = parent_->displacement;
+        displacement = pdisp;
         break;
     case NORTH:
-        displacement = boost::make_tuple(0, -abs(parent_->displacement.get<1>()));
+        displacement = boost::make_tuple(0, -abs(pdisp.get<1>()));
         break;
     case EAST:
-        displacement = boost::make_tuple(abs(parent_->displacement.get<0>()), 0);
+        displacement = boost::make_tuple(abs(pdisp.get<0>()), 0);
         break;
     case SOUTH:
-        displacement = boost::make_tuple(0, abs(parent_->displacement.get<1>()));
+        displacement = boost::make_tuple(0, abs(pdisp.get<1>()));
         break;
     case WEST:
-        displacement = boost::make_tuple(-abs(parent_->displacement.get<0>()), 0);
+        displacement = boost::make_tuple(-abs(pdisp.get<0>()), 0);
         break;
     case NORTHEAST:
         displacement = boost::make_tuple(
-                     abs(parent_->displacement.get<0>()),
-                    -abs(parent_->displacement.get<1>()));
+                     abs(pdisp.get<0>()),
+                    -abs(pdisp.get<1>()));
     case SOUTHEAST:
         displacement = boost::make_tuple(
-                     abs(parent_->displacement.get<0>()),
-                     abs(parent_->displacement.get<1>()));
+                     abs(pdisp.get<0>()),
+                     abs(pdisp.get<1>()));
     case NORTHWEST:
         displacement = boost::make_tuple(
-                    -abs(parent_->displacement.get<0>()),
-                    -abs(parent_->displacement.get<1>()));
+                    -abs(pdisp.get<0>()),
+                    -abs(pdisp.get<1>()));
     case SOUTHWEST:
         displacement = boost::make_tuple(
-                    -abs(parent_->displacement.get<0>()),
-                     abs(parent_->displacement.get<1>()));
+                    -abs(pdisp.get<0>()),
+                     abs(pdisp.get<1>()));
         break;
     default:
         std::cerr << "WARNING: Unknown placement\n";

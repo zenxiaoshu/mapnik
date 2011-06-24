@@ -36,52 +36,52 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
 
     bool placement_found = false;
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    text_properties &p = placement->properties;
     while (!placement_found && placement->next())
     {
-        expression_ptr name_expr = placement->name;
+        expression_ptr name_expr = p.name;
         if (!name_expr) return;
         value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
         UnicodeString text = result.to_unicode();
 
-        if (placement->text_transform == UPPERCASE)
+        if (p.text_transform == UPPERCASE)
         {
             text = text.toUpper();
         }
-        else if (placement->text_transform == LOWERCASE)
+        else if (p.text_transform == LOWERCASE)
         {
             text = text.toLower();
         }
-        else if (placement->text_transform == CAPITALIZE)
+        else if (p.text_transform == CAPITALIZE)
         {
             text = text.toTitle(NULL);
         }
 
         if (text.length() <= 0) continue;
-        color const& fill = placement->fill;
 
         face_set_ptr faces;
-        if (placement->fontset.size() > 0)
+        if (p.fontset.size() > 0)
         {
-            faces = font_manager_.get_face_set(placement->fontset);
+            faces = font_manager_.get_face_set(p.fontset);
         }
         else
         {
-            faces = font_manager_.get_face_set(placement->face_name);
+            faces = font_manager_.get_face_set(p.face_name);
         }
 
         stroker_ptr strk = font_manager_.get_stroker();
         if (!(faces->size() > 0 && strk))
         {
-            throw config_error("Unable to find specified font face '" + placement->face_name + "'");
+            throw config_error("Unable to find specified font face '" + p.face_name + "'");
         }
         text_renderer<T> ren(pixmap_, faces, *strk);
-        ren.set_pixel_size(placement->text_size * scale_factor_);
-        ren.set_fill(fill);
-        ren.set_halo_fill(placement->halo_fill);
-        ren.set_halo_radius(placement->halo_radius * scale_factor_);
-        ren.set_opacity(placement->text_opacity);
+        ren.set_pixel_size(p.text_size * scale_factor_);
+        ren.set_fill(p.fill);
+        ren.set_halo_fill(p.halo_fill);
+        ren.set_halo_radius(p.halo_radius * scale_factor_);
+        ren.set_opacity(p.text_opacity);
 
-        box2d<double> dims(0,0,width_,height_);
+        box2d<double> dims(0, 0, width_, height_);
         placement_finder<label_collision_detector4> finder(detector_, dims);
 
         string_info info(text);
@@ -100,13 +100,13 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                 if (writer.first)
                     placement->collect_extents = true; // needed for inmem metawriter
 
-                if (placement->label_placement == POINT_PLACEMENT ||
-                    placement->label_placement == INTERIOR_PLACEMENT)
+                if (p.label_placement == POINT_PLACEMENT ||
+                    p.label_placement == INTERIOR_PLACEMENT)
                 {
                     double label_x=0.0;
                     double label_y=0.0;
                     double z=0.0;
-                    if (placement->label_placement == POINT_PLACEMENT)
+                    if (p.label_placement == POINT_PLACEMENT)
                         geom.label_position(&label_x, &label_y);
                     else
                         geom.label_interior_position(&label_x, &label_y);
@@ -114,7 +114,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                     t_.forward(&label_x,&label_y);
 
                     double angle = 0.0;
-                    expression_ptr angle_expr = placement->orientation;
+                    expression_ptr angle_expr = p.orientation;
                     if (angle_expr)
                     {
                         // apply rotation
@@ -123,11 +123,11 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                     }
 
                     finder.find_point_placement(*placement, label_x,label_y,
-                                                angle, placement->line_spacing,
-                                                placement->character_spacing);
+                                                angle, p.line_spacing,
+                                                p.character_spacing);
                     finder.update_detector(*placement);
                 }
-                else if ( geom.num_points() > 1 && placement->label_placement == LINE_PLACEMENT)
+                else if ( geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
                 {
                     path_type path(t_,geom,prj_trans);
                     finder.find_line_placements<path_type>(*placement, path);

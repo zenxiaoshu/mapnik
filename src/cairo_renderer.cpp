@@ -1073,6 +1073,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
     typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    text_properties &p = placement->properties;
     placement->next();
     placement->next_position_only();
 
@@ -1135,7 +1136,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
             placement_finder<label_collision_detector4> finder(detector_);
 
-            faces->set_pixel_sizes(placement->text_size);
+            faces->set_pixel_sizes(p.text_size);
             faces->get_string_info(info);
 
             int w = (*marker)->width();
@@ -1216,7 +1217,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                     context.add_text(placement->placements[ii],
                                                      face_manager_,
                                                      faces,
-                                                     placement->text_size,
+                                                     p.text_size,
                                                      sym.get_fill(),
                                                      sym.get_halo_radius(),
                                                      sym.get_halo_fill()
@@ -1253,7 +1254,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                             context.add_text(placement->placements[ii],
                                              face_manager_,
                                              faces,
-                                             placement->text_size,
+                                             p.text_size,
                                              sym.get_fill(),
                                              sym.get_halo_radius(),
                                              sym.get_halo_fill()
@@ -1516,6 +1517,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
 
     bool placement_found = false;
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    text_properties &p = placement->properties;
     while (!placement_found && placement->next())
     {
         expression_ptr name_expr = sym.get_name();
@@ -1556,7 +1558,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
         cairo_context context(context_);
         string_info info(text);
 
-        faces->set_pixel_sizes(placement->text_size);
+        faces->set_pixel_sizes(p.text_size);
         faces->get_string_info(info);
 
         placement_finder<label_collision_detector4> finder(detector_);
@@ -1614,7 +1616,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                     context.add_text(placement->placements[ii],
                                      face_manager_,
                                      faces,
-                                     placement->text_size,
+                                     p.text_size,
                                      sym.get_fill(),
                                      sym.get_halo_radius(),
                                      sym.get_halo_fill()

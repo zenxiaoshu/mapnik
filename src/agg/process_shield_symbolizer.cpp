@@ -49,6 +49,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
     placement->next();
     placement->next_position_only();
+    text_properties &p = placement->properties;
 
     UnicodeString text;
     if( sym.get_no_text() )
@@ -161,8 +162,8 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
 
                             finder.find_point_placement(*placement,
                                                         label_x, label_y, 0.0,
-                                                        placement->line_spacing,
-                                                        placement->character_spacing);
+                                                        p.line_spacing,
+                                                        p.character_spacing);
 
                             // check to see if image overlaps anything too, there is only ever 1 placement found for points and verticies
                             if( placement->placements.size() > 0)
