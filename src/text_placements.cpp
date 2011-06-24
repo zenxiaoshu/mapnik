@@ -124,6 +124,14 @@ text_placement_info_ptr text_placements_dummy::get_placement_info() const
     return text_placement_info_ptr(new text_placement_info_dummy(this));
 }
 
+void text_placement_info::init(string_info *info_, double scale_factor_,
+                               unsigned w, unsigned h, bool has_dimensions_)
+{
+    info = info_;
+    scale_factor = scale_factor_;
+    dimensions = std::make_pair(w, h);
+    has_dimensions = has_dimensions_;
+}
 
 /************************************************************************/
 

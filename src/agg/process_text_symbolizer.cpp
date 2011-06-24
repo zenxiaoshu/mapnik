@@ -96,7 +96,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
             while (!placement_found && placement->next_position_only())
             {
-                placement->set_scale_factor(scale_factor_);
+                placement->init(&info, scale_factor_);
                 if (writer.first)
                     placement->collect_extents = true; // needed for inmem metawriter
 

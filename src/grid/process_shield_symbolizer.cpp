@@ -137,9 +137,7 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
                     {
                         // for every vertex, try and place a shield/text
                         geom.rewind(0);
-                        placement->set_scale_factor(scale_factor_);
-                        placement->dimensions = std::make_pair(w, h);
-                        placement->has_dimensions = false; //TODO: Why?
+                        placement->init(&info, scale_factor_, w, h, false);
                         position const& pos = sym.get_displacement();
                         position const& shield_pos = sym.get_shield_displacement();
                         for( unsigned jj = 0; jj < geom.num_points(); jj++ )
@@ -206,9 +204,7 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
 
                     else if (geom.num_points() > 1 && how_placed == LINE_PLACEMENT)
                     {
-                        placement->set_scale_factor(scale_factor_);
-                        placement->dimensions = std::make_pair(w, h);
-                        placement->has_dimensions = true;
+                        placement->init(&info, scale_factor_, w, h, true);
 
                         finder.find_point_placements<path_type>(*placement, path);
 

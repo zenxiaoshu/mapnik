@@ -1155,9 +1155,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                     {
                         // for every vertex, try and place a shield/text
                         geom.rewind(0);
-                        placement->set_scale_factor(1.0);
-                        placement->dimensions = std::make_pair(w, h);
-                        placement->has_dimensions = false; //TODO: Why?
+                        placement->init(&info, 1.0, w, h, false);
                         if (writer.first)
                             placement->collect_extents = true; // needed for inmem metawriter
                         position const& pos = sym.get_displacement();
@@ -1236,9 +1234,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                     }
                     else if (geom.num_points() > 1 && how_placed == LINE_PLACEMENT)
                     {
-                        placement->set_scale_factor(1.0);
-                        placement->dimensions = std::make_pair(w, h);
-                        placement->has_dimensions = true;
+                        placement->init(&info, 1.0, w, h, true);
 
                         finder.find_point_placements<path_type>(*placement, path);
 
@@ -1574,7 +1570,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
             if (geom.num_points() == 0) continue;// don't bother with empty geometries
             while (!placement_found && placement->next_position_only())
             {
-                placement->set_scale_factor(1.0);
+                placement->init(&info, 1.0);
                 if (writer.first)
                     placement->collect_extents = true; // needed for inmem metawriter
 

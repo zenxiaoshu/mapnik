@@ -115,6 +115,8 @@ public:
       */
     virtual bool next_position_only()=0;
     virtual ~text_placement_info() {}
+    void init(string_info *info_, double scale_factor_,
+              unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
 
     /* NOTE: Values are public and non-virtual to avoid any performance problems.
              Make sure to add each new attribute in the constructor of this
