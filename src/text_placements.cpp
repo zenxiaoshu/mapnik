@@ -22,11 +22,14 @@
 
 #include <mapnik/text_placements.hpp>
 #include <mapnik/text_placements_simple.hpp>
+#include <mapnik/text_placements_list.hpp>
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_stl.hpp>
+#include <boost/optional.hpp>
+#include <mapnik/ptree_helpers.hpp>
 
 namespace mapnik {
 
@@ -36,14 +39,15 @@ using boost::spirit::ascii::space;
 using phoenix::push_back;
 using phoenix::ref;
 using qi::_1;
+using boost::optional;
 
 text_properties::text_properties() :
     text_size(10),
     anchor(0.0,0.5),
     label_placement(POINT_PLACEMENT),
-    halign(H_MIDDLE),
+    halign(H_AUTO),
     jalign(J_MIDDLE),
-    valign(V_MIDDLE),
+    valign(V_AUTO),
     line_spacing(0),
     character_spacing(0),
     label_spacing(0),
@@ -64,6 +68,67 @@ text_properties::text_properties() :
     halo_fill(color(255,255,255)),
     halo_radius(0)
 {
+}
+
+void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym, bool strict)
+{
+    optional<std::string> face_name_ = get_opt_attr<std::string>(sym, "face-name");
+    if (face_name_) face_name = *face_name_;
+    optional<std::string> fontset_name_ = get_opt_attr<std::string>(sym, "fontset-name");
+    optional<unsigned> text_size_ = get_opt_attr<unsigned>(sym, "size");
+    if (text_size_) text_size = *text_size_;
+    optional<color> fill_ = get_opt_attr<color>(sym, "fill");
+    if (fill_) fill = *fill_;
+    optional<label_placement_e> placement_ = get_opt_attr<label_placement_e>(sym, "placement");
+    if (placement_) label_placement = *placement_;
+    optional<vertical_alignment_e> valign_ = get_opt_attr<vertical_alignment_e>(sym, "vertical-alignment");
+    if (valign_) valign = *valign_;
+    optional<color> halo_fill_ = get_opt_attr<color>(sym, "halo-fill");
+    if (halo_fill_) halo_fill = *halo_fill_;
+    optional<double> halo_radius_ = get_opt_attr<double>(sym, "halo-radius");
+    if (halo_radius_) halo_radius = *halo_radius_;
+    optional<unsigned> text_ratio_ = get_opt_attr<unsigned>(sym, "text-ratio");
+    if (text_ratio_) text_ratio = *text_ratio_;
+    optional<unsigned> wrap_width_ = get_opt_attr<unsigned>(sym, "wrap-width");
+    if (wrap_width_) wrap_width = *wrap_width_;
+    optional<boolean> wrap_before_ = get_opt_attr<boolean>(sym, "wrap-before");
+    if (wrap_before_) wrap_before = *wrap_before_;
+    optional<text_transform_e> tconvert_ = get_opt_attr<text_transform_e>(sym, "text-transform");
+    if (tconvert_) text_transform = *tconvert_;
+    optional<unsigned> line_spacing_ = get_opt_attr<unsigned>(sym, "line-spacing");
+    if (line_spacing_) line_spacing = *line_spacing_;
+    optional<unsigned> label_position_tolerance_ = get_opt_attr<unsigned>(sym, "label-position-tolerance");
+    if (label_position_tolerance_) label_position_tolerance = *label_position_tolerance_;
+    optional<unsigned> character_spacing_ = get_opt_attr<unsigned>(sym, "character-spacing");
+    if (character_spacing_) character_spacing = *character_spacing_;
+    optional<unsigned> spacing_ = get_opt_attr<unsigned>(sym, "spacing");
+    if (spacing_) label_spacing = *spacing_;
+    optional<unsigned> minimum_distance_ = get_opt_attr<unsigned>(sym, "minimum-distance");
+    if (minimum_distance_) minimum_distance = *minimum_distance_;
+    optional<unsigned> min_padding_ = get_opt_attr<unsigned>(sym, "minimum-padding");
+    if (min_padding_) minimum_padding = *min_padding_;
+    optional<boolean> avoid_edges_ = get_opt_attr<boolean>(sym, "avoid-edges");
+    if (avoid_edges_) avoid_edges = *avoid_edges_;
+    optional<boolean> allow_overlap_ = get_opt_attr<boolean>(sym, "allow-overlap");
+    if (allow_overlap_) allow_overlap = *allow_overlap_;
+    optional<double> opacity_ = get_opt_attr<double>(sym, "opacity");
+    if (opacity_) text_opacity = *opacity_;
+    optional<horizontal_alignment_e> halign_ = get_opt_attr<horizontal_alignment_e>(sym, "horizontal-alignment");
+    if (halign_) halign = *halign_;
+    optional<justify_alignment_e> jalign_ = get_opt_attr<justify_alignment_e>(sym, "justify-alignment");
+    if (jalign_) jalign = *jalign_;
+    optional<std::string> orientation_ = get_opt_attr<std::string>(sym, "orientation");
+    if (orientation_) orientation = parse_expression(*orientation_, "utf8");
+    optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
+    if (name_) name = parse_expression(*name_, "utf8");
+    optional<double> dx = get_opt_attr<double>(sym, "dx");
+    if (dx) displacement.get<0>() = *dx;
+    optional<double> dy = get_opt_attr<double>(sym, "dy");
+    if (dy) displacement.get<1>() = *dy;
+    optional<double> max_char_angle_delta_ = get_opt_attr<double>(sym, "max-char-angle-delta");
+    if (max_char_angle_delta_) max_char_angle_delta=(*max_char_angle_delta_)*(M_PI/180);
+    optional<std::string> wrap_char_ = get_opt_attr<std::string>(sym, "wrap-character");
+    if (wrap_char_ && (*wrap_char_).size() > 0) wrap_char = ((*wrap_char_)[0]);
 }
 
 text_placements::text_placements() : properties()
@@ -232,4 +297,49 @@ text_placements_simple::text_placements_simple(std::string positions)
 {
     set_positions(positions);
 }
+
+/***************************************************************************/
+
+bool text_placement_info_list::next()
+{
+    position_state = 0;
+    if (state == 0) {
+        properties = parent_->properties;
+    } else {
+        if (state > parent_->list_.size()) return false;
+        properties = parent_->list_[state-1];
+    }
+    state++;
+    return true;
+}
+
+bool text_placement_info_list::next_position_only()
+{
+    return (position_state++ == 0);
+}
+
+text_properties & text_placements_list::add()
+{
+    text_properties &last = list_[list_.size()-1];
+    text_properties &p = list_[list_.size()]; //Add new item
+    p = last; //Preinitialize with old values
+    return p;
+}
+
+text_properties & text_placements_list::get(unsigned i)
+{
+    return list_[i];
+}
+
+text_placement_info_ptr text_placements_list::get_placement_info() const
+{
+    return text_placement_info_ptr(new text_placement_info_list(this));
+}
+
+text_placements_list::text_placements_list() : text_placements(), list_()
+{
+
+}
+
+
 } //namespace

@@ -46,6 +46,7 @@
 #include <mapnik/metawriter_factory.hpp>
 
 #include <mapnik/text_placements_simple.hpp>
+#include <mapnik/text_placements_list.hpp>
 
 // boost
 #include <boost/optional.hpp>
@@ -1190,28 +1191,34 @@ void map_parser::parse_polygon_pattern_symbolizer( rule & rule,
 
 void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
 {
-    std::stringstream s;
-    s << "name,face-name,fontset-name,size,fill,orientation,"
+    std::stringstream s_common;
+    s_common << "name,face-name,fontset-name,size,fill,orientation,"
       << "dx,dy,placement,vertical-alignment,halo-fill,"
       << "halo-radius,text-ratio,wrap-width,wrap-before,"
       << "wrap-character,text-transform,line-spacing,"
       << "label-position-tolerance,character-spacing,"
       << "spacing,minimum-distance,minimum-padding,"
       << "avoid-edges,allow-overlap,opacity,max-char-angle-delta,"
-      << "horizontal-alignment,justify-alignment,"
-      << "placements,placement-type,"
+      << "horizontal-alignment,justify-alignment";
+
+    std::stringstream s_symbolizer;
+    s_symbolizer << s_common.str() << ",placements,placement-type,"
       << "meta-writer,meta-output";
     
-    ensure_attrs(sym, "TextSymbolizer", s.str());
+    ensure_attrs(sym, "TextSymbolizer", s_symbolizer.str());
     try
     {
         text_placements_ptr placement_finder;
+        text_placements_list *list = 0;
         optional<std::string> placement_type = get_opt_attr<std::string>(sym, "placement-type");
         if (placement_type) {
             if (*placement_type == "simple") {
                 placement_finder = text_placements_ptr(
                     new text_placements_simple(
                         get_attr<std::string>(sym, "placements", "X")));
+            } else if (*placement_type == "list") {
+                list = new text_placements_list();
+                placement_finder = text_placements_ptr(list);
             } else if (*placement_type != "dummy" && *placement_type != "") {
                 throw config_error(std::string("Unknown placement type '"+*placement_type+"'"));
             }
@@ -1220,27 +1227,22 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
             placement_finder = text_placements_ptr(new text_placements_dummy());
         }
 
-        std::string name = get_attr<string>(sym, "name");
-        
-        optional<std::string> face_name =
-            get_opt_attr<std::string>(sym, "face-name");
-
-        optional<std::string> fontset_name =
-            get_opt_attr<std::string>(sym, "fontset-name");
-
-        unsigned size = get_attr(sym, "size", 10U);
-
-        color c = get_attr(sym, "fill", color(0,0,0));
-
-        text_symbolizer text_symbol = text_symbolizer(parse_expression(name, "utf8"), size, c, placement_finder);
-
-        optional<std::string> orientation = get_opt_attr<std::string>(sym, "orientation");
-        if (orientation)
-        {
-            text_symbol.set_orientation(parse_expression(*orientation, "utf8"));
+        text_symbolizer text_symbol = text_symbolizer(expression_ptr(), 10, color(0,0,0), placement_finder);
+        placement_finder->properties.set_values_from_xml(sym, strict_);
+        if (list) {
+            ptree::const_iterator symIter = sym.begin();
+            ptree::const_iterator endSym = sym.end();
+            for( ;symIter != endSym; ++symIter) {
+                if ((*symIter).first != "Placement") {
+                    throw config_error("Unknown element '"+(*symIter).first+"'");
+                }
+                ensure_attrs(symIter->second, "TextSymbolizer/Placement", s_common.str());
+                text_properties & p = list->add();
+                p.set_values_from_xml((*symIter).second);
+            }
         }
-        
-        if (fontset_name && face_name)
+
+    /*    if (fontset_name && face_name)
         {
             throw config_error(std::string("Can't have both face-name and fontset-name"));
         }
@@ -1267,151 +1269,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
         else
         {
             throw config_error(std::string("Must have face-name or fontset-name"));
-        }
-
-        double dx = get_attr(sym, "dx", 0.0);
-        double dy = get_attr(sym, "dy", 0.0);
-        text_symbol.set_displacement(dx,dy);
-
-        label_placement_e placement =
-            get_attr<label_placement_e>(sym, "placement", POINT_PLACEMENT);
-        text_symbol.set_label_placement( placement );
-
-        // vertical alignment
-        vertical_alignment_e default_vertical_alignment = V_AUTO;
-            
-        vertical_alignment_e valign = get_attr<vertical_alignment_e>(sym, "vertical-alignment", default_vertical_alignment);
-        text_symbol.set_vertical_alignment(valign);
-
-        // halo fill and radius
-        optional<color> halo_fill = get_opt_attr<color>(sym, "halo-fill");
-        if (halo_fill)
-        {
-            text_symbol.set_halo_fill( * halo_fill );
-        }
-        optional<double> halo_radius =
-            get_opt_attr<double>(sym, "halo-radius");
-        if (halo_radius)
-        {
-            text_symbol.set_halo_radius(*halo_radius);
-        }
-        
-        // text ratio and wrap width
-        optional<unsigned> text_ratio =
-            get_opt_attr<unsigned>(sym, "text-ratio");
-        if (text_ratio)
-        {
-            text_symbol.set_text_ratio(*text_ratio);
-        }
-
-        optional<unsigned> wrap_width =
-            get_opt_attr<unsigned>(sym, "wrap-width");
-        if (wrap_width)
-        {
-            text_symbol.set_wrap_width(*wrap_width);
-        }
-
-        optional<boolean> wrap_before =
-            get_opt_attr<boolean>(sym, "wrap-before");
-        if (wrap_before)
-        {
-            text_symbol.set_wrap_before(*wrap_before);
-        }
-
-        // character used to break long strings
-        optional<std::string> wrap_char =
-            get_opt_attr<std::string>(sym, "wrap-character");
-        if (wrap_char && (*wrap_char).size() > 0)
-        {
-            text_symbol.set_wrap_char((*wrap_char)[0]);
-        }
-
-        // text conversion before rendering
-        text_transform_e tconvert =
-            get_attr<text_transform_e>(sym, "text-transform", NONE);
-        text_symbol.set_text_transform(tconvert);
-
-        // spacing between text lines
-        optional<unsigned> line_spacing = get_opt_attr<unsigned>(sym, "line-spacing");
-        if (line_spacing)
-        {
-            text_symbol.set_line_spacing(*line_spacing);
-        }
-
-        // tolerance between label spacing along line
-        optional<unsigned> label_position_tolerance = get_opt_attr<unsigned>(sym, "label-position-tolerance");
-        if (label_position_tolerance)
-        {
-            text_symbol.set_label_position_tolerance(*label_position_tolerance);
-        }
-
-        // spacing between characters in text
-        optional<unsigned> character_spacing = get_opt_attr<unsigned>(sym, "character-spacing");
-        if (character_spacing)
-        {
-            text_symbol.set_character_spacing(*character_spacing);
-        }
-
-        // spacing between repeated labels on lines
-        optional<unsigned> spacing = get_opt_attr<unsigned>(sym, "spacing");
-        if (spacing)
-        {
-            text_symbol.set_label_spacing(*spacing);
-        }
-
-        // minimum distance between labels
-        optional<unsigned> min_distance = get_opt_attr<unsigned>(sym, "minimum-distance");
-        if (min_distance)
-        {
-            text_symbol.set_minimum_distance(*min_distance);
-        }
-        
-        // minimum distance from edge of the map
-        optional<unsigned> min_padding = get_opt_attr<unsigned>(sym, "minimum-padding");
-        if (min_padding)
-        {
-            text_symbol.set_minimum_padding(*min_padding);
-        }
-        
-        // do not render labels around edges
-        optional<boolean> avoid_edges =
-            get_opt_attr<boolean>(sym, "avoid-edges");
-        if (avoid_edges)
-        {
-            text_symbol.set_avoid_edges( * avoid_edges);
-        }
-
-        // allow_overlap
-        optional<boolean> allow_overlap =
-            get_opt_attr<boolean>(sym, "allow-overlap");
-        if (allow_overlap)
-        {
-            text_symbol.set_allow_overlap( * allow_overlap );
-        }
-
-        // opacity
-        optional<double> opacity =
-            get_opt_attr<double>(sym, "opacity");
-        if (opacity)
-        {
-            text_symbol.set_text_opacity( * opacity );
-        }
-        
-        // max_char_angle_delta
-        optional<double> max_char_angle_delta =
-            get_opt_attr<double>(sym, "max-char-angle-delta");
-        if (max_char_angle_delta)
-        {
-            text_symbol.set_max_char_angle_delta( (*max_char_angle_delta)*(M_PI/180));
-        }
-            
-        // horizontal alignment
-        horizontal_alignment_e halign = get_attr<horizontal_alignment_e>(sym, "horizontal-alignment", H_AUTO);
-        text_symbol.set_horizontal_alignment(halign);
-
-        // justify alignment
-        justify_alignment_e jalign = get_attr<justify_alignment_e>(sym, "justify-alignment", J_MIDDLE);
-        text_symbol.set_justify_alignment(jalign);
+        }*/
 
         parse_metawriter_in_symbolizer(text_symbol, sym);
         rule.append(text_symbol);

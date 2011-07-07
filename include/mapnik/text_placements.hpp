@@ -39,6 +39,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace mapnik {
 
@@ -103,6 +104,7 @@ DEFINE_ENUM( text_transform_e, text_transform );
 
 struct text_properties {
     text_properties();
+    void set_values_from_xml(boost::property_tree::ptree const &sym, bool strict=false);
     expression_ptr name;
 
     std::string face_name;
