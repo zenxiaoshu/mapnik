@@ -1228,49 +1228,21 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
         }
 
         text_symbolizer text_symbol = text_symbolizer(expression_ptr(), 10, color(0,0,0), placement_finder);
-        placement_finder->properties.set_values_from_xml(sym, strict_);
+        placement_finder->properties.set_values_from_xml(sym, fontsets_);
+        if (strict_) ensure_font_face(placement_finder->properties.face_name);
         if (list) {
             ptree::const_iterator symIter = sym.begin();
             ptree::const_iterator endSym = sym.end();
             for( ;symIter != endSym; ++symIter) {
-                if ((*symIter).first != "Placement") {
-                    throw config_error("Unknown element '"+(*symIter).first+"'");
+                if (symIter->first != "Placement") {
+                    throw config_error("Unknown element '" + symIter->first + "'");
                 }
                 ensure_attrs(symIter->second, "TextSymbolizer/Placement", s_common.str());
                 text_properties & p = list->add();
-                p.set_values_from_xml((*symIter).second);
+                p.set_values_from_xml(symIter->second, fontsets_);
+                if (strict_) ensure_font_face(p.face_name);
             }
         }
-
-    /*    if (fontset_name && face_name)
-        {
-            throw config_error(std::string("Can't have both face-name and fontset-name"));
-        }
-        else if (fontset_name)
-        {
-            std::map<std::string,font_set>::const_iterator itr = fontsets_.find(*fontset_name);
-            if (itr != fontsets_.end())
-            {
-                text_symbol.set_fontset(itr->second);
-            }
-            else
-            {
-                throw config_error("Unable to find any fontset named '" + *fontset_name + "'");
-            }
-        }
-        else if (face_name)
-        {
-            if ( strict_ )
-            {
-                ensure_font_face(*face_name);
-            }
-            text_symbol.set_face_name(*face_name);
-        }
-        else
-        {
-            throw config_error(std::string("Must have face-name or fontset-name"));
-        }*/
-
         parse_metawriter_in_symbolizer(text_symbol, sym);
         rule.append(text_symbol);
     }

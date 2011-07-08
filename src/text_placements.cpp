@@ -70,11 +70,8 @@ text_properties::text_properties() :
 {
 }
 
-void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym, bool strict)
+void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets)
 {
-    optional<std::string> face_name_ = get_opt_attr<std::string>(sym, "face-name");
-    if (face_name_) face_name = *face_name_;
-    optional<std::string> fontset_name_ = get_opt_attr<std::string>(sym, "fontset-name");
     optional<unsigned> text_size_ = get_opt_attr<unsigned>(sym, "size");
     if (text_size_) text_size = *text_size_;
     optional<color> fill_ = get_opt_attr<color>(sym, "fill");
@@ -117,6 +114,7 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
     if (halign_) halign = *halign_;
     optional<justify_alignment_e> jalign_ = get_opt_attr<justify_alignment_e>(sym, "justify-alignment");
     if (jalign_) jalign = *jalign_;
+    /* Attributes needing special care */
     optional<std::string> orientation_ = get_opt_attr<std::string>(sym, "orientation");
     if (orientation_) orientation = parse_expression(*orientation_, "utf8");
     optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
@@ -129,6 +127,28 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
     if (max_char_angle_delta_) max_char_angle_delta=(*max_char_angle_delta_)*(M_PI/180);
     optional<std::string> wrap_char_ = get_opt_attr<std::string>(sym, "wrap-character");
     if (wrap_char_ && (*wrap_char_).size() > 0) wrap_char = ((*wrap_char_)[0]);
+    optional<std::string> face_name_ = get_opt_attr<std::string>(sym, "face-name");
+    if (face_name_)
+    {
+        face_name = *face_name_;
+    }
+    optional<std::string> fontset_name_ = get_opt_attr<std::string>(sym, "fontset-name");
+    std::map<std::string,font_set>::const_iterator itr = fontsets.find(*fontset_name_);
+    if (itr != fontsets.end())
+    {
+        fontset = itr->second;
+    } else
+    {
+        throw config_error("Unable to find any fontset named '" + *fontset_name_ + "'");
+    }
+    if (!face_name.empty() && !fontset.get_name().empty())
+    {
+        throw config_error(std::string("Can't have both face-name and fontset-name"));
+    }
+    if (face_name.empty() && fontset.get_name().empty())
+    {
+        throw config_error(std::string("Must have face-name or fontset-name"));
+    }
 }
 
 text_placements::text_placements() : properties()
