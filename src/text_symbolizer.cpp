@@ -100,7 +100,7 @@ text_symbolizer::text_symbolizer(expression_ptr name, std::string const& face_na
 
 text_symbolizer::text_symbolizer(expression_ptr name, unsigned size, color const& fill,
                                  text_placements_ptr placements)
-    : symbolizer_base()
+    : symbolizer_base(), placement_options_(placements)
 {
     set_name(name);
     set_text_size(size);
