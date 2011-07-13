@@ -216,12 +216,18 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                 boost::filesystem::path xml_path(filename_);
                 // TODO - should we make this absolute?
                 #if (BOOST_FILESYSTEM_VERSION == 3)
+                #if 0
                     std::string const& base = xml_path.parent_path().string();
+                #else
+                //For some reason boost sometimes returns wrong strings and crashes on my system (Herm)
+                    std::string const& base = ".";
+                #endif
+
                 #else // v2
                     std::string const& base = xml_path.branch_path().string();
                 #endif
 
-                map.set_base_path( base ); 
+                map.set_base_path( base );
             }
 
             optional<color> bgcolor = get_opt_attr<color>(map_node, "background-color");
@@ -317,7 +323,6 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
             ex.append_context("(in node Map)");
             throw;
         }
-        
         parse_map_include( map, map_node );
     }
     catch (const boost::property_tree::ptree_bad_path &)
@@ -1234,7 +1239,9 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
             ptree::const_iterator symIter = sym.begin();
             ptree::const_iterator endSym = sym.end();
             for( ;symIter != endSym; ++symIter) {
-                if (symIter->first != "Placement") {
+                if (symIter->first == "<xmlattr>") continue;
+                if (symIter->first != "Placement")
+                {
                     throw config_error("Unknown element '" + symIter->first + "'");
                 }
                 ensure_attrs(symIter->second, "TextSymbolizer/Placement", s_common.str());
