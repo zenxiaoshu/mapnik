@@ -133,13 +133,15 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
         face_name = *face_name_;
     }
     optional<std::string> fontset_name_ = get_opt_attr<std::string>(sym, "fontset-name");
-    std::map<std::string,font_set>::const_iterator itr = fontsets.find(*fontset_name_);
-    if (itr != fontsets.end())
-    {
-        fontset = itr->second;
-    } else
-    {
-        throw config_error("Unable to find any fontset named '" + *fontset_name_ + "'");
+    if (fontset_name_) {
+        std::map<std::string,font_set>::const_iterator itr = fontsets.find(*fontset_name_);
+        if (itr != fontsets.end())
+        {
+            fontset = itr->second;
+        } else
+        {
+            throw config_error("Unable to find any fontset named '" + *fontset_name_ + "'");
+        }
     }
     if (!face_name.empty() && !fontset.get_name().empty())
     {
