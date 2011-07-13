@@ -43,18 +43,6 @@ import os
 import sys
 import warnings
 
-try:
-    from ctypes import RTLD_NOW, RTLD_GLOBAL
-except ImportError:
-    try:
-        from DLFCN import RTLD_NOW, RTLD_GLOBAL
-    except ImportError:
-        RTLD_NOW = 2
-        RTLD_GLOBAL = 256
-
-flags = sys.getdlopenflags()
-sys.setdlopenflags(RTLD_NOW | RTLD_GLOBAL)
-
 from _mapnik2 import *
 from paths import inputpluginspath, fontscollectionpath
 
@@ -243,22 +231,10 @@ class _Projection(Projection,_injector):
         """
         return inverse_(obj,self)
 
-def get_types(num):
-    dispatch = {1: int,
-                2: float,
-                3: float,
-                4: str,
-                5: Geometry2d,
-                6: object}
-    return dispatch.get(num)
-
 class _Datasource(Datasource,_injector):
 
     def describe(self):
         return Describe(self)
-
-    def field_types(self):
-        return map(get_types,self._field_types())
 
     def all_features(self,fields=None):
         query = Query(self.envelope())
@@ -316,10 +292,9 @@ class _Feature(Feature, _injector):
         for k, v in properties.iteritems():
             self[k] = v
     
-class _Color(Color,_injector):
-
-    def __repr__(self):
-        return "Color(%r)" % self.to_hex_string()
+    class _Color(Color,_injector):
+        def __repr__(self):
+            return "Color(R=%d,G=%d,B=%d,A=%d)" % (self.r,self.g,self.b,self.a)
 
 class _Symbolizers(Symbolizers,_injector):
 
@@ -661,9 +636,6 @@ def register_fonts(path=fontscollectionpath,valid_extensions=['.ttf','.otf','.tt
 register_plugins()
 register_fonts()
 
-#set dlopen flags back to the original
-sys.setdlopenflags(flags)
-
 # Explicitly export API members to avoid namespace pollution
 # and ensure correct documentation processing
 __all__ = [
@@ -673,6 +645,7 @@ __all__ = [
     #'ColorBand',
     'CompositeOp',
     'DatasourceCache',
+    'MemoryDatasource',
     'Box2d',
     'Feature',
     'Featureset',
@@ -681,6 +654,8 @@ __all__ = [
     'GlyphSymbolizer',
     'Image',
     'ImageView',
+    'Grid',
+    'GridView',
     'Layer',
     'Layers',
     'LinePatternSymbolizer',

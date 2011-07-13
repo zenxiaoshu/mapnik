@@ -216,15 +216,9 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                 boost::filesystem::path xml_path(filename_);
                 // TODO - should we make this absolute?
                 #if (BOOST_FILESYSTEM_VERSION == 3)
-                #if 0
-                    std::string const& base = xml_path.parent_path().string();
-                #else
-                //For some reason boost sometimes returns wrong strings and crashes on my system (Herm)
-                    std::string const& base = ".";
-                #endif
-
+                    std::string base = xml_path.parent_path().string();
                 #else // v2
-                    std::string const& base = xml_path.branch_path().string();
+                    std::string base = xml_path.branch_path().string();
                 #endif
 
                 map.set_base_path( base );
@@ -236,7 +230,7 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                 map.set_background( * bgcolor );
             }
             
-            optional<std::string> image_filename = get_opt_attr<string>(map_node, "background-image");
+            optional<std::string> image_filename = get_opt_attr<std::string>(map_node, "background-image");
             if (image_filename)
             {                
                 map.set_background_image(ensure_relative_to_xml(image_filename));
@@ -362,13 +356,13 @@ void map_parser::parse_map_include( Map & map, ptree const & include )
         }
         else if (v.first == "FileSource")
         {
-            std::string name = get_attr<string>( v.second, "name");
-            std::string value = get_value<string>( v.second, "");
+            std::string name = get_attr<std::string>( v.second, "name");
+            std::string value = get_value<std::string>( v.second, "");
             file_sources_[name] = value;
         }
         else if (v.first == "Datasource")
         {
-            std::string name = get_attr(v.second, "name", string("Unnamed"));
+            std::string name = get_attr(v.second, "name", std::string("Unnamed"));
             parameters params;
             ptree::const_iterator paramIter = v.second.begin();
             ptree::const_iterator endParam = v.second.end();
@@ -378,8 +372,8 @@ void map_parser::parse_map_include( Map & map, ptree const & include )
 
                 if (paramIter->first == "Parameter")
                 {
-                    std::string name = get_attr<string>(param, "name");
-                    std::string value = get_value<string>( param,
+                    std::string name = get_attr<std::string>(param, "name");
+                    std::string value = get_value<std::string>( param,
                                                            "datasource parameter");
                     params[name] = value;
                 }
@@ -412,10 +406,10 @@ void map_parser::parse_style( Map & map, ptree const & sty )
       << "filter-mode";
     ensure_attrs(sty, "Style", s.str());
 
-    string name("<missing name>");
+    std::string name("<missing name>");
     try
     {
-        name = get_attr<string>(sty, "name");
+        name = get_attr<std::string>(sty, "name");
         feature_type_style style;
 
         filter_mode_e filter_mode = get_attr<filter_mode_e>(sty, "filter-mode", FILTER_ALL);
@@ -443,9 +437,9 @@ void map_parser::parse_style( Map & map, ptree const & sty )
 
     } catch (const config_error & ex) {
         if ( ! name.empty() ) {
-            ex.append_context(string("in style '") + name + "'");
+            ex.append_context(std::string("in style '") + name + "'");
         }
-        ex.append_context(string("in map '") + filename_ + "'");
+        ex.append_context(std::string("in map '") + filename_ + "'");
         throw;
     }
 }
@@ -453,19 +447,19 @@ void map_parser::parse_style( Map & map, ptree const & sty )
 void map_parser::parse_metawriter(Map & map, ptree const & pt)
 {
     ensure_attrs(pt, "MetaWriter", "name,type,file,default-output,output-empty");
-    string name("<missing name>");
+    std::string name("<missing name>");
     metawriter_ptr writer;
     try
     {
-        name = get_attr<string>(pt, "name");
+        name = get_attr<std::string>(pt, "name");
         writer = metawriter_create(pt);
         map.insert_metawriter(name, writer);
 
     } catch (const config_error & ex) {
         if (!name.empty()) {
-            ex.append_context(string("in meta writer '") + name + "'");
+            ex.append_context(std::string("in meta writer '") + name + "'");
         }
-        ex.append_context(string("in map '") + filename_ + "'");
+        ex.append_context(std::string("in map '") + filename_ + "'");
         throw;
     }
 }
@@ -473,10 +467,10 @@ void map_parser::parse_metawriter(Map & map, ptree const & pt)
 void map_parser::parse_fontset( Map & map, ptree const & fset )
 {
     ensure_attrs(fset, "FontSet", "name,Font");
-    string name("<missing name>");
+    std::string name("<missing name>");
     try
     {
-        name = get_attr<string>(fset, "name");
+        name = get_attr<std::string>(fset, "name");
         font_set fontset(name);
 
         ptree::const_iterator itr = fset.begin();
@@ -505,9 +499,9 @@ void map_parser::parse_fontset( Map & map, ptree const & fset )
         fontsets_.insert(pair<std::string, font_set>(name, fontset));
     } catch (const config_error & ex) {
         if ( ! name.empty() ) {
-            ex.append_context(string("in FontSet '") + name + "'");
+            ex.append_context(std::string("in FontSet '") + name + "'");
         }
-        ex.append_context(string("in map '") + filename_ + "'");
+        ex.append_context(std::string("in map '") + filename_ + "'");
         throw;
     }
 }
@@ -516,7 +510,7 @@ void map_parser::parse_font(font_set & fset, ptree const & f)
 {
     ensure_attrs(f, "Font", "face-name");
 
-    std::string face_name = get_attr(f, "face-name", string());
+    std::string face_name = get_attr(f, "face-name", std::string());
 
     if ( strict_ )
     {
@@ -542,7 +536,7 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
     ensure_attrs(lay, "Layer", s.str());
     try
     {
-        name = get_attr(lay, "name", string("Unnamed"));
+        name = get_attr(lay, "name", std::string("Unnamed"));
 
         // XXX if no projection is given inherit from map? [DS]
         std::string srs = get_attr(lay, "srs", map.srs());
@@ -555,13 +549,13 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
             lyr.setActive( * status );
         }
 
-        optional<std::string> title =  get_opt_attr<string>(lay, "title");
+        optional<std::string> title =  get_opt_attr<std::string>(lay, "title");
         if (title)
         {
             lyr.set_title( * title );
         }
 
-        optional<std::string> abstract =  get_opt_attr<string>(lay, "abstract");
+        optional<std::string> abstract =  get_opt_attr<std::string>(lay, "abstract");
         if (abstract)
         {
             lyr.set_abstract( * abstract );
@@ -646,8 +640,8 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
                     if (paramIter->first == "Parameter")
                     {
                         ensure_attrs(param, "Parameter", "name");
-                        std::string name = get_attr<string>(param, "name");
-                        std::string value = get_value<string>( param,
+                        std::string name = get_attr<std::string>(param, "name");
+                        std::string value = get_value<std::string>( param,
                                                                "datasource parameter");
                         params[name] = value;
                     }
@@ -724,13 +718,13 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
     std::string name;
     try
     {
-        name = get_attr( r, "name", string());
-        std::string title = get_attr( r, "title", string());
+        name = get_attr( r, "name", std::string());
+        std::string title = get_attr( r, "title", std::string());
 
         rule rule(name,title);
 
         optional<std::string> filter_expr =
-            get_opt_child<string>( r, "Filter");
+            get_opt_child<std::string>( r, "Filter");
         if (filter_expr)
         {
             // TODO - can we use encoding defined for XML document for filter expressions?
@@ -738,7 +732,7 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
         }
 
         optional<std::string> else_filter =
-            get_opt_child<string>(r, "ElseFilter");
+            get_opt_child<std::string>(r, "ElseFilter");
         if (else_filter)
         {
             rule.set_else(true);
@@ -829,7 +823,7 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
     {
         if ( ! name.empty() )
         {
-            ex.append_context(string("in rule '") + name + "' in map '" + filename_ + "')");
+            ex.append_context(std::string("in rule '") + name + "' in map '" + filename_ + "')");
         }
         throw;
     }
@@ -837,9 +831,9 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
 
 void map_parser::parse_metawriter_in_symbolizer(symbolizer_base &sym, ptree const &pt)
 {
-    optional<std::string> writer =  get_opt_attr<string>(pt, "meta-writer");
+    optional<std::string> writer =  get_opt_attr<std::string>(pt, "meta-writer");
     if (!writer) return;
-    optional<std::string> output =  get_opt_attr<string>(pt, "meta-output");
+    optional<std::string> output =  get_opt_attr<std::string>(pt, "meta-output");
     sym.add_metawriter(*writer, output);
 }
 
@@ -850,8 +844,8 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
         std::stringstream s;
         s << "file,base,allow-overlap,ignore-placement,opacity,placement,transform,meta-writer,meta-output";
         
-        optional<std::string> file =  get_opt_attr<string>(sym, "file");
-        optional<std::string> base =  get_opt_attr<string>(sym, "base");
+        optional<std::string> file =  get_opt_attr<std::string>(sym, "file");
+        optional<std::string> base =  get_opt_attr<std::string>(sym, "base");
         optional<boolean> allow_overlap =
             get_opt_attr<boolean>(sym, "allow-overlap");
         optional<boolean> ignore_placement =
@@ -859,7 +853,7 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
         optional<float> opacity =
             get_opt_attr<float>(sym, "opacity");
         
-        optional<std::string> transform_wkt = get_opt_attr<string>(sym, "transform");
+        optional<std::string> transform_wkt = get_opt_attr<std::string>(sym, "transform");
 
         if (file)
         {
@@ -906,7 +900,7 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
                         if (strict_)
                             throw config_error(ss.str()); // value_error here?
                         else
-                            clog << "### WARNING: " << ss << endl;         
+                            std::clog << "### WARNING: " << ss << endl;         
                     }
                     boost::array<double,6> matrix;
                     tr.store_to(&matrix[0]);
@@ -918,7 +912,7 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
             }
             catch (image_reader_exception const & ex )
             {
-                string msg("Failed to load image file '" + * file +
+                std::string msg("Failed to load image file '" + * file +
                            "': " + ex.what());
                 if (strict_)
                 {
@@ -926,7 +920,7 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
                 }
                 else
                 {
-                    clog << "### WARNING: " << msg << endl;
+                    std::clog << "### WARNING: " << msg << endl;
                 }
             }
 
@@ -969,9 +963,9 @@ void map_parser::parse_markers_symbolizer( rule & rule, ptree const & sym )
     try
     {
         std::string filename("");
-        optional<std::string> file =  get_opt_attr<string>(sym, "file");
-        optional<std::string> base =  get_opt_attr<string>(sym, "base");
-        optional<std::string> transform_wkt = get_opt_attr<string>(sym, "transform");
+        optional<std::string> file =  get_opt_attr<std::string>(sym, "file");
+        optional<std::string> base =  get_opt_attr<std::string>(sym, "base");
+        optional<std::string> transform_wkt = get_opt_attr<std::string>(sym, "transform");
 
         std::stringstream s;
         //s << "file,opacity,spacing,max-error,allow-overlap,placement,";
@@ -1003,14 +997,14 @@ void map_parser::parse_markers_symbolizer( rule & rule, ptree const & sym )
             }
             catch (...)
             {
-                string msg("Failed to load marker file '" + *file + "'!");
+                std::string msg("Failed to load marker file '" + *file + "'!");
                 if (strict_)
                 {
                     throw config_error(msg);
                 }
                 else
                 {
-                    clog << "### WARNING: " << msg << endl;
+                    std::clog << "### WARNING: " << msg << endl;
                 }
             }
         }
@@ -1035,7 +1029,7 @@ void map_parser::parse_markers_symbolizer( rule & rule, ptree const & sym )
                 if (strict_)
                     throw config_error(ss.str()); // value_error here?
                 else
-                    clog << "### WARNING: " << ss << endl;         
+                    std::clog << "### WARNING: " << ss << endl;         
             }
             boost::array<double,6> matrix;
             tr.store_to(&matrix[0]);
@@ -1100,8 +1094,8 @@ void map_parser::parse_line_pattern_symbolizer( rule & rule, ptree const & sym )
     ensure_attrs(sym, "LinePatternSymbolizer", "file,base,meta-writer,meta-output");
     try
     {
-        std::string file = get_attr<string>(sym, "file");
-        optional<std::string> base = get_opt_attr<string>(sym, "base");
+        std::string file = get_attr<std::string>(sym, "file");
+        optional<std::string> base = get_opt_attr<std::string>(sym, "base");
             
         try
         {
@@ -1123,7 +1117,7 @@ void map_parser::parse_line_pattern_symbolizer( rule & rule, ptree const & sym )
         }
         catch (image_reader_exception const & ex )
         {
-            string msg("Failed to load image file '" + file +
+            std::string msg("Failed to load image file '" + file +
                        "': " + ex.what());
             if (strict_)
             {
@@ -1131,7 +1125,7 @@ void map_parser::parse_line_pattern_symbolizer( rule & rule, ptree const & sym )
             }
             else
             {
-                clog << "### WARNING: " << msg << endl;
+                std::clog << "### WARNING: " << msg << endl;
             }
         }
     }
@@ -1145,11 +1139,11 @@ void map_parser::parse_line_pattern_symbolizer( rule & rule, ptree const & sym )
 void map_parser::parse_polygon_pattern_symbolizer( rule & rule,
                                                    ptree const & sym )
 {
-    ensure_attrs(sym, "PolygonPatternSymbolizer", "file,base,alignment,meta-writer,meta-output");
+    ensure_attrs(sym, "PolygonPatternSymbolizer", "file,base,alignment,gamma,meta-writer,meta-output");
     try
     {
-        std::string file = get_attr<string>(sym, "file");
-        optional<std::string> base = get_opt_attr<string>(sym, "base");
+        std::string file = get_attr<std::string>(sym, "file");
+        optional<std::string> base = get_opt_attr<std::string>(sym, "base");
             
         try
         {
@@ -1170,12 +1164,16 @@ void map_parser::parse_polygon_pattern_symbolizer( rule & rule,
             pattern_alignment_e p_alignment = get_attr<pattern_alignment_e>(sym, "alignment",LOCAL_ALIGNMENT);
             symbol.set_alignment(p_alignment);
 
+            // gamma
+            optional<double> gamma = get_opt_attr<double>(sym, "gamma");
+            if (gamma)  symbol.set_gamma(*gamma);
+
             parse_metawriter_in_symbolizer(symbol, sym);
             rule.append(symbol);
         }
         catch (image_reader_exception const & ex )
         {
-            string msg("Failed to load image file '" + file +
+            std::string msg("Failed to load image file '" + file +
                        "': " + ex.what());
             if (strict_)
             {
@@ -1183,7 +1181,7 @@ void map_parser::parse_polygon_pattern_symbolizer( rule & rule,
             }
             else
             {
-                clog << "### WARNING: " << msg << endl;
+                std::clog << "### WARNING: " << msg << endl;
             }
         }
     }
@@ -1239,7 +1237,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
             ptree::const_iterator symIter = sym.begin();
             ptree::const_iterator endSym = sym.end();
             for( ;symIter != endSym; ++symIter) {
-                if (symIter->first == "<xmlattr>") continue;
+                if (symIter->first.find('<') != std::string::npos) continue;
                 if (symIter->first != "Placement")
                 {
                     throw config_error("Unknown element '" + symIter->first + "'");
@@ -1282,7 +1280,7 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
     ensure_attrs(sym, "ShieldSymbolizer", s.str());
     try
     {
-        std::string name =  get_attr<string>(sym, "name");
+        std::string name =  get_attr<std::string>(sym, "name");
 
         optional<std::string> face_name =
             get_opt_attr<std::string>(sym, "face-name");
@@ -1293,10 +1291,10 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
         unsigned size = get_attr(sym, "size", 10U);
         color fill = get_attr(sym, "fill", color(0,0,0));
 
-        std::string image_file = get_attr<string>(sym, "file");
-        optional<std::string> base = get_opt_attr<string>(sym, "base");
+        std::string image_file = get_attr<std::string>(sym, "file");
+        optional<std::string> base = get_opt_attr<std::string>(sym, "base");
         
-        optional<std::string> transform_wkt = get_opt_attr<string>(sym, "transform");
+        optional<std::string> transform_wkt = get_opt_attr<std::string>(sym, "transform");
         try
         {
             if( base )
@@ -1482,7 +1480,7 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
                     if (strict_)
                         throw config_error(ss.str()); // value_error here?
                     else
-                        clog << "### WARNING: " << ss << endl;         
+                        std::clog << "### WARNING: " << ss << endl;         
                 }
                 boost::array<double,6> matrix;
                 tr.store_to(&matrix[0]);
@@ -1510,7 +1508,7 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
         }
         catch (image_reader_exception const & ex )
         {
-            string msg("Failed to load image file '" + image_file +
+            std::string msg("Failed to load image file '" + image_file +
                        "': " + ex.what());
             if (strict_)
             {
@@ -1518,7 +1516,7 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
             }
             else
             {
-                clog << "### WARNING: " << msg << endl;
+                std::clog << "### WARNING: " << msg << endl;
             }
         }
 
@@ -1561,7 +1559,7 @@ void map_parser::parse_stroke(stroke & strk, ptree const & sym)
     if (dash_offset) strk.set_dash_offset(*dash_offset);
 
     // stroke-dasharray
-    optional<string> str = get_opt_attr<string>(sym,"stroke-dasharray");
+    optional<std::string> str = get_opt_attr<std::string>(sym,"stroke-dasharray");
     if (str) 
     {
         tokenizer<> tok (*str);

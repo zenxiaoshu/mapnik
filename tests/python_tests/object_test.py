@@ -402,6 +402,15 @@ def test_map_pickle():
     eq_(pickle.loads(pickle.dumps(m)), m)
 
 # Color initialization
+
+@raises(Exception) # Boost.Python.ArgumentError
+def test_color_init_errors():
+    c = mapnik2.Color()
+
+@raises(RuntimeError)
+def test_color_init_errors():
+    c = mapnik2.Color('foo') # mapnik config 
+
 def test_color_init():
     c = mapnik2.Color('blue')
 
@@ -446,14 +455,16 @@ def test_color_init():
     eq_(c.g, 64)
     eq_(c.b, 128)
 
-    eq_(c.to_hex_string(), '#004080')
+    eq_(c.to_hex_string(), '#004080c0')
 
 # Color equality
 def test_color_equality():
+    
     c1 = mapnik2.Color('blue')
-    c2 = mapnik2.Color('blue')
+    c2 = mapnik2.Color(0,0,255)
     c3 = mapnik2.Color('black')
-
+    
+    
     c3.r = 0
     c3.g = 0
     c3.b = 255
@@ -465,7 +476,7 @@ def test_color_equality():
     c1 = mapnik2.Color(0, 64, 128)
     c2 = mapnik2.Color(0, 64, 128)
     c3 = mapnik2.Color(0, 0, 0)
-
+    
     c3.r = 0
     c3.g = 64
     c3.b = 128
@@ -489,11 +500,20 @@ def test_color_equality():
     c2 = mapnik2.Color(128, 128, 128, 255)
     c3 = mapnik2.Color('#808080')
     c4 = mapnik2.Color('gray')
-
+    
     eq_(c1, c2)
     eq_(c1, c3)
     eq_(c1, c4)
-
+    
+    c1 = mapnik2.Color('hsl(0, 100%, 50%)')   # red
+    c2 = mapnik2.Color('hsl(120, 100%, 50%)') # lime
+    c3 = mapnik2.Color('hsla(240, 100%, 50%, 0.5)') # semi-transparent solid blue
+    
+    eq_(c1, mapnik2.Color('red'))
+    eq_(c2, mapnik2.Color('lime'))
+    eq_(c3, mapnik2.Color(0,0,255,128))
+    
+    
 # Color pickling
 def test_color_pickle():
     c = mapnik2.Color('blue')

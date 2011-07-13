@@ -37,10 +37,15 @@ namespace boost { namespace python {
             return ::PyInt_FromLong(val);
 #endif
         }
-            
+
         PyObject * operator() (double val) const
         {
             return ::PyFloat_FromDouble(val);
+        }
+
+        PyObject * operator() (bool val) const
+        {
+            return ::PyBool_FromLong(val);
         }
             
         PyObject * operator() (UnicodeString const& s) const
@@ -54,7 +59,7 @@ namespace boost { namespace python {
             
         PyObject * operator() (mapnik::value_null const& /*s*/) const
         {
-            return NULL;
+            return Py_None;
         }
     };
 

@@ -62,7 +62,7 @@ grid_renderer<T>::grid_renderer(Map const& m, T & pixmap, double scale_factor, u
       width_(pixmap_.width()),
       height_(pixmap_.height()),
       scale_factor_(scale_factor),
-      t_(pixmap_.width(),pixmap_.width(),m.get_current_extent(),offset_x,offset_y),
+      t_(pixmap_.width(),pixmap_.height(),m.get_current_extent(),offset_x,offset_y),
       font_engine_(),
       font_manager_(font_engine_),
       detector_(box2d<double>(-m.buffer_size(), -m.buffer_size(), pixmap_.width() + m.buffer_size(), pixmap_.height() + m.buffer_size())),
