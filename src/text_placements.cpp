@@ -328,7 +328,7 @@ bool text_placement_info_list::next()
     if (state == 0) {
         properties = parent_->properties;
     } else {
-        if (state > parent_->list_.size()) return false;
+        if (state-1 >= parent_->list_.size()) return false;
         properties = parent_->list_[state-1];
     }
     state++;
@@ -342,10 +342,13 @@ bool text_placement_info_list::next_position_only()
 
 text_properties & text_placements_list::add()
 {
-    text_properties &last = list_[list_.size()-1];
-    text_properties &p = list_[list_.size()]; //Add new item
-    p = last; //Preinitialize with old values
-    return p;
+    if (list_.size()) {
+        text_properties &last = list_.back();
+        list_.push_back(last); //Preinitialize with old values
+    } else {
+        list_.push_back(properties);
+    }
+    return list_.back();
 }
 
 text_properties & text_placements_list::get(unsigned i)
@@ -358,7 +361,7 @@ text_placement_info_ptr text_placements_list::get_placement_info() const
     return text_placement_info_ptr(new text_placement_info_list(this));
 }
 
-text_placements_list::text_placements_list() : text_placements(), list_()
+text_placements_list::text_placements_list() : text_placements(), list_(0)
 {
 
 }
