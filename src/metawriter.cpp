@@ -96,7 +96,7 @@ metawriter_json_stream::~metawriter_json_stream()
 
 metawriter_json_stream::metawriter_json_stream(metawriter_properties dflt_properties)
     : metawriter(dflt_properties), count_(-1), output_empty_(true),
-      trans_(0), output_srs_("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"), f_(0)
+      trans_(0), output_srs_("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"), f_(0), pixel_coordinates(false)
 {
 }
 
@@ -104,7 +104,7 @@ void metawriter_json_stream::write_properties(Feature const& feature, metawriter
 {
     *f_ << "}," << //Close coordinates object
             "\n  \"properties\": {";
-    std::map<std::string, value> fprops = feature.props();
+    std::map<std::string, value> const &fprops = feature.props();
     int i = 0;
     BOOST_FOREACH(std::string p, properties)
     {
@@ -143,14 +143,21 @@ void metawriter_json_stream::add_box(box2d<double> const &box, Feature const& fe
 {
     /* Check if feature is in bounds. */
     if (box.maxx() < 0 || box.maxy() < 0 || box.minx() > width_ || box.miny() > height_) return;
+    double minx, miny, maxx, maxy;
+    if (pixel_coordinates_) {
+        minx = box.minx();
+        miny = box.miny();
+        maxx = box.maxx();
+        maxy = box.maxy();
+    } else {
+        //t_ coord transform has transform for box2d combined with proj_transform
+        box2d<double> transformed = t.backward(box, *trans_);
 
-    //t_ coord transform has transform for box2d combined with proj_transform
-    box2d<double> transformed = t.backward(box, *trans_);
-
-    double minx = transformed.minx();
-    double miny = transformed.miny();
-    double maxx = transformed.maxx();
-    double maxy = transformed.maxy();
+        minx = transformed.minx();
+        miny = transformed.miny();
+        maxx = transformed.maxx();
+        maxy = transformed.maxy();
+    }
 
     write_feature_header("Polygon");
 
