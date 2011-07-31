@@ -41,7 +41,7 @@
 
 namespace mapnik {
 
-struct text_placement_info;
+class text_placement_info;
 
 /** Implementation of std::map that also returns const& for operator[]. */
 class metawriter_property_map
