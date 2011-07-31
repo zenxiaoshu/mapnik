@@ -330,16 +330,6 @@ label_placement_e  text_symbolizer::get_label_placement() const
     return placement_options_->properties.label_placement;
 }
 
-void  text_symbolizer::set_anchor(double x, double y)
-{
-    placement_options_->properties.anchor = boost::make_tuple(x,y);
-}
-
-position const& text_symbolizer::get_anchor() const
-{
-    return placement_options_->properties.anchor;
-}
-
 void  text_symbolizer::set_displacement(double x, double y)
 {
     placement_options_->properties.displacement = boost::make_tuple(x,y);

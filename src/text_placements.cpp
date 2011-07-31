@@ -44,7 +44,6 @@ using boost::optional;
 
 text_properties::text_properties() :
     text_size(10),
-    anchor(0.0,0.5),
     label_placement(POINT_PLACEMENT),
     halign(H_AUTO),
     jalign(J_MIDDLE),

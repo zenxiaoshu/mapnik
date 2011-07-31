@@ -114,8 +114,6 @@ struct text_properties {
     unsigned text_size;
 
     expression_ptr orientation;
-
-    position anchor;
     position displacement;
     label_placement_e label_placement;
     horizontal_alignment_e halign;

@@ -106,8 +106,6 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base
     label_placement_e get_label_placement() const func_deprecated;
     void set_vertical_alignment(vertical_alignment_e valign);
     vertical_alignment_e get_vertical_alignment() const func_deprecated;
-    void set_anchor(double x, double y);
-    position const& get_anchor() const func_deprecated;
     void set_displacement(double x, double y);
     position const& get_displacement() const func_deprecated;
     void set_avoid_edges(bool avoid);
