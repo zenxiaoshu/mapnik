@@ -155,15 +155,21 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
 
 void text_properties::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_properties const &dfl) const
 {
-    const std::string & namestr = to_expression_string(*name);
-    if (!dfl.name || namestr != to_expression_string(*(dfl.name)) || explicit_defaults)
+    if (name) /* Should always be true, but better check it. */
     {
-        set_attr(node, "name", namestr);
+        const std::string & namestr = to_expression_string(*name);
+        if (!dfl.name || namestr != to_expression_string(*(dfl.name)) || explicit_defaults)
+        {
+            set_attr(node, "name", namestr);
+        }
     }
 
-    const std::string & orientationstr = to_expression_string(*orientation);
-    if (!dfl.orientation || orientationstr != to_expression_string(*(dfl.orientation)) || explicit_defaults) {
-        set_attr(node, "orientation", orientationstr);
+    if (orientation)
+    {
+        const std::string & orientationstr = to_expression_string(*orientation);
+        if (!dfl.orientation || orientationstr != to_expression_string(*(dfl.orientation)) || explicit_defaults) {
+            set_attr(node, "orientation", orientationstr);
+        }
     }
 
     const std::string & fontset_name = fontset.get_name();
