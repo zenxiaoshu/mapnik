@@ -45,44 +45,44 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
         value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
         UnicodeString text = result.to_unicode();
 
-        if ( sym.get_text_transform() == UPPERCASE)
+        if (p.text_transform == UPPERCASE)
         {
             text = text.toUpper();
         }
-        else if ( sym.get_text_transform() == LOWERCASE)
+        else if (p.text_transform == LOWERCASE)
         {
             text = text.toLower();
         }
-        else if ( sym.get_text_transform() == CAPITALIZE)
+        else if (p.text_transform == CAPITALIZE)
         {
             text = text.toTitle(NULL);
         }
 
-        if ( text.length() <= 0 ) continue;
-        color const& fill = sym.get_fill();
+        if (text.length() <= 0) continue;
+        color const& fill = p.fill;
 
         face_set_ptr faces;
 
-        if (sym.get_fontset().size() > 0)
+        if (p.fontset.size() > 0)
         {
-            faces = font_manager_.get_face_set(sym.get_fontset());
+            faces = font_manager_.get_face_set(p.fontset);
         }
         else
         {
-            faces = font_manager_.get_face_set(sym.get_face_name());
+            faces = font_manager_.get_face_set(p.face_name);
         }
 
         stroker_ptr strk = font_manager_.get_stroker();
         if (!(faces->size() > 0 && strk))
         {
-            throw config_error("Unable to find specified font face '" + sym.get_face_name() + "'");
+            throw config_error("Unable to find specified font face '" + p.face_name + "'");
         }
         text_renderer<T> ren(pixmap_, faces, *strk);
         ren.set_pixel_size(p.text_size * (scale_factor_ * (1.0/pixmap_.get_resolution())));
         ren.set_fill(fill);
-        ren.set_halo_fill(sym.get_halo_fill());
-        ren.set_halo_radius(sym.get_halo_radius() * scale_factor_);
-        ren.set_opacity(sym.get_text_opacity());
+        ren.set_halo_fill(p.halo_fill);
+        ren.set_halo_radius(p.halo_radius * scale_factor_);
+        ren.set_opacity(p.text_opacity);
 
         // /pixmap_.get_resolution() ?
         box2d<double> dims(0,0,width_,height_);
@@ -99,11 +99,11 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
             while (!placement_found && placement->next_position_only())
             {
                 placement->init(&info, scale_factor_);
-                if (sym.get_label_placement() == POINT_PLACEMENT ||
-                        sym.get_label_placement() == INTERIOR_PLACEMENT)
+                if (p.label_placement == POINT_PLACEMENT ||
+                        p.label_placement == INTERIOR_PLACEMENT)
                 {
                     double label_x, label_y, z=0.0;
-                    if (sym.get_label_placement() == POINT_PLACEMENT)
+                    if (p.label_placement == POINT_PLACEMENT)
                         geom.label_position(&label_x, &label_y);
                     else
                         geom.label_interior_position(&label_x, &label_y);
@@ -111,7 +111,7 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
                     t_.forward(&label_x,&label_y);
 
                     double angle = 0.0;
-                    expression_ptr angle_expr = sym.get_orientation();
+                    expression_ptr angle_expr = p.orientation;
                     if (angle_expr)
                     {
                         // apply rotation
@@ -121,12 +121,12 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
 
                     finder.find_point_placement(*placement,
                                                 label_x, label_y,
-                                                angle, sym.get_line_spacing(),
-                                                sym.get_character_spacing());
+                                                angle, p.line_spacing,
+                                                p.character_spacing);
 
                     finder.update_detector(*placement);
                 }
-                else if ( geom.num_points() > 1 && sym.get_label_placement() == LINE_PLACEMENT)
+                else if ( geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
                 {
                     path_type path(t_,geom,prj_trans);
                     finder.find_line_placements<path_type>(*placement, path);
