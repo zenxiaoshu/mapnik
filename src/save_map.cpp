@@ -453,9 +453,11 @@ private:
         if (list) {
             set_attr(node, "placment-type", "list");
             unsigned i;
+            text_properties *dfl = &(list->properties);
             for (i=0; i < list->size(); i++) {
                 ptree &placement_node = node.push_back(ptree::value_type("Placement", ptree()))->second;
-                list->get(i).to_xml(placement_node, explicit_defaults_);
+                list->get(i).to_xml(placement_node, explicit_defaults_, *dfl);
+                dfl = &(list->get(i));
             }
         }
     }

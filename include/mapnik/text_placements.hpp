@@ -106,7 +106,7 @@ DEFINE_ENUM( text_transform_e, text_transform );
 struct text_properties {
     text_properties();
     void set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets);
-    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults) const;
+    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_properties const &dfl=text_properties()) const;
     expression_ptr name;
 
     std::string face_name;
