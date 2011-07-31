@@ -10,7 +10,6 @@ import mapnik2, pickle
 # ShieldSymbolizer initialization
 def test_shieldsymbolizer_init():
     s = mapnik2.ShieldSymbolizer(mapnik2.Expression('[Field Name]'), 'DejaVu Sans Bold', 6, mapnik2.Color('#000000'), mapnik2.PathExpression('../data/images/dummy.png'))
-    eq_(s.anchor, (0.0,0.5,))
     eq_(s.displacement, (0.0,0.0))
     eq_(s.allow_overlap, False)
     eq_(s.avoid_edges, False)
@@ -27,7 +26,7 @@ def test_shieldsymbolizer_init():
     eq_(s.text_ratio, 0)
     eq_(s.text_size, 6)
     eq_(s.wrap_width, 0)
-    eq_(s.vertical_alignment, mapnik2.vertical_alignment.MIDDLE)
+    eq_(s.vertical_alignment, mapnik2.vertical_alignment.AUTO)
     eq_(s.label_spacing, 0)
     eq_(s.label_position_tolerance, 0)
     # 22.5 * M_PI/180.0 initialized by default
@@ -40,7 +39,7 @@ def test_shieldsymbolizer_init():
     
     # r1341
     eq_(s.wrap_before, False)
-    eq_(s.horizontal_alignment, mapnik2.horizontal_alignment.MIDDLE)
+    eq_(s.horizontal_alignment, mapnik2.horizontal_alignment.AUTO)
     eq_(s.justify_alignment, mapnik2.justify_alignment.MIDDLE)
     eq_(s.opacity, 1.0)
     
@@ -288,7 +287,6 @@ def test_textsymbolizer_pickle():
     eq_(ts.face_name, ts2.face_name)
     eq_(ts.allow_overlap, ts2.allow_overlap)
     eq_(ts.displacement, ts2.displacement)
-    eq_(ts.anchor, ts2.anchor)
     eq_(ts.fill, ts2.fill)
     eq_(ts.force_odd_labels, ts2.force_odd_labels)
     eq_(ts.halo_fill, ts2.halo_fill)
