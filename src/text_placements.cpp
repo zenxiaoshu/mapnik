@@ -153,8 +153,18 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
     }
 }
 
+/************************************************************************/
+
 text_placements::text_placements() : properties()
 {
+}
+
+std::set<expression_ptr> text_placements::get_all_expressions()
+{
+    std::set<expression_ptr> result;
+    result.insert(properties.name);
+    result.insert(properties.orientation);
+    return result;
 }
 
 
@@ -364,6 +374,21 @@ text_placement_info_ptr text_placements_list::get_placement_info() const
 text_placements_list::text_placements_list() : text_placements(), list_(0)
 {
 
+}
+
+std::set<expression_ptr> text_placements_list::get_all_expressions()
+{
+    std::set<expression_ptr> result;
+    result.insert(properties.name);
+    result.insert(properties.orientation);
+
+    std::vector<text_properties>::const_iterator it;
+    for (it=list_.begin(); it != list_.end(); it++)
+    {
+        result.insert(it->name);
+        result.insert(it->orientation);
+    }
+    return result;
 }
 
 

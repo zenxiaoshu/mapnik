@@ -34,6 +34,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <set>
 
 //boost
 #include <boost/tuple/tuple.hpp>
@@ -184,6 +185,10 @@ class text_placements
 public:
     text_placements();
     virtual text_placement_info_ptr get_placement_info() const =0;
+    /** Get a list of all expressions used in any placement.
+      * This function is used to collect attributes.
+      */
+    virtual std::set<expression_ptr> get_all_expressions();
 
     virtual ~text_placements() {}
     text_properties properties;
