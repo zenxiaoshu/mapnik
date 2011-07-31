@@ -23,6 +23,7 @@
 #include <mapnik/text_placements.hpp>
 #include <mapnik/text_placements_simple.hpp>
 #include <mapnik/text_placements_list.hpp>
+#include <mapnik/expression_string.hpp>
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -150,6 +151,126 @@ void text_properties::set_values_from_xml(boost::property_tree::ptree const &sym
     if (face_name.empty() && fontset.get_name().empty())
     {
         throw config_error(std::string("Must have face-name or fontset-name"));
+    }
+}
+
+void text_properties::to_xml(boost::property_tree::ptree &node, bool explicit_defaults) const
+{
+    const std::string & namestr = to_expression_string(name);
+    if (!namestr.empty()) set_attr(node, "name", namestr);
+
+    const std::string & orientationstr = to_expression_string(orientation);
+    if (!orientationstr.empty()) set_attr(node, "orientation", orientationstr);
+
+    const std::string & fontset_name = fontset.get_name();
+    if (!fontset_name.empty()) set_attr(node, "fontset-name", fontset_name);
+
+    if (!face_name.empty()) set_attr(node, "face-name", face_name);
+
+    set_attr(node, "size", text_size);
+    set_attr(node, "fill", fill);
+
+    // default-construct a text_properties object. It is used
+    // to avoid printing of attributes with default values without
+    // repeating the default values here.
+    text_properties dfl;
+
+    if (displacement.get<0>() != dfl.displacement.get<0>() || explicit_defaults)
+    {
+        set_attr(node, "dx", displacement.get<0>());
+    }
+    if (displacement.get<1>() != dfl.displacement.get<1>() || explicit_defaults)
+    {
+        set_attr(node, "dy", displacement.get<1>());
+    }
+    if (label_placement != dfl.label_placement || explicit_defaults)
+    {
+        set_attr(node, "placement", label_placement);
+    }
+    if (valign != dfl.valign || explicit_defaults)
+    {
+        set_attr(node, "vertical-alignment", valign);
+    }
+    if (halo_radius != dfl.halo_radius || explicit_defaults)
+    {
+        set_attr(node, "halo-radius", halo_radius);
+    }
+    if (halo_fill != dfl.halo_fill || explicit_defaults)
+    {
+        set_attr(node, "halo-fill", halo_fill);
+    }
+    if (text_ratio != dfl.text_ratio || explicit_defaults)
+    {
+        set_attr(node, "text-ratio", text_ratio);
+    }
+    if (wrap_width != dfl.wrap_width || explicit_defaults)
+    {
+        set_attr(node, "wrap-width", wrap_width);
+    }
+    if (wrap_before != dfl.wrap_before || explicit_defaults)
+    {
+        set_attr(node, "wrap-before", wrap_before);
+    }
+    if (wrap_char != dfl.wrap_char || explicit_defaults)
+    {
+        set_attr(node, "wrap-character", std::string(1, wrap_char));
+    }
+    if (text_transform != dfl.text_transform || explicit_defaults)
+    {
+        set_attr(node, "text-transform", text_transform);
+    }
+    if (line_spacing != dfl.line_spacing || explicit_defaults)
+    {
+        set_attr(node, "line-spacing", line_spacing);
+    }
+    if (character_spacing != dfl.character_spacing || explicit_defaults)
+    {
+        set_attr(node, "character-spacing", character_spacing);
+    }
+    if (label_position_tolerance != dfl.label_position_tolerance || explicit_defaults)
+    {
+        set_attr(node, "label-position-tolerance", label_position_tolerance);
+    }
+    if (label_spacing != dfl.label_spacing || explicit_defaults)
+    {
+        set_attr(node, "spacing", label_spacing);
+    }
+    if (minimum_distance != dfl.minimum_distance || explicit_defaults)
+    {
+        set_attr(node, "minimum-distance", minimum_distance);
+    }
+    if (minimum_padding != dfl.minimum_padding || explicit_defaults)
+    {
+        set_attr(node, "minimum-padding", minimum_padding);
+    }
+    if (allow_overlap != dfl.allow_overlap || explicit_defaults)
+    {
+        set_attr(node, "allow-overlap", allow_overlap);
+    }
+    if (avoid_edges != dfl.avoid_edges || explicit_defaults)
+    {
+        set_attr(node, "avoid-edges", avoid_edges);
+    }
+    // for shield_symbolizer this is later overridden
+    if (text_opacity != dfl.text_opacity || explicit_defaults)
+    {
+        set_attr(node, "opacity", text_opacity);
+    }
+    if (max_char_angle_delta != dfl.max_char_angle_delta || explicit_defaults)
+    {
+        set_attr(node, "max-char-angle-delta", max_char_angle_delta);
+    }
+    if (halign != dfl.halign || explicit_defaults)
+    {
+        set_attr(node, "horizontal-alignment", halign);
+    }
+    if (jalign != dfl.jalign || explicit_defaults)
+    {
+        set_attr(node, "justify-alignment", jalign);
+    }
+    if (valign != dfl.valign || explicit_defaults)
+    {
+        set_attr(node, "vertical-alignment", valign);
     }
 }
 
@@ -310,8 +431,7 @@ void text_placements_simple::set_positions(std::string positions)
     std::string::iterator first = positions.begin(),  last = positions.end();
     qi::phrase_parse(first, last,
         (direction_name[push_back(ref(direction_), _1)] % ',') >> *(',' >> qi::int_[push_back(ref(text_sizes_), _1)]),
-        space
-    );
+        space);
     if (first != last) {
         std::cerr << "WARNING: Could not parse text_placement_simple placement string ('" << positions << "').\n";
     }
@@ -328,6 +448,11 @@ text_placements_simple::text_placements_simple()
 text_placements_simple::text_placements_simple(std::string positions)
 {
     set_positions(positions);
+}
+
+std::string text_placements_simple::get_positions()
+{
+    return positions_; //TODO: Build string from data in direction_ and text_sizes_
 }
 
 /***************************************************************************/
@@ -389,6 +514,11 @@ std::set<expression_ptr> text_placements_list::get_all_expressions()
         result.insert(it->orientation);
     }
     return result;
+}
+
+unsigned text_placements_list::size() const
+{
+    return list_.size();
 }
 
 
