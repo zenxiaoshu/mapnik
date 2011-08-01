@@ -200,8 +200,11 @@ private:
             }
             break;
             case XML_TEXT_NODE:
-                pt.put_value( (char*) cur_node->content );
-                break;
+            {
+                ptree::iterator it = pt.push_back(ptree::value_type("<xmltext>", ptree()));
+                it->second.put_value((char*)cur_node->content);
+            }
+            break;
             case XML_COMMENT_NODE:
             {
                 ptree::iterator it = pt.push_back(

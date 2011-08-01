@@ -345,7 +345,10 @@ T get_value(const boost::property_tree::ptree & node, const std::string & name)
 {
     try
     {
-        return node.get_value<T>();
+        /* NOTE: get_child works as long as there is only one child with that name.
+           If this function is used this used this condition should always be satisfied.
+         */
+        return node.get_child("<xmltext>").get_value<T>();
     }
     catch (...)
     {
