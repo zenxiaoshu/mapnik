@@ -139,6 +139,7 @@ source = Split(
     metawriter.cpp
     raster_colorizer.cpp
     text_placements.cpp
+    text_processing.cpp
     wkt/wkt_factory.cpp
     metawriter_inmem.cpp
     metawriter_factory.cpp

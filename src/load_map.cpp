@@ -47,6 +47,7 @@
 
 #include <mapnik/text_placements_simple.hpp>
 #include <mapnik/text_placements_list.hpp>
+#include <mapnik/text_processing.hpp>
 
 // boost
 #include <boost/optional.hpp>
@@ -1240,7 +1241,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
                 if (symIter->first.find('<') != std::string::npos) continue;
                 if (symIter->first != "Placement")
                 {
-                    throw config_error("Unknown element '" + symIter->first + "'");
+//                    throw config_error("Unknown element '" + symIter->first + "'");
                 }
                 ensure_attrs(symIter->second, "TextSymbolizer/Placement", s_common.str());
                 text_properties & p = list->add();
@@ -1249,6 +1250,8 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
             }
         }
         parse_metawriter_in_symbolizer(text_symbol, sym);
+        token_list format;
+        format.from_xml(sym);
         rule.append(text_symbol);
     }
     catch (const config_error & ex)
