@@ -23,21 +23,30 @@
 #define MAPNIK_TEXT_PROCESSING_HPP
 
 #include <boost/property_tree/ptree.hpp>
+#include <mapnik/feature.hpp>
+#include <mapnik/text_placements.hpp>
 
 #include <list>
+#include <utility>
 
 namespace mapnik
 {
 class abstract_token;
+typedef std::pair<text_properties, UnicodeString> formated_expression;
+typedef std::list<formated_expression> formated_text;
 
-class token_list
+
+class text_processor
 {
 public:
-    token_list();
-    void from_xml(boost::property_tree::ptree const &pt);
+    text_processor();
+    void from_xml(boost::property_tree::ptree const& pt);
     /*void to_xml(boost::property_tree::ptree &node); */
+    void process(formated_text &output, Feature const& feature);
+    void set_defaults(text_properties const& defaults);
 private:
     std::list<abstract_token *> list_;
+    text_properties defaults_;
 };
 
 } /* namespace */

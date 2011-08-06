@@ -24,6 +24,7 @@
 // mapnik
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
+#include <mapnik/text_processing.hpp>
 
 namespace mapnik {
 
@@ -32,6 +33,16 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               Feature const& feature,
                               proj_transform const& prj_trans)
 {
+text_processor &processor = *(sym.get_placement_options()->properties.processor); //TODO
+formated_text text;
+processor.process(text, feature);
+formated_text::const_iterator itr = text.begin();
+formated_text::const_iterator end = text.end();
+for (; itr!=end; ++itr)
+{
+    std::cout << "Text '" << itr->second << "' with color '" << itr->first.fill.to_string() << "'\n";
+}
+#if 0
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
     bool placement_found = false;
@@ -39,26 +50,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
     text_properties &p = placement->properties;
     while (!placement_found && placement->next())
     {
-        expression_ptr name_expr = p.name;
-        if (!name_expr) return;
-        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
-        UnicodeString text = result.to_unicode();
-
-        if (p.text_transform == UPPERCASE)
-        {
-            text = text.toUpper();
-        }
-        else if (p.text_transform == LOWERCASE)
-        {
-            text = text.toLower();
-        }
-        else if (p.text_transform == CAPITALIZE)
-        {
-            text = text.toTitle(NULL);
-        }
-
-        if (text.length() <= 0) continue;
-
         face_set_ptr faces;
         if (p.fontset.size() > 0)
         {
@@ -148,6 +139,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             }
         }
     }
+#endif
 }
 
 template void agg_renderer<image_32>::process(text_symbolizer const&,

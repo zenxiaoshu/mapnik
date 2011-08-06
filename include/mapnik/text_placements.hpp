@@ -46,6 +46,7 @@ namespace mapnik {
 
 class text_placements;
 class string_info;
+class text_processor;
 typedef text_path placement_element;
 
 typedef boost::tuple<double,double> position;
@@ -140,6 +141,7 @@ struct text_properties {
     color fill;
     color halo_fill;
     double halo_radius;
+    text_processor *processor;
 };
 
 class text_placement_info : boost::noncopyable

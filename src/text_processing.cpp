@@ -31,6 +31,8 @@
 #include <boost/optional.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <stack>
+
 namespace mapnik {
 using boost::property_tree::ptree;
 using boost::optional;
@@ -45,7 +47,7 @@ public:
 class abstract_formating_token : public abstract_token
 {
 public:
-    virtual void apply(text_properties p, Feature const& feature) = 0;
+    virtual void apply(text_properties &p, Feature const& feature) = 0;
 };
 
 class abstract_text_token : public abstract_token
@@ -77,7 +79,7 @@ class fixed_formating_token : public abstract_formating_token
 {
 public:
     fixed_formating_token();
-    virtual void apply(text_properties p, Feature const& feature);
+    virtual void apply(text_properties &p, Feature const& feature);
     std::string to_xml_string();
     void set_fill(optional<color> c);
 private:
@@ -109,7 +111,7 @@ UnicodeString expression_token::to_string(const Feature &feature)
 
 std::string expression_token::to_xml_string()
 {
-    return "Text: "+to_expression_string(*text_);
+    return to_expression_string(*text_);
 }
 
 /************************************************************/
@@ -124,7 +126,7 @@ void fixed_formating_token::set_fill(optional<color> c)
     fill_ = c;
 }
 
-void fixed_formating_token::apply(text_properties p, const Feature &feature)
+void fixed_formating_token::apply(text_properties &p, const Feature &feature)
 {
     if (fill_) p.fill = *fill_;
 }
@@ -143,12 +145,12 @@ std::string end_format_token::to_xml_string()
 
 /************************************************************/
 
-token_list::token_list():
+text_processor::text_processor():
     list_()
 {
 }
 
-void token_list::from_xml(const boost::property_tree::ptree &pt)
+void text_processor::from_xml(const boost::property_tree::ptree &pt)
 {
     ptree::const_iterator itr = pt.begin();
     ptree::const_iterator end = pt.end();
@@ -161,7 +163,7 @@ void token_list::from_xml(const boost::property_tree::ptree &pt)
             list_.push_back(token);
         } else if (itr->first == "Format") {
             fixed_formating_token *token = new fixed_formating_token();
-            token->set_fill(get_opt_attr<color>(itr->second, "color"));
+            token->set_fill(get_opt_attr<color>(itr->second, "fill"));
             list_.push_back(token);
             from_xml(itr->second); /* Parse children, making a list out of a tree. */
             list_.push_back(new end_format_token());
@@ -181,6 +183,53 @@ void token_list::from_xml(const boost::property_tree::ptree &pt)
     }
 #endif
 
+}
+
+void text_processor::process(formated_text &output, Feature const& feature)
+{
+    std::list<abstract_token *>::const_iterator itr = list_.begin();
+    std::list<abstract_token *>::const_iterator end = list_.end();
+    std::stack<text_properties> formats;
+    formats.push(defaults_);
+
+    for (; itr != end; ++itr) {
+        abstract_text_token *text = dynamic_cast<abstract_text_token *>(*itr);
+        abstract_formating_token *format = dynamic_cast<abstract_formating_token *>(*itr);;
+        end_format_token *end = dynamic_cast<end_format_token *>(*itr);;
+        if (text) {
+            UnicodeString text_str = text->to_string(feature);
+            text_properties const& p = formats.top();
+            /* TODO: Make a class out of text_transform which does the work! */
+            if (p.text_transform == UPPERCASE)
+            {
+                text_str = text_str.toUpper();
+            }
+            else if (p.text_transform == LOWERCASE)
+            {
+                text_str = text_str.toLower();
+            }
+            else if (p.text_transform == CAPITALIZE)
+            {
+                text_str = text_str.toTitle(NULL);
+            }
+            if (text_str.length() > 0) {
+                output.push_back(std::make_pair(p, text_str));
+            }
+        } else if (format) {
+            text_properties next_properties = formats.top();
+            format->apply(next_properties, feature);
+            formats.push(next_properties);
+        } else if (end) {
+            /* Always keep at least the defaults_ on stack. */
+            if (formats.size() > 1) {
+                formats.pop();
+            } else {
+                std::cerr << "Warning: Internal mapnik error. More elements popped than pushed in text_processor::process()\n";
+                output.clear();
+                return;
+            }
+        }
+    }
 }
 
 

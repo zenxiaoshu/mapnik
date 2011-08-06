@@ -1250,8 +1250,9 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
             }
         }
         parse_metawriter_in_symbolizer(text_symbol, sym);
-        token_list format;
-        format.from_xml(sym);
+        text_processor *format = new text_processor;
+        format->from_xml(sym);
+        placement_finder->properties.processor = format; //TODO: Temporary hack
         rule.append(text_symbol);
     }
     catch (const config_error & ex)
