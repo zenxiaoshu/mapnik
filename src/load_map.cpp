@@ -1252,6 +1252,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
         parse_metawriter_in_symbolizer(text_symbol, sym);
         text_processor *format = new text_processor;
         format->from_xml(sym);
+        format->set_defaults( placement_finder->properties);
         placement_finder->properties.processor = format; //TODO: Temporary hack
         rule.append(text_symbol);
     }

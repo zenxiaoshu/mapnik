@@ -33,23 +33,56 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               Feature const& feature,
                               proj_transform const& prj_trans)
 {
-text_processor &processor = *(sym.get_placement_options()->properties.processor); //TODO
-formated_text text;
-processor.process(text, feature);
-formated_text::const_iterator itr = text.begin();
-formated_text::const_iterator end = text.end();
-for (; itr!=end; ++itr)
-{
-    std::cout << "Text '" << itr->second << "' with color '" << itr->first.fill.to_string() << "'\n";
-}
+    text_processor &processor = *(sym.get_placement_options()->properties.processor); //TODO
+    text_properties const& p = sym.get_placement_options()->properties; //TODO
+    /* placement_options will return a text_processor which then produces the text_properties. For now a lot of this is a hack to not completely break other code in mapnik. */
+    /*
+    bool placement_found = false;
+    while (!placement_found && placement->next())
+    {
+        while (!placement_found && placement->next_position_only())
+        {
+    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    text_properties &p = placement->properties;
+        }
+    }*/
+    processed_text text(detector_, font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
+    processor.process(text, feature);
+    processed_text::expression_list::const_iterator itr = text.begin();
+    processed_text::expression_list::const_iterator end = text.end();
+    for (; itr!=end; ++itr)
+    {
+        std::cout << "Text '" << itr->str << "' with color '" << itr->p.fill.to_string() << "'\n";
+    }
+    unsigned num_geom = feature.num_geometries();
+    for (unsigned i=0; i<num_geom; ++i)
+    {
+        geometry_type const& geom = feature.get_geometry(i);
+        if (geom.num_points() == 0) continue; // don't bother with empty geometries
+        if (p.label_placement == POINT_PLACEMENT ||
+            p.label_placement == INTERIOR_PLACEMENT)
+        {
+            double label_x=0.0;
+            double label_y=0.0;
+            double z=0.0;
+            if (p.label_placement == POINT_PLACEMENT)
+                geom.label_position(&label_x, &label_y);
+            else
+                geom.label_interior_position(&label_x, &label_y);
+            prj_trans.backward(label_x,label_y, z);
+            t_.forward(&label_x,&label_y);
+
+            text.find_point_placement(label_x, label_y);
+        //    finder.update_detector(*placement);
+        }
+    }
+
+
+
 #if 0
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
-    bool placement_found = false;
-    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
-    text_properties &p = placement->properties;
-    while (!placement_found && placement->next())
-    {
+
         face_set_ptr faces;
         if (p.fontset.size() > 0)
         {
@@ -80,44 +113,13 @@ for (; itr!=end; ++itr)
         faces->get_string_info(info);
         metawriter_with_properties writer = sym.get_metawriter();
 
-        unsigned num_geom = feature.num_geometries();
-        for (unsigned i=0; i<num_geom; ++i)
-        {
-            geometry_type const& geom = feature.get_geometry(i);
-            if (geom.num_points() == 0) continue; // don't bother with empty geometries
+
             while (!placement_found && placement->next_position_only())
             {
                 placement->init(&info, scale_factor_);
                 if (writer.first)
                     placement->collect_extents = true; // needed for inmem metawriter
 
-                if (p.label_placement == POINT_PLACEMENT ||
-                    p.label_placement == INTERIOR_PLACEMENT)
-                {
-                    double label_x=0.0;
-                    double label_y=0.0;
-                    double z=0.0;
-                    if (p.label_placement == POINT_PLACEMENT)
-                        geom.label_position(&label_x, &label_y);
-                    else
-                        geom.label_interior_position(&label_x, &label_y);
-                    prj_trans.backward(label_x,label_y, z);
-                    t_.forward(&label_x,&label_y);
-
-                    double angle = 0.0;
-                    expression_ptr angle_expr = p.orientation;
-                    if (angle_expr)
-                    {
-                        // apply rotation
-                        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*angle_expr);
-                        angle = result.to_double();
-                    }
-
-                    finder.find_point_placement(*placement, label_x,label_y,
-                                                angle, p.line_spacing,
-                                                p.character_spacing);
-                    finder.update_detector(*placement);
-                }
                 else if ( geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
                 {
                     path_type path(t_,geom,prj_trans);

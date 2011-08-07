@@ -129,6 +129,13 @@ void fixed_formating_token::set_fill(optional<color> c)
 void fixed_formating_token::apply(text_properties &p, const Feature &feature)
 {
     if (fill_) p.fill = *fill_;
+    /*expression_ptr angle_expr = p.orientation;
+    if (angle_expr)
+    {
+        // apply rotation
+        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*angle_expr);
+        angle = result.to_double();
+    }*/
 }
 
 std::string fixed_formating_token::to_xml_string()
@@ -171,21 +178,9 @@ void text_processor::from_xml(const boost::property_tree::ptree &pt)
             std::cerr << "Unknown item" << itr->first;
         }
     }
-
-#if 0
-
-    std::list<abstract_token *>::const_iterator itr2 = list_.begin();
-    std::list<abstract_token *>::const_iterator end2 = list_.end();
-
-    std::cerr << "Debug output\n";
-    for (; itr2 != end2; ++itr2) {
-        std::cout << (*itr2)->to_xml_string() << "\n";
-    }
-#endif
-
 }
 
-void text_processor::process(formated_text &output, Feature const& feature)
+void text_processor::process(processed_text &output, Feature const& feature)
 {
     std::list<abstract_token *>::const_iterator itr = list_.begin();
     std::list<abstract_token *>::const_iterator end = list_.end();
@@ -213,7 +208,7 @@ void text_processor::process(formated_text &output, Feature const& feature)
                 text_str = text_str.toTitle(NULL);
             }
             if (text_str.length() > 0) {
-                output.push_back(std::make_pair(p, text_str));
+                output.push_back(processed_expression(p, text_str));
             }
         } else if (format) {
             text_properties next_properties = formats.top();
@@ -232,8 +227,72 @@ void text_processor::process(formated_text &output, Feature const& feature)
     }
 }
 
+void text_processor::set_defaults(const text_properties &defaults)
+{
+    defaults_ = defaults;
+}
+
+/************************************************************/
+
+void processed_text::push_back(processed_expression const& exp)
+{
+    expr_list_.push_back(exp);
+}
+
+processed_text::expression_list::const_iterator processed_text::begin()
+{
+    return expr_list_.begin();
+}
+
+processed_text::expression_list::const_iterator processed_text::end()
+{
+    return expr_list_.end();
+}
+
+bool processed_text::find_point_placement(double x, double y)
+{
+    buffer_char_sizes();
+    return false;
+}
+
+processed_text::processed_text(DetectorType & detector, face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor)
+    : detector_(detector), dimensions_(dimensions), font_manager_(font_manager), scale_factor_(scale_factor)
+{
+
+}
+
+void processed_text::clear()
+{
+    expr_list_.clear();
+}
 
 
+void processed_text::buffer_char_sizes()
+{
+    //TODO: Make sure this is only called once
+    expression_list::iterator itr = expr_list_.begin();
+    expression_list::iterator end = expr_list_.end();
+    for (; itr != end; ++itr)
+    {
+        text_properties const &p = itr->p;
+        face_set_ptr faces;
+        if (p.fontset.size() > 0)
+        {
+            faces = font_manager_.get_face_set(p.fontset);
+        }
+        else
+        {
+            faces = font_manager_.get_face_set(p.face_name);
+        }
+        if (faces->size() <= 0)
+        {
+            throw config_error("Unable to find specified font face '" + p.face_name + "'");
+        }
+        faces->set_pixel_sizes(p.text_size * scale_factor_);
+        itr->info = new string_info(itr->str);
+        faces->get_string_info(*(itr->info));
+    }
+}
 
 
 

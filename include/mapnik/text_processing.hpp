@@ -25,15 +25,55 @@
 #include <boost/property_tree/ptree.hpp>
 #include <mapnik/feature.hpp>
 #include <mapnik/text_placements.hpp>
+#include <mapnik/box2d.hpp>
+#include <mapnik/ctrans.hpp>
+#include <mapnik/label_collision_detector.hpp>
+#include <mapnik/font_engine_freetype.hpp>
+#include <mapnik/text_path.hpp>
 
 #include <list>
-#include <utility>
-
 namespace mapnik
 {
+
+
+typedef coord_transform2<CoordTransform,geometry_type> path_type; //TODO: Put this into a global header and remove it from each file it is used.
+typedef label_collision_detector4 DetectorType;
+
 class abstract_token;
-typedef std::pair<text_properties, UnicodeString> formated_expression;
-typedef std::list<formated_expression> formated_text;
+class processed_text;
+
+class processed_expression
+{
+public:
+    processed_expression(text_properties const& properties, UnicodeString const& text) :
+        p(properties), str(text), info(0) {}
+    ~processed_expression() { if (info) delete info; }
+    text_properties p;
+    UnicodeString str;
+    string_info *info;
+private:
+    friend class processed_text;
+};
+
+class processed_text
+{
+public:
+    processed_text(DetectorType & detector, face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor);
+    void push_back(processed_expression const& exp);
+    void clear();
+    typedef std::list<processed_expression> expression_list;
+    expression_list::const_iterator begin();
+    expression_list::const_iterator end();
+    bool find_point_placement(double x, double y);
+protected:
+    void buffer_char_sizes();
+private:
+    expression_list expr_list_;
+    DetectorType &detector_;
+    box2d<double> dimensions_;
+    face_manager<freetype_engine> & font_manager_;
+    double scale_factor_;
+};
 
 
 class text_processor
@@ -42,7 +82,7 @@ public:
     text_processor();
     void from_xml(boost::property_tree::ptree const& pt);
     /*void to_xml(boost::property_tree::ptree &node); */
-    void process(formated_text &output, Feature const& feature);
+    void process(processed_text &output, Feature const& feature);
     void set_defaults(text_properties const& defaults);
 private:
     std::list<abstract_token *> list_;
