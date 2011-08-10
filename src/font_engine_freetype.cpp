@@ -227,10 +227,15 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
 
 void font_face_set::get_string_info(string_info & info)
 {
+    get_string_info(info, info.get_string(), 0);
+}
+
+
+void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format)
+{
     unsigned width = 0;
     unsigned height = 0;
     UErrorCode err = U_ZERO_ERROR;
-    UnicodeString const& ustr = info.get_string();
     const UChar * text = ustr.getBuffer();
     UBiDi * bidi = ubidi_openSized(ustr.length(),0,&err);
 
@@ -251,10 +256,9 @@ void font_face_set::get_string_info(string_info & info)
                     do {
                         UChar ch = text[logicalStart++];
                         dimension_t char_dim = character_dimensions(ch);
-                        info.add_info(ch, char_dim.width, char_dim.height);
+                        info.add_info(ch, char_dim.width, char_dim.height, format);
                         width += char_dim.width;
-                        height = char_dim.height > height ? char_dim.height : height;
-
+                        height = std::max(char_dim.height, height);
                     } while (--length > 0);
                 }
                 else
@@ -285,9 +289,9 @@ void font_face_set::get_string_info(string_info & info)
                             for (int j=0;j<shaped.length();++j)
                             {
                                 dimension_t char_dim = character_dimensions(shaped[j]);
-                                info.add_info(shaped[j], char_dim.width, char_dim.height);
+                                info.add_info(shaped[j], char_dim.width, char_dim.height, format);
                                 width += char_dim.width;
-                                height = char_dim.height > height ? char_dim.height : height;
+                                height = std::max(char_dim.height, height);
                             }
                         }
                     } else {
@@ -295,9 +299,9 @@ void font_face_set::get_string_info(string_info & info)
                         for (int j=0;j<arabic.length();++j)
                         {
                             dimension_t char_dim = character_dimensions(arabic[j]);
-                            info.add_info(arabic[j], char_dim.width, char_dim.height);
+                            info.add_info(arabic[j], char_dim.width, char_dim.height, format);
                             width += char_dim.width;
-                            height = char_dim.height > height ? char_dim.height : height;
+                            height = std::max(char_dim.height, height);
                         }
                     }
                 }

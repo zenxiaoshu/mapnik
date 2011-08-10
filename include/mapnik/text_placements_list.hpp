@@ -35,11 +35,11 @@ public:
     text_placements_list();
     text_placement_info_ptr get_placement_info() const;
     virtual std::set<expression_ptr> get_all_expressions();
-    text_properties & add();
-    text_properties & get(unsigned i);
+    text_symbolizer_properties & add();
+    text_symbolizer_properties & get(unsigned i);
     unsigned size() const;
 private:
-    std::vector<text_properties> list_;
+    std::vector<text_symbolizer_properties> list_;
     friend class text_placement_info_list;
 };
 

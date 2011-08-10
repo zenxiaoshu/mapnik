@@ -47,7 +47,7 @@ public:
 class abstract_formating_token : public abstract_token
 {
 public:
-    virtual void apply(text_properties &p, Feature const& feature) = 0;
+    virtual void apply(char_properties &p, Feature const& feature) = 0;
 };
 
 class abstract_text_token : public abstract_token
@@ -79,7 +79,7 @@ class fixed_formating_token : public abstract_formating_token
 {
 public:
     fixed_formating_token();
-    virtual void apply(text_properties &p, Feature const& feature);
+    virtual void apply(char_properties &p, Feature const& feature);
     std::string to_xml_string();
     void set_fill(optional<color> c);
 private:
@@ -126,7 +126,7 @@ void fixed_formating_token::set_fill(optional<color> c)
     fill_ = c;
 }
 
-void fixed_formating_token::apply(text_properties &p, const Feature &feature)
+void fixed_formating_token::apply(char_properties &p, const Feature &feature)
 {
     if (fill_) p.fill = *fill_;
     /*expression_ptr angle_expr = p.orientation;
@@ -184,8 +184,8 @@ void text_processor::process(processed_text &output, Feature const& feature)
 {
     std::list<abstract_token *>::const_iterator itr = list_.begin();
     std::list<abstract_token *>::const_iterator end = list_.end();
-    std::stack<text_properties> formats;
-    formats.push(defaults_);
+    std::stack<char_properties> formats;
+    formats.push(defaults);
 
     for (; itr != end; ++itr) {
         abstract_text_token *text = dynamic_cast<abstract_text_token *>(*itr);
@@ -193,7 +193,7 @@ void text_processor::process(processed_text &output, Feature const& feature)
         end_format_token *end = dynamic_cast<end_format_token *>(*itr);;
         if (text) {
             UnicodeString text_str = text->to_string(feature);
-            text_properties const& p = formats.top();
+            char_properties const& p = formats.top();
             /* TODO: Make a class out of text_transform which does the work! */
             if (p.text_transform == UPPERCASE)
             {
@@ -211,7 +211,7 @@ void text_processor::process(processed_text &output, Feature const& feature)
                 output.push_back(processed_expression(p, text_str));
             }
         } else if (format) {
-            text_properties next_properties = formats.top();
+            char_properties next_properties = formats.top();
             format->apply(next_properties, feature);
             formats.push(next_properties);
         } else if (end) {
@@ -225,11 +225,6 @@ void text_processor::process(processed_text &output, Feature const& feature)
             }
         }
     }
-}
-
-void text_processor::set_defaults(const text_properties &defaults)
-{
-    defaults_ = defaults;
 }
 
 /************************************************************/
@@ -269,12 +264,12 @@ void processed_text::clear()
 
 void processed_text::buffer_char_sizes()
 {
-    //TODO: Make sure this is only called once
+    //info_.clear(); TODO: Make sure this is only called once
     expression_list::iterator itr = expr_list_.begin();
     expression_list::iterator end = expr_list_.end();
     for (; itr != end; ++itr)
     {
-        text_properties const &p = itr->p;
+        char_properties const &p = itr->p;
         face_set_ptr faces;
         if (p.fontset.size() > 0)
         {
@@ -289,8 +284,8 @@ void processed_text::buffer_char_sizes()
             throw config_error("Unable to find specified font face '" + p.face_name + "'");
         }
         faces->set_pixel_sizes(p.text_size * scale_factor_);
-        itr->info = new string_info(itr->str);
-        faces->get_string_info(*(itr->info));
+        faces->get_string_info(info_, itr->str, &(itr->p));
+        info_.add_text(itr->str);
     }
 }
 

@@ -43,13 +43,14 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                                Feature const& feature,
                                proj_transform const& prj_trans)
 {
+#if 0
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
 
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
     placement->next();
     placement->next_position_only();
-    text_properties &p = placement->properties;
+    text_symbolizer_properties &p = placement->properties;
 
     UnicodeString text;
     if( sym.get_no_text() )
@@ -239,6 +240,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
             }
         }
     }
+#endif
 }
 
 

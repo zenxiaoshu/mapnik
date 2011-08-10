@@ -34,13 +34,17 @@
 
 namespace mapnik
 {
+struct char_properties;
+
 struct character_info
 { 
     int character;
     double width, height;
+    char_properties *format;
       
     character_info() : character(0), width(0), height(0) {}
     character_info(int c_, double width_, double height_) : character(c_), width(width_), height(height_) {}
+    character_info(int c_, double width_, double height_, char_properties *format_) : character(c_), width(width_), height(height_), format(format_) {}
     ~character_info() {}
         
     character_info(const character_info &ci)
@@ -55,7 +59,7 @@ class string_info : private boost::noncopyable
 protected:
     typedef boost::ptr_vector<character_info> characters_t;
     characters_t characters_;
-    UnicodeString const& text_;
+    UnicodeString text_;
     double width_;
     double height_;
 public:
@@ -63,10 +67,24 @@ public:
         : text_(text),
           width_(0),
           height_(0) {}
+    string_info()
+        : text_(),
+          width_(0),
+          height_(0) {}
 
     void add_info(int c, double width, double height)
     {
         characters_.push_back(new character_info(c, width, height));
+    }
+
+    void add_info(int c, double width, double height, char_properties *format)
+    {
+        characters_.push_back(new character_info(c, width, height, format));
+    }
+
+    void add_text(UnicodeString text)
+    {
+        text_ += text;
     }
       
     unsigned num_characters() const
@@ -113,6 +131,7 @@ struct text_path : boost::noncopyable
     {
         int c;
         double x, y, angle;
+        char_properties *format;
                
         character_node(int c_, double x_, double y_, double angle_) 
             : c(c_), x(x_), y(y_), angle(angle_) {}

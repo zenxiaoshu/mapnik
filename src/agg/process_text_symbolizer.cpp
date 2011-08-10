@@ -34,8 +34,8 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               proj_transform const& prj_trans)
 {
     text_processor &processor = *(sym.get_placement_options()->properties.processor); //TODO
-    text_properties const& p = sym.get_placement_options()->properties; //TODO
-    /* placement_options will return a text_processor which then produces the text_properties. For now a lot of this is a hack to not completely break other code in mapnik. */
+    text_symbolizer_properties const& p = sym.get_placement_options()->properties; //TODO
+    /* placement_options will return a text_processor which then produces the text_symbolizer_properties. For now a lot of this is a hack to not completely break other code in mapnik. */
     /*
     bool placement_found = false;
     while (!placement_found && placement->next())
@@ -43,7 +43,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         while (!placement_found && placement->next_position_only())
         {
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
-    text_properties &p = placement->properties;
+    text_symbolizer_properties &p = placement->properties;
         }
     }*/
     processed_text text(detector_, font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
@@ -76,6 +76,15 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         //    finder.update_detector(*placement);
         }
     }
+#if 0
+    for (unsigned int ii = 0; ii < text_placement.placements.size(); ++ii)
+    {
+        double x = text_placement.placements[ii].starting_x;
+        double y = text_placement.placements[ii].starting_y;
+        ren.prepare_glyphs(&text_placement.placements[ii]);
+        ren.render(x,y);
+    }
+#endif
 
 
 
@@ -129,13 +138,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                 if (!placement->placements.size()) continue;
                 placement_found = true;
 
-                for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
-                {
-                    double x = placement->placements[ii].starting_x;
-                    double y = placement->placements[ii].starting_y;
-                    ren.prepare_glyphs(&(placement->placements[ii]));
-                    ren.render(x,y);
-                }
 
                 if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
             }

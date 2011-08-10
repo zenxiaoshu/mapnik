@@ -104,26 +104,39 @@ enum text_transform
 
 DEFINE_ENUM( text_transform_e, text_transform );
 
-struct text_properties {
-    text_properties();
+struct char_properties
+{
+    char_properties();
     void set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets);
-    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_properties const &dfl=text_properties()) const;
-    expression_ptr name;
-
+    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, char_properties const &dfl=char_properties()) const;
     std::string face_name;
     font_set fontset;
     unsigned text_size;
+    unsigned character_spacing;
+    unsigned line_spacing; //Largest value per line is chosen (TODO)
+    double text_opacity;
+    bool wrap_before; // wraps text at wrap_char immediately before current word
+    unsigned char wrap_char;
+    text_transform_e text_transform; //Per expression
+    color fill;
+    color halo_fill;
+    double halo_radius;
+};
 
+struct text_symbolizer_properties
+{
+    text_symbolizer_properties();
+    void set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets);
+    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_symbolizer_properties const &dfl=text_symbolizer_properties()) const;
+
+    //Per symbolizer options
+    expression_ptr name; //deprecated
     expression_ptr orientation;
     position displacement;
     label_placement_e label_placement;
     horizontal_alignment_e halign;
     justify_alignment_e jalign;
     vertical_alignment_e valign;
-
-
-    unsigned line_spacing;
-    unsigned character_spacing;
     unsigned label_spacing; // distance between repeated labels on a single geometry
     unsigned label_position_tolerance; //distance the label can be moved on the line to fit, if 0 the default is used
     bool avoid_edges;
@@ -132,16 +145,10 @@ struct text_properties {
     double max_char_angle_delta;
     bool force_odd_labels; //Always try render an odd amount of labels
     bool allow_overlap;
-    double text_opacity;
     unsigned text_ratio;
-    bool wrap_before; // wraps text at wrap_char immediately before current word
     unsigned wrap_width;
-    unsigned char wrap_char;
-    text_transform_e text_transform;
-    color fill;
-    color halo_fill;
-    double halo_radius;
-    text_processor *processor;
+    text_processor *processor; //Contains expressions and text formats
+    //TODO: Change to real member object
 };
 
 class text_placement_info : boost::noncopyable
@@ -161,7 +168,7 @@ public:
     void init(string_info *info_, double scale_factor_,
               unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
 
-    text_properties properties;
+    text_symbolizer_properties properties;
     double scale_factor;
     bool has_dimensions;
     std::pair<double, double> dimensions;
@@ -192,7 +199,7 @@ public:
     virtual std::set<expression_ptr> get_all_expressions();
 
     virtual ~text_placements() {}
-    text_properties properties;
+    text_symbolizer_properties properties;
 
     friend class text_placement_info;
 };

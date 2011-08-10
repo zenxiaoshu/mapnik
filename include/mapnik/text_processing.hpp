@@ -32,10 +32,9 @@
 #include <mapnik/text_path.hpp>
 
 #include <list>
+#include <vector>
 namespace mapnik
 {
-
-
 typedef coord_transform2<CoordTransform,geometry_type> path_type; //TODO: Put this into a global header and remove it from each file it is used.
 typedef label_collision_detector4 DetectorType;
 
@@ -45,12 +44,10 @@ class processed_text;
 class processed_expression
 {
 public:
-    processed_expression(text_properties const& properties, UnicodeString const& text) :
-        p(properties), str(text), info(0) {}
-    ~processed_expression() { if (info) delete info; }
-    text_properties p;
+    processed_expression(char_properties const& properties, UnicodeString const& text) :
+        p(properties), str(text) {}
+    char_properties p;
     UnicodeString str;
-    string_info *info;
 private:
     friend class processed_text;
 };
@@ -73,6 +70,7 @@ private:
     box2d<double> dimensions_;
     face_manager<freetype_engine> & font_manager_;
     double scale_factor_;
+    string_info info_;
 };
 
 
@@ -83,10 +81,9 @@ public:
     void from_xml(boost::property_tree::ptree const& pt);
     /*void to_xml(boost::property_tree::ptree &node); */
     void process(processed_text &output, Feature const& feature);
-    void set_defaults(text_properties const& defaults);
+    char_properties defaults;
 private:
     std::list<abstract_token *> list_;
-    text_properties defaults_;
 };
 
 } /* namespace */

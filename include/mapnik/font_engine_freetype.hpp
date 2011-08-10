@@ -182,6 +182,7 @@ public:
     dimension_t character_dimensions(const unsigned c);
 
     void get_string_info(string_info & info);
+    void get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format = 0);
 
     void set_pixel_sizes(unsigned size)
     {

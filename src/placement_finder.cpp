@@ -114,7 +114,7 @@ template <typename DetectorT>
 template <typename T>
 void placement_finder<DetectorT>::find_point_placements(text_placement_info &pi, T & shape_path)
 {
-    text_properties &p = pi.properties;
+    text_symbolizer_properties &p = pi.properties;
     unsigned cmd;
     double new_x = 0.0;
     double new_y = 0.0;
@@ -185,7 +185,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
                                                        unsigned line_spacing,
                                                        unsigned character_spacing)
 {
-    text_properties &p = pi.properties;
+    text_symbolizer_properties &p = pi.properties;
     double x, y;
     std::auto_ptr<placement_element> current_placement(new placement_element);
     
@@ -229,7 +229,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
             unsigned c = ci.character;
             word_width += cwidth;
 
-            if ((c == p.wrap_char) || (c == '\n'))
+            if ((c == ci.format->wrap_char) || (c == '\n'))
             {
                 last_wrap_char = ii;
                 last_wrap_char_width = cwidth;
@@ -239,8 +239,8 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
 
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
             if ((c == '\n') ||
-                (line_width > 0 && (((line_width - character_spacing) > wrap_at && !p.wrap_before) ||
-                                   ((line_width + word_width - character_spacing) > wrap_at && p.wrap_before)) ))
+                (line_width > 0 && (((line_width - character_spacing) > wrap_at && !ci.format->wrap_before) ||
+                                   ((line_width + word_width - character_spacing) > wrap_at && ci.format->wrap_before)) ))
             {
                 // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
                 line_width -= (last_wrap_char_width + character_spacing);
@@ -297,6 +297,8 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
     else if (real_valign == V_BOTTOM)
         current_placement->starting_y += 0.5 * (string_height + (line_spacing * (total_lines-1)));  // move center down by the 1/2 the total height
 
+#if 0
+    //TODO
     // correct placement for error, but BOTTOM does not need to be adjusted
     // (text rendering is at text_size, but line placement is by line_height (max_character_height),
     //  and the rendering adds the extra space below the characters)
@@ -305,6 +307,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
 
     else if (real_valign == V_MIDDLE)
         current_placement->starting_y -= ((p.text_size - max_character_height) / 2.0); // move up by 1/2 the error
+#endif
 
     // set horizontal position to middle of text
     current_placement->starting_x = label_x;  // no adjustment, default is MIDDLE
@@ -431,7 +434,7 @@ template <typename DetectorT>
 template <typename PathT>
 void placement_finder<DetectorT>::find_line_placements(text_placement_info &pi, PathT & shape_path)
 {
-    text_properties &p = pi.properties;
+    text_symbolizer_properties &p = pi.properties;
     unsigned cmd;
     double new_x = 0.0;
     double new_y = 0.0;
@@ -598,7 +601,7 @@ void placement_finder<DetectorT>::find_line_placements(text_placement_info &pi, 
 template <typename DetectorT>
 std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offset(text_placement_info &pi, const std::vector<vertex2d> &path_positions, const std::vector<double> &path_distances, int &orientation, unsigned index, double distance)
 {
-    text_properties &p = pi.properties;
+    text_symbolizer_properties &p = pi.properties;
     //Check that the given distance is on the given index and find the correct index and distance if not
     while (distance < 0 && index > 1)
     {
@@ -784,7 +787,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
 template <typename DetectorT>
 bool placement_finder<DetectorT>::test_placement(text_placement_info &pi, const std::auto_ptr<placement_element> & current_placement, const int & orientation)
 {
-    text_properties &p = pi.properties;
+    text_symbolizer_properties &p = pi.properties;
     std::pair<double, double> string_dimensions = pi.info->get_dimensions();
 
     double string_height = string_dimensions.second;

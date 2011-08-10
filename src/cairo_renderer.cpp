@@ -1070,6 +1070,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
                                   Feature const& feature,
                                   proj_transform const& prj_trans)
 {
+#if 0
     typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
@@ -1268,6 +1269,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
             }
         }
     }
+#endif
 }
 
 void cairo_renderer_base::process(line_pattern_symbolizer const& sym,
@@ -1513,6 +1515,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                                   Feature const& feature,
                                   proj_transform const& prj_trans)
 {
+#if 0
     typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
     bool placement_found = false;
@@ -1627,6 +1630,7 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
             }
         }
     }
+#endif
 }
 
 template class cairo_renderer<Cairo::Surface>;
