@@ -40,17 +40,17 @@ public:
     placement_finder(DetectorT & detector, box2d<double> const& extent);
     
     //Try place a single label at the given point
-    void find_point_placement(text_placement_info &p, double pos_x, double pos_y, double angle=0.0, unsigned line_spacing=0, unsigned character_spacing=0);
+    void find_point_placement(text_placement_info &p, string_info &info, double pos_x, double pos_y, double angle=0.0, unsigned line_spacing=0, unsigned character_spacing=0);
 
     //Iterate over the given path, placing point labels with respect to label_spacing
     template <typename T>
-    void find_point_placements(text_placement_info &pi, T & path);
+    void find_point_placements(text_placement_info &pi, string_info &info, T & path);
 
     //Iterate over the given path, placing line-following labels with respect to label_spacing
     template <typename T>
-    void find_line_placements(text_placement_info &pi, T & path);
+    void find_line_placements(text_placement_info &pi, string_info &info, T & path);
 
-    void update_detector(text_placement_info &pi);
+    void update_detector(text_placement_info &pi, string_info &info);
 
     void clear();
     
@@ -66,6 +66,7 @@ private:
     //             If >= 50% of the characters end up upside down, it will be retried the other way.
     //             RETURN: 1/-1 depending which way up the string ends up being.
     std::auto_ptr<placement_element> get_placement_offset(text_placement_info &pi,
+                                                          string_info &info,
                                                           const std::vector<vertex2d> & path_positions,
                                                           const std::vector<double> & path_distances,
                                                           int & orientation, unsigned index, double distance);
@@ -73,7 +74,7 @@ private:
     ///Tests wether the given placement_element be placed without a collision
     // Returns true if it can
     // NOTE: This edits p.envelopes so it can be used afterwards (you must clear it otherwise)
-    bool test_placement(text_placement_info &pi, const std::auto_ptr<placement_element> & current_placement, const int & orientation);
+    bool test_placement(text_placement_info &pi, string_info &info, const std::auto_ptr<placement_element> & current_placement, const int & orientation);
 
     ///Does a line-circle intersect calculation
     // NOTE: Follow the strict pre conditions

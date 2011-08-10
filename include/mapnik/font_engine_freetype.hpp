@@ -382,7 +382,10 @@ struct text_renderer : private boost::noncopyable
             int c;
             double x, y, angle;
 
+#if 0
+            TODO
             path->vertex(&c, &x, &y, &angle);
+#endif
 
 #ifdef MAPNIK_DEBUG
             // TODO Enable when we have support for setting verbosity
@@ -455,7 +458,7 @@ struct text_renderer : private boost::noncopyable
         //make sure we've got reasonable values.
         if (halo_radius_ > 0.0 && halo_radius_ < 1024.0)
         {
-            stroker_.init(halo_radius_);   
+            stroker_.init(halo_radius_);
             for ( pos = glyphs_.begin(); pos != glyphs_.end();++pos)
             {
                 FT_Glyph g;
@@ -467,7 +470,7 @@ struct text_renderer : private boost::noncopyable
                     error = FT_Glyph_To_Bitmap( &g,FT_RENDER_MODE_NORMAL,0,1);
                     if ( ! error )
                     {
-                        
+
                         FT_BitmapGlyph bit = (FT_BitmapGlyph)g;
                         render_bitmap(&bit->bitmap, halo_fill_.rgba(),
                                       bit->left,
@@ -475,7 +478,7 @@ struct text_renderer : private boost::noncopyable
                     }
                 }
                 FT_Done_Glyph(g);
-            }    
+            }
         }
         //render actual text
         for ( pos = glyphs_.begin(); pos != glyphs_.end();++pos)
@@ -507,7 +510,7 @@ struct text_renderer : private boost::noncopyable
         // now render transformed glyphs
         typename glyphs_t::iterator pos;
 
-        stroker_.init(std::max(halo_radius_,min_radius));   
+        stroker_.init(std::max(halo_radius_,min_radius));
         for ( pos = glyphs_.begin(); pos != glyphs_.end();++pos)
         {
             FT_Glyph g;
@@ -520,7 +523,7 @@ struct text_renderer : private boost::noncopyable
                 //error = FT_Glyph_To_Bitmap( &g,FT_RENDER_MODE_MONO,0,1);
                 if ( ! error )
                 {
-                    
+
                     FT_BitmapGlyph bit = (FT_BitmapGlyph)g;
                     render_bitmap_id(&bit->bitmap, feature_id,
                                   bit->left,
@@ -528,7 +531,7 @@ struct text_renderer : private boost::noncopyable
                 }
             }
             FT_Done_Glyph(g);
-        }    
+        }
     }
     
 private:

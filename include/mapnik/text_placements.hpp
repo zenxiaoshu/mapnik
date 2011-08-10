@@ -179,7 +179,6 @@ public:
     double get_actual_minimum_padding() { return scale_factor * properties.minimum_padding; }
 
     bool collect_extents;
-    string_info *info; // should only be used for finding placement. doesn't necessarily match placements.vertex() values
     //Output
     box2d<double> extents;
     std::queue< box2d<double> > envelopes;

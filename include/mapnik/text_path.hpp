@@ -121,16 +121,17 @@ struct text_path : boost::noncopyable
         double x, y, angle;
         char_properties *format;
                
-        character_node(int c_, double x_, double y_, double angle_) 
-            : c(c_), x(x_), y(y_), angle(angle_) {}
+        character_node(int c_, double x_, double y_, double angle_, char_properties *format_)
+            : c(c_), x(x_), y(y_), angle(angle_), format(format_) {}
         ~character_node() {}
                
-        void vertex(int *c_, double *x_, double *y_, double *angle_)
+        void vertex(int *c_, double *x_, double *y_, double *angle_, char_properties **format_)
         {
             *c_ = c;
             *x_ = x;
             *y_ = y;
             *angle_ = angle;
+            *format_ = format;
         }
     };
          
@@ -149,14 +150,14 @@ struct text_path : boost::noncopyable
          
     ~text_path() {}
           
-    void add_node(int c, double x, double y, double angle)
+    void add_node(int c, double x, double y, double angle, char_properties *format)
     {
-        nodes_.push_back(character_node(c, x, y, angle));
+        nodes_.push_back(character_node(c, x, y, angle, format));
     }
         
-    void vertex(int *c, double *x, double *y, double *angle)
+    void vertex(int *c, double *x, double *y, double *angle, char_properties **format)
     {
-        nodes_[itr_++].vertex(c, x, y, angle);
+        nodes_[itr_++].vertex(c, x, y, angle, format);
     }
          
     void rewind()

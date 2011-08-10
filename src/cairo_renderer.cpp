@@ -585,7 +585,10 @@ public:
             int c;
             double x, y, angle;
 
+#if 0
+            TODO
             path.vertex(&c, &x, &y, &angle);
+#endif
 
             glyph_ptr glyph = faces->get_glyph(c);
  
@@ -621,8 +624,10 @@ public:
         {
             int c;
             double x, y, angle;
-
+#if 0
+            TODO
             path.vertex(&c, &x, &y, &angle);
+#endif
 
             glyph_ptr glyph = faces->get_glyph(c);
  
