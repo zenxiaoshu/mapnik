@@ -46,14 +46,20 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
     text_symbolizer_properties &p = placement->properties;
         }
     }*/
-    processed_text text(detector_, font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
+    processed_text text(font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
     processor.process(text, feature);
     processed_text::expression_list::const_iterator itr = text.begin();
     processed_text::expression_list::const_iterator end = text.end();
     for (; itr!=end; ++itr)
     {
-        std::cout << "Text '" << itr->str << "' with color '" << itr->p.fill.to_string() << "'\n";
+        std::cout << "Text '" << itr->str << "' with color '" << itr->p.fill.to_string() << "' '" << itr->p.face_name << &(itr->p) << "'\n";
     }
+    int i;
+    string_info const& info = text.get_string_info();
+    for (i=0; i<info.num_characters(); i++) {
+        std::cout << "Char '" << (char)(info[i].character) << "' "<<info[i].format << " with color '" << info[i].format->fill.to_string() << "'\n";
+    }
+    std::cout << "test6\n";
     unsigned num_geom = feature.num_geometries();
     for (unsigned i=0; i<num_geom; ++i)
     {
@@ -72,7 +78,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             prj_trans.backward(label_x,label_y, z);
             t_.forward(&label_x,&label_y);
 
-            text.find_point_placement(label_x, label_y);
+//            text.find_point_placement(label_x, label_y);
         //    finder.update_detector(*placement);
         }
     }

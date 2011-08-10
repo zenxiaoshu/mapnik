@@ -59,6 +59,7 @@ text_symbolizer_properties::text_symbolizer_properties() :
     text_ratio(0),
     wrap_width(0)
 {
+    processor = new text_processor();
 }
 
 void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets)
@@ -98,6 +99,7 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     if (dy) displacement.get<1>() = *dy;
     optional<double> max_char_angle_delta_ = get_opt_attr<double>(sym, "max-char-angle-delta");
     if (max_char_angle_delta_) max_char_angle_delta=(*max_char_angle_delta_)*(M_PI/180);
+    processor->from_xml(sym, fontsets);
 }
 
 void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_symbolizer_properties const &dfl) const
@@ -187,8 +189,8 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
 
 char_properties::char_properties() :
     text_size(10),
-    line_spacing(0),
     character_spacing(0),
+    line_spacing(0),
     text_opacity(1.0),
     wrap_before(false),
     wrap_char(' '),

@@ -1208,7 +1208,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
     std::stringstream s_symbolizer;
     s_symbolizer << s_common.str() << ",placements,placement-type,"
       << "meta-writer,meta-output";
-    
+
     ensure_attrs(sym, "TextSymbolizer", s_symbolizer.str());
     try
     {
@@ -1233,7 +1233,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
 
         text_symbolizer text_symbol = text_symbolizer(expression_ptr(), 10, color(0,0,0), placement_finder);
         placement_finder->properties.set_values_from_xml(sym, fontsets_);
-//        if (strict_) ensure_font_face(placement_finder->properties.face_name); TODO
+        if (strict_) ensure_font_face(placement_finder->properties.processor->defaults.face_name);
         if (list) {
             ptree::const_iterator symIter = sym.begin();
             ptree::const_iterator endSym = sym.end();
@@ -1242,18 +1242,15 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
                 if (symIter->first != "Placement")
                 {
 //                    throw config_error("Unknown element '" + symIter->first + "'"); TODO
+                    continue;
                 }
                 ensure_attrs(symIter->second, "TextSymbolizer/Placement", s_common.str());
                 text_symbolizer_properties & p = list->add();
                 p.set_values_from_xml(symIter->second, fontsets_);
-//                if (strict_) ensure_font_face(p.face_name); //TODO
+                if (strict_) ensure_font_face(p.processor->defaults.face_name);
             }
         }
         parse_metawriter_in_symbolizer(text_symbol, sym);
-        text_processor *format = new text_processor;
-        format->from_xml(sym);
-//        format->set_defaults( placement_finder->properties); //TODO
-        placement_finder->properties.processor = format; //TODO: Temporary hack
         rule.append(text_symbol);
     }
     catch (const config_error & ex)

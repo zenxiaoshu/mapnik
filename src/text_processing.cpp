@@ -157,7 +157,13 @@ text_processor::text_processor():
 {
 }
 
-void text_processor::from_xml(const boost::property_tree::ptree &pt)
+void text_processor::from_xml(const boost::property_tree::ptree &pt, std::map<std::string,font_set> const &fontsets)
+{
+    defaults.set_values_from_xml(pt, fontsets);
+    from_xml_recursive(pt, fontsets);
+}
+
+void text_processor::from_xml_recursive(const boost::property_tree::ptree &pt, std::map<std::string,font_set> const &fontsets)
 {
     ptree::const_iterator itr = pt.begin();
     ptree::const_iterator end = pt.end();
@@ -172,7 +178,7 @@ void text_processor::from_xml(const boost::property_tree::ptree &pt)
             fixed_formating_token *token = new fixed_formating_token();
             token->set_fill(get_opt_attr<color>(itr->second, "fill"));
             list_.push_back(token);
-            from_xml(itr->second); /* Parse children, making a list out of a tree. */
+            from_xml_recursive(itr->second, fontsets); /* Parse children, making a list out of a tree. */
             list_.push_back(new end_format_token());
         } else if (itr->first != "<xmlcomment>" && itr->first != "<xmlattr>" && itr->first != "Placement") {
             std::cerr << "Unknown item" << itr->first;
@@ -209,6 +215,10 @@ void text_processor::process(processed_text &output, Feature const& feature)
             }
             if (text_str.length() > 0) {
                 output.push_back(processed_expression(p, text_str));
+            } else {
+#ifdef MAPNIK_DEBUG
+                std::cerr << "Warning: Empty expression.\n";
+#endif
             }
         } else if (format) {
             char_properties next_properties = formats.top();
@@ -224,6 +234,9 @@ void text_processor::process(processed_text &output, Feature const& feature)
                 return;
             }
         }
+    }
+    if (formats.size() != 1) {
+        std::cerr << "Warning: Internal mapnik error. Less elements popped than pushed in text_processor::process()\n";
     }
 }
 
@@ -244,14 +257,8 @@ processed_text::expression_list::const_iterator processed_text::end()
     return expr_list_.end();
 }
 
-bool processed_text::find_point_placement(double x, double y)
-{
-    buffer_char_sizes();
-    return false;
-}
-
-processed_text::processed_text(DetectorType & detector, face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor)
-    : detector_(detector), dimensions_(dimensions), font_manager_(font_manager), scale_factor_(scale_factor)
+processed_text::processed_text(face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor)
+    : dimensions_(dimensions), font_manager_(font_manager), scale_factor_(scale_factor)
 {
 
 }
@@ -262,9 +269,9 @@ void processed_text::clear()
 }
 
 
-void processed_text::buffer_char_sizes()
+string_info const& processed_text::get_string_info()
 {
-    //info_.clear(); TODO: Make sure this is only called once
+    //info_.clear(); TODO
     expression_list::iterator itr = expr_list_.begin();
     expression_list::iterator end = expr_list_.end();
     for (; itr != end; ++itr)
@@ -287,6 +294,7 @@ void processed_text::buffer_char_sizes()
         faces->get_string_info(info_, itr->str, &(itr->p));
         info_.add_text(itr->str);
     }
+    return info_;
 }
 
 

@@ -35,9 +35,6 @@
 #include <vector>
 namespace mapnik
 {
-typedef coord_transform2<CoordTransform,geometry_type> path_type; //TODO: Put this into a global header and remove it from each file it is used.
-typedef label_collision_detector4 DetectorType;
-
 class abstract_token;
 class processed_text;
 
@@ -55,18 +52,15 @@ private:
 class processed_text
 {
 public:
-    processed_text(DetectorType & detector, face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor);
+    processed_text(face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor);
     void push_back(processed_expression const& exp);
     void clear();
     typedef std::list<processed_expression> expression_list;
     expression_list::const_iterator begin();
     expression_list::const_iterator end();
-    bool find_point_placement(double x, double y);
-protected:
-    void buffer_char_sizes();
+    string_info const& get_string_info();
 private:
     expression_list expr_list_;
-    DetectorType &detector_;
     box2d<double> dimensions_;
     face_manager<freetype_engine> & font_manager_;
     double scale_factor_;
@@ -78,10 +72,12 @@ class text_processor
 {
 public:
     text_processor();
-    void from_xml(boost::property_tree::ptree const& pt);
+    void from_xml(boost::property_tree::ptree const& pt, std::map<std::string,font_set> const &fontsets);
     /*void to_xml(boost::property_tree::ptree &node); */
     void process(processed_text &output, Feature const& feature);
     char_properties defaults;
+protected:
+    void from_xml_recursive(boost::property_tree::ptree const& pt, std::map<std::string,font_set> const &fontsets);
 private:
     std::list<abstract_token *> list_;
 };
