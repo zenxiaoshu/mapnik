@@ -42,16 +42,9 @@ struct character_info
     double width, height;
     char_properties *format;
       
-    character_info() : character(0), width(0), height(0) {}
-    character_info(int c_, double width_, double height_) : character(c_), width(width_), height(height_) {}
+    character_info() : character(0), width(0), height(0), format(0) {}
     character_info(int c_, double width_, double height_, char_properties *format_) : character(c_), width(width_), height(height_), format(format_) {}
     ~character_info() {}
-        
-    character_info(const character_info &ci)
-        : character(ci.character), width(ci.width), height(ci.height)
-    {
-    }
-          
 };
     
 class string_info : private boost::noncopyable
@@ -71,11 +64,6 @@ public:
         : text_(),
           width_(0),
           height_(0) {}
-
-    void add_info(int c, double width, double height)
-    {
-        characters_.push_back(new character_info(c, width, height));
-    }
 
     void add_info(int c, double width, double height, char_properties *format)
     {
@@ -158,12 +146,6 @@ struct text_path : boost::noncopyable
         : starting_x(0),
           starting_y(0),
           itr_(0) {} 
-         
-    //text_path(text_path const& other) : 
-    //  itr_(0),
-    //  nodes_(other.nodes_),
-    //  string_dimensions(other.string_dimensions)
-    //{}
          
     ~text_path() {}
           
