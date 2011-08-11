@@ -165,7 +165,7 @@ public:
       */
     virtual bool next_position_only()=0;
     virtual ~text_placement_info() {}
-    void init(string_info *info_, double scale_factor_,
+    void init(double scale_factor_,
               unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
 
     text_symbolizer_properties properties;

@@ -78,7 +78,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             prj_trans.backward(label_x,label_y, z);
             t_.forward(&label_x,&label_y);
 
-//            text.find_point_placement(label_x, label_y);
+
         //    finder.update_detector(*placement);
         }
     }
@@ -97,16 +97,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
 #if 0
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
 
-
-        face_set_ptr faces;
-        if (p.fontset.size() > 0)
-        {
-            faces = font_manager_.get_face_set(p.fontset);
-        }
-        else
-        {
-            faces = font_manager_.get_face_set(p.face_name);
-        }
 
         stroker_ptr strk = font_manager_.get_stroker();
         if (!(faces->size() > 0 && strk))

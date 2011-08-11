@@ -203,7 +203,8 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
         for (int i = 0; i < current_placement.num_nodes(); ++i) {
             int cx = current_placement.starting_x;
             int cy = current_placement.starting_y;
-            current_placement.vertex(&c, &x, &y, &angle);
+            char_properties *unused;
+            current_placement.vertex(&c, &x, &y, &angle, &unused);
             if (cx+x >= 0 && cx+x < width_ && cy-y >= 0 && cy-y < height_) inside = true;
             if (angle > 0.001 || angle < -0.001) straight = false;
             if (inside && !straight) break;
@@ -216,7 +217,8 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             //Reduce number of polygons
             double minx = INT_MAX, miny = INT_MAX, maxx = INT_MIN, maxy = INT_MIN;
             for (int i = 0; i < current_placement.num_nodes(); ++i) {
-                current_placement.vertex(&c, &x, &y, &angle);
+                char_properties *unused;
+                current_placement.vertex(&c, &x, &y, &angle, &unused);
                 font_face_set::dimension_t ci = face->character_dimensions(c);
                 if (x < minx) minx = x;
                 if (x+ci.width > maxx) maxx = x+ci.width;
@@ -239,7 +241,8 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             if (c != ' ') {
                 *f_ << ",";
             }
-            current_placement.vertex(&c, &x, &y, &angle);
+            char_properties *unused;
+            current_placement.vertex(&c, &x, &y, &angle, &unused);
             if (c == ' ') continue;
             font_face_set::dimension_t ci = face->character_dimensions(c);
 

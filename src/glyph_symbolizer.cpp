@@ -22,7 +22,7 @@ text_path_ptr glyph_symbolizer::get_text_path(face_set_ptr const& faces,
     // calculate displacement so glyph is rotated along center (default pivot is
     // lowerbottom corner)
     string_info info(char_);
-    faces->get_string_info(info);
+    faces->get_string_info(info, char_ /*TODO!!! Completely broken!!!*/);
 
     // XXX: Perhaps this limitation can be overcomed?
     if (info.num_characters() != 1)
@@ -39,7 +39,7 @@ text_path_ptr glyph_symbolizer::get_text_path(face_set_ptr const& faces,
     
     // Create text path and add character with displacement and angle
     text_path_ptr path_ptr = text_path_ptr(new text_path());
-    path_ptr->add_node(ci.character, -xoff, -yoff, angle);
+    path_ptr->add_node(ci.character, -xoff, -yoff, angle, ci.format);
     return path_ptr;
 }
 

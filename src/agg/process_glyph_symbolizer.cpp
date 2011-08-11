@@ -48,9 +48,11 @@ void agg_renderer<T>::process(glyph_symbolizer const& sym,
         prj_trans.backward(x,y,z);
         t_.forward(&x, &y);
 
-        text_renderer<T> ren(pixmap_, faces, *strk);
+        text_renderer<T> ren(pixmap_, font_manager_, *strk);
 
         // set fill and halo colors
+
+#if 0
         color fill = sym.eval_color(feature);
         ren.set_fill(fill);
         if (fill != color("transparent")) {
@@ -62,6 +64,7 @@ void agg_renderer<T>::process(glyph_symbolizer const& sym,
         unsigned size = sym.eval_size(feature);
         ren.set_pixel_size(size * scale_factor_);
         faces->set_pixel_sizes(size * scale_factor_);
+#endif
 
         // Get and render text path
         //
