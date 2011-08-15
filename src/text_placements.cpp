@@ -91,8 +91,6 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     /* Attributes needing special care */
     optional<std::string> orientation_ = get_opt_attr<std::string>(sym, "orientation");
     if (orientation_) orientation = parse_expression(*orientation_, "utf8");
-    optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
-    if (name_) name = parse_expression(*name_, "utf8");
     optional<double> dx = get_opt_attr<double>(sym, "dx");
     if (dx) displacement.get<0>() = *dx;
     optional<double> dy = get_opt_attr<double>(sym, "dy");
@@ -100,19 +98,16 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     optional<double> max_char_angle_delta_ = get_opt_attr<double>(sym, "max-char-angle-delta");
     if (max_char_angle_delta_) max_char_angle_delta=(*max_char_angle_delta_)*(M_PI/180);
     processor->from_xml(sym, fontsets);
+    optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
+    if (name_) {
+        std::clog << "### WARNING: Using 'name' in TextSymbolizer is depecated!\n";
+//        name = parse_expression(*name_, "utf8");
+        /* TODO: Add to processor as default text. */
+    }
 }
 
 void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_symbolizer_properties const &dfl) const
 {
-    if (name) /* Should always be true, but better check it. */
-    {
-        const std::string & namestr = to_expression_string(*name);
-        if (!dfl.name || namestr != to_expression_string(*(dfl.name)) || explicit_defaults)
-        {
-            set_attr(node, "name", namestr);
-        }
-    }
-
     if (orientation)
     {
         const std::string & orientationstr = to_expression_string(*orientation);
@@ -185,6 +180,7 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
     {
         set_attr(node, "vertical-alignment", valign);
     }
+    //TODO: Processor
 }
 
 char_properties::char_properties() :
@@ -318,7 +314,7 @@ text_placements::text_placements() : properties()
 std::set<expression_ptr> text_placements::get_all_expressions()
 {
     std::set<expression_ptr> result;
-    result.insert(properties.name);
+    /* TODO: Collect expressions!*/
     result.insert(properties.orientation);
     return result;
 }

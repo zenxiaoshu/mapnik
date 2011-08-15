@@ -33,8 +33,8 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               Feature const& feature,
                               proj_transform const& prj_trans)
 {
-    typedef  coord_transform2<CoordTransform,geometry_type> path_type; /* TODO */
     bool placement_found = false;
+    metawriter_with_properties writer = sym.get_metawriter();
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
     while (!placement_found && placement->next()) {
         text_processor &processor = *(placement->properties.processor);
@@ -43,17 +43,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         processed_text text(font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
         processor.process(text, feature);
         string_info &info = text.get_string_info();
-#if 0
-        processed_text::expression_list::const_iterator itr = text.begin();
-        processed_text::expression_list::const_iterator end = text.end();
-        for (; itr!=end; ++itr)
-        {
-            std::cout << "Text '" << itr->str << "' with color '" << itr->p.fill.to_string() << "' '" << itr->p.face_name << &(itr->p) << "'\n";
-        }
-        for (unsigned i=0; i<info.num_characters(); i++) {
-            std::cout << "Char '" << (char)(info[i].character) << "' "<<info[i].format << " with color '" << info[i].format->fill.to_string() << "'\n";
-        }
-#endif
         box2d<double> dims(0, 0, width_, height_);
         placement_finder<label_collision_detector4> finder(detector_,dims);
         unsigned num_geom = feature.num_geometries();
@@ -61,38 +50,17 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
-//            if (writer.first)
-//                text_placement.collect_extents = true; // needed for inmem metawriter
-
-            if (p.label_placement == POINT_PLACEMENT || p.label_placement == INTERIOR_PLACEMENT)
+            if (writer.first)
+                placement->collect_extents = true; // needed for inmem metawriter
+            double angle = 0.0;
+            if (p.orientation)
             {
-                double label_x=0.0;
-                double label_y=0.0;
-                double z=0.0;
-                if (p.label_placement == POINT_PLACEMENT)
-                    geom.label_position(&label_x, &label_y);
-                else
-                    geom.label_interior_position(&label_x, &label_y);
-                prj_trans.backward(label_x, label_y, z);
-                t_.forward(&label_x, &label_y);
-
-                double angle = 0.0;
-                expression_ptr angle_expr = sym.get_orientation();
-                if (angle_expr)
-                {
-                    // apply rotation
-                    value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*angle_expr);
-                    angle = result.to_double();
-                }
-
-                finder.find_point_placement(*placement, info, label_x, label_y, angle);
-                finder.update_detector(*placement, info); /*TODO: Info required?*/
+                // apply rotation
+                value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*(p.orientation));
+                angle = result.to_double();
             }
-            else if (p.label_placement == LINE_PLACEMENT && geom.num_points() > 1)
-            {
-                path_type path(t_, geom, prj_trans);
-                finder.find_line_placements<path_type>(*placement, info, path);
-            }
+            finder.find_placement(*placement, info, angle, geom, t_, prj_trans);
+
             if (!placement->placements.size()) continue;
             placement_found = true;
             stroker_ptr strk = font_manager_.get_stroker();
@@ -105,7 +73,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                 ren.render(x, y);
             }
 
-//            if (writer.first) writer.first->add_text(text_placement, faces, feature, t_, writer.second);
+//            if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
         }
     }
 }

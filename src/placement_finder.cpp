@@ -945,6 +945,34 @@ void placement_finder<DetectorT>::clear()
     detector_.clear();
 }
 
+template <typename DetectorT>
+void placement_finder<DetectorT>::find_placement(text_placement_info &pi, string_info &info, double angle, geometry_type const& geom, CoordTransform const& t, proj_transform const& prj_trans)
+{
+    text_symbolizer_properties &p = pi.properties;
+    if (p.label_placement == POINT_PLACEMENT ||
+        p.label_placement == INTERIOR_PLACEMENT)
+    {
+        double label_x=0.0;
+        double label_y=0.0;
+        double z=0.0;
+        if (p.label_placement == POINT_PLACEMENT)
+            geom.label_position(&label_x, &label_y);
+        else
+            geom.label_interior_position(&label_x, &label_y);
+        prj_trans.backward(label_x, label_y, z);
+        t.forward(&label_x, &label_y);
+
+        find_point_placement(pi, info, label_x, label_y, angle);
+        update_detector(pi, info);
+    }
+    else if (p.label_placement == LINE_PLACEMENT && geom.num_points() > 1)
+    {
+        typedef  coord_transform2<CoordTransform,geometry_type> path_type;
+        path_type path(t, geom, prj_trans);
+        find_line_placements<path_type>(pi, info, path);
+    }
+}
+
 typedef coord_transform2<CoordTransform,geometry_type> PathType;
 typedef label_collision_detector4 DetectorType;
 

@@ -123,12 +123,12 @@ text_symbolizer& text_symbolizer::operator=(text_symbolizer const& other)
 
 expression_ptr text_symbolizer::get_name() const
 {
-    return placement_options_->properties.name;
+    return expression_ptr();
 }
 
 void text_symbolizer::set_name(expression_ptr name)
 {
-    placement_options_->properties.name = name;
+    //TODO: Remove this
 }
 
 expression_ptr text_symbolizer::get_orientation() const

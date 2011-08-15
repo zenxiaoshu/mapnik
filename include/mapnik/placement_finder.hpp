@@ -50,6 +50,9 @@ public:
     template <typename T>
     void find_line_placements(text_placement_info &pi, string_info &info, T & path);
 
+    //Find placement, automatically select point or line placement
+    void find_placement(text_placement_info &pi, string_info &info, double angle, geometry_type const& geom, CoordTransform const& t, proj_transform const& prj_trans);
+
     void update_detector(text_placement_info &pi, string_info &info);
 
     void clear();

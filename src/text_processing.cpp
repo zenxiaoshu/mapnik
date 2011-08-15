@@ -129,13 +129,6 @@ void fixed_formating_token::set_fill(optional<color> c)
 void fixed_formating_token::apply(char_properties &p, const Feature &feature)
 {
     if (fill_) p.fill = *fill_;
-    /*expression_ptr angle_expr = p.orientation;
-    if (angle_expr)
-    {
-        // apply rotation
-        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*angle_expr);
-        angle = result.to_double();
-    }*/
 }
 
 std::string fixed_formating_token::to_xml_string()

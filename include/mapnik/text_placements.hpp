@@ -130,7 +130,6 @@ struct text_symbolizer_properties
     void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_symbolizer_properties const &dfl=text_symbolizer_properties()) const;
 
     //Per symbolizer options
-    expression_ptr name; //deprecated
     expression_ptr orientation;
     position displacement;
     label_placement_e label_placement;
