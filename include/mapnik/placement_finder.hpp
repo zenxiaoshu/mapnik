@@ -40,7 +40,7 @@ public:
     placement_finder(DetectorT & detector, box2d<double> const& extent);
     
     //Try place a single label at the given point
-    void find_point_placement(text_placement_info &p, string_info &info, double pos_x, double pos_y, double angle=0.0, unsigned line_spacing=0, unsigned character_spacing=0);
+    void find_point_placement(text_placement_info &p, string_info &info, double pos_x, double pos_y, double angle=0.0);
 
     //Iterate over the given path, placing point labels with respect to label_spacing
     template <typename T>

@@ -182,16 +182,15 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
                                                        string_info &info,
                                                        double label_x,
                                                        double label_y,
-                                                       double angle,
-                                                       unsigned line_spacing,
-                                                       unsigned character_spacing)
+                                                       double angle)
 {
+    unsigned line_spacing = 0;
     text_symbolizer_properties &p = pi.properties;
     double x, y;
     std::auto_ptr<placement_element> current_placement(new placement_element);
     
     std::pair<double, double> string_dimensions = info.get_dimensions();
-    double string_width = string_dimensions.first + (character_spacing *(info.num_characters()-1));
+    double string_width = string_dimensions.first /* TODO + (character_spacing * (info.num_characters()-1))*/;
     double string_height = string_dimensions.second;
 
     // use height of tallest character in the string for the 'line' spacing to obtain consistent line spacing
@@ -225,7 +224,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
             character_info ci;
             ci = info.at(ii);
 
-            double cwidth = ci.width + character_spacing;
+            double cwidth = ci.width + ci.format->character_spacing;
 
             unsigned c = ci.character;
             word_width += cwidth;
@@ -240,11 +239,11 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
 
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
             if ((c == '\n') ||
-                (line_width > 0 && (((line_width - character_spacing) > wrap_at && !ci.format->wrap_before) ||
-                                   ((line_width + word_width - character_spacing) > wrap_at && ci.format->wrap_before)) ))
+                (line_width > 0 && (((line_width - ci.format->character_spacing) > wrap_at && !ci.format->wrap_before) ||
+                                   ((line_width + word_width - ci.format->character_spacing) > wrap_at && ci.format->wrap_before)) ))
             {
                 // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
-                line_width -= (last_wrap_char_width + character_spacing);
+                line_width -= (last_wrap_char_width + ci.format->character_spacing);
                 string_width = string_width > line_width ? string_width : line_width;
                 string_height += max_character_height;
                 line_breaks.push_back(last_wrap_char);
@@ -254,7 +253,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
                 word_width = 0.0;
             }
         }
-        line_width += (word_width - character_spacing);  // remove character_spacing from last character on the line
+        line_width += (word_width /* TODO: - character_spacing*/);  // remove character_spacing from last character on the line
         string_width = string_width > line_width ? string_width : line_width;
         string_height += max_character_height;
         line_breaks.push_back(info.num_characters());
@@ -267,7 +266,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
     }
     int total_lines = line_breaks.size();
 
-    info.set_dimensions( string_width, (string_height + (line_spacing * (total_lines-1))) );
+    info.set_dimensions( string_width, (string_height + (line_spacing * (total_lines-1))) ); //TODO: Looks wrong
 
     // if needed, adjust for desired vertical alignment
     current_placement->starting_y = label_y;  // no adjustment, default is MIDDLE
@@ -347,7 +346,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
         character_info ci;
         ci = info.at(i);
 
-        double cwidth = ci.width + character_spacing;
+        double cwidth = ci.width + ci.format->character_spacing;
 
         unsigned c = ci.character;
         if (i == index_to_wrap_at)

@@ -58,7 +58,7 @@ public:
     typedef std::list<processed_expression> expression_list;
     expression_list::const_iterator begin();
     expression_list::const_iterator end();
-    string_info const& get_string_info();
+    string_info &get_string_info();
 private:
     expression_list expr_list_;
     box2d<double> dimensions_;

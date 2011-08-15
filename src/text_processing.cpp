@@ -269,7 +269,7 @@ void processed_text::clear()
 }
 
 
-string_info const& processed_text::get_string_info()
+string_info &processed_text::get_string_info()
 {
     //info_.clear(); TODO
     expression_list::iterator itr = expr_list_.begin();
