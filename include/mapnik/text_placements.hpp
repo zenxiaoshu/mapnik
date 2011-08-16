@@ -116,7 +116,7 @@ struct char_properties
     unsigned line_spacing; //Largest value per line is chosen (TODO)
     double text_opacity;
     bool wrap_before; // wraps text at wrap_char immediately before current word
-    unsigned char wrap_char;
+    unsigned wrap_char;
     text_transform_e text_transform; //Per expression
     color fill;
     color halo_fill;

@@ -41,7 +41,7 @@ class abstract_token
 {
 public:
     virtual ~abstract_token() {}
-    virtual std::string to_xml_string() = 0;
+    virtual ptree *to_xml(ptree *node) = 0;
 };
 
 class abstract_formating_token : public abstract_token
@@ -60,7 +60,7 @@ class end_format_token : public abstract_token
 {
 public:
     end_format_token() {}
-    std::string to_xml_string();
+    ptree *to_xml(ptree *node);
 };
 
 class expression_token: public abstract_text_token
@@ -68,7 +68,7 @@ class expression_token: public abstract_text_token
 public:
     expression_token(expression_ptr text);
     UnicodeString to_string(Feature const& feature);
-    std::string to_xml_string();
+    ptree *to_xml(ptree *node);
     void set_expression(expression_ptr text);
     expression_ptr get_expression();
 private:
@@ -80,10 +80,32 @@ class fixed_formating_token : public abstract_formating_token
 public:
     fixed_formating_token();
     virtual void apply(char_properties &p, Feature const& feature);
-    std::string to_xml_string();
-    void set_fill(optional<color> c);
+    ptree* to_xml(ptree *node);
+    void from_xml(ptree const& node);
+    void set_face_name(optional<std::string> face_name);
+    void set_text_size(optional<unsigned> text_size);
+    void set_character_spacing(optional<unsigned> character_spacing);
+    void set_line_spacing(optional<unsigned> line_spacing);
+    void set_text_opacity(optional<double> opacity);
+    void set_wrap_before(optional<boolean> wrap_before);
+    void set_wrap_char(optional<unsigned> wrap_char);
+    void set_text_transform(optional<text_transform_e> text_trans);
+    void set_fill(optional<color> fill);
+    void set_halo_fill(optional<color> halo_fill);
+    void set_halo_radius(optional<double> radius);
 private:
+    boost::optional<std::string> face_name_;
+//    font_set fontset;
+    boost::optional<unsigned> text_size_;
+    boost::optional<unsigned> character_spacing_;
+    boost::optional<unsigned> line_spacing_;
+    boost::optional<double> text_opacity_;
+    boost::optional<boolean> wrap_before_;
+    boost::optional<unsigned> wrap_char_;
+    boost::optional<text_transform_e> text_transform_;
     boost::optional<color> fill_;
+    boost::optional<color> halo_fill_;
+    boost::optional<double> halo_radius_;
 };
 
 /************************************************************/
@@ -109,9 +131,12 @@ UnicodeString expression_token::to_string(const Feature &feature)
     return result.to_unicode();
 }
 
-std::string expression_token::to_xml_string()
+ptree *expression_token::to_xml(ptree *node)
 {
-    return to_expression_string(*text_);
+    ptree &new_node = node->push_back(ptree::value_type(
+                             "<xmltext>", ptree()))->second;
+    new_node.put_value(to_expression_string(*text_));
+    return &new_node;
 }
 
 /************************************************************/
@@ -121,26 +146,113 @@ fixed_formating_token::fixed_formating_token():
 {
 }
 
+void fixed_formating_token::apply(char_properties &p, const Feature &feature)
+{
+    if (text_size_) p.text_size = *text_size_;
+    if (character_spacing_) p.character_spacing = *character_spacing_;
+    if (line_spacing_) p.line_spacing = *line_spacing_;
+    if (text_opacity_) p.text_opacity = *text_opacity_;
+    if (wrap_before_) p.wrap_before = *wrap_before_;
+    if (wrap_char_) p.wrap_char = *wrap_char_;
+    if (text_transform_) p.text_transform = *text_transform_;
+    if (fill_) p.fill = *fill_;
+    if (halo_fill_) p.halo_fill = *halo_fill_;
+    if (halo_radius_) p.halo_radius = *halo_radius_;
+}
+
+ptree *fixed_formating_token::to_xml(ptree *node)
+{
+
+    ptree &new_node = node->push_back(ptree::value_type("Format", ptree()))->second;
+    if (text_size_) set_attr(new_node, "text-size", text_size_);
+    if (character_spacing_) set_attr(new_node, "character-spacing", character_spacing_);
+    if (line_spacing_) set_attr(new_node, "line-spacing", line_spacing_);
+    if (text_opacity_) set_attr(new_node, "opacity", text_opacity_);
+    if (wrap_before_) set_attr(new_node, "wrap-before", wrap_before_);
+    if (wrap_char_) set_attr(new_node, "wrap-character", wrap_char_);
+    if (text_transform_) set_attr(new_node, "text-transform", text_transform_);
+    if (fill_) set_attr(new_node, "fill", fill_);
+    if (halo_fill_) set_attr(new_node, "halo-fill", halo_fill_);
+    if (halo_radius_) set_attr(new_node, "halo-radius", halo_radius_);
+    return &new_node;
+}
+
+void fixed_formating_token::from_xml(ptree const& node)
+{
+    set_face_name(get_opt_attr<std::string>(node, "face-name"));
+    /*TODO: Fontset is problematic. We don't have the fontsets pointer here... */
+    set_text_size(get_opt_attr<unsigned>(node, "text-size"));
+    set_character_spacing(get_opt_attr<unsigned>(node, "character-spacing"));
+    set_line_spacing(get_opt_attr<unsigned>(node, "line-spacing"));
+    set_text_opacity(get_opt_attr<double>(node, "opactity"));
+    set_wrap_before(get_opt_attr<boolean>(node, "wrap-before"));
+    set_wrap_char(get_opt_attr<unsigned>(node, "wrap-character"));
+    set_text_transform(get_opt_attr<text_transform_e>(node, "text-transform"));
+    set_fill(get_opt_attr<color>(node, "fill"));
+    set_halo_fill(get_opt_attr<color>(node, "halo-fill"));
+    set_halo_radius(get_opt_attr<double>(node, "halo-radius"));
+}
+
+void fixed_formating_token::set_face_name(optional<std::string> face_name)
+{
+    face_name_ = face_name;
+}
+
+void fixed_formating_token::set_text_size(optional<unsigned> text_size)
+{
+    text_size_ = text_size;
+}
+
+void fixed_formating_token::set_character_spacing(optional<unsigned> character_spacing)
+{
+    character_spacing_ = character_spacing;
+}
+
+void fixed_formating_token::set_line_spacing(optional<unsigned> line_spacing)
+{
+    line_spacing_ = line_spacing;
+}
+
+void fixed_formating_token::set_text_opacity(optional<double> text_opacity)
+{
+    text_opacity_ = text_opacity;
+}
+
+void fixed_formating_token::set_wrap_before(optional<boolean> wrap_before)
+{
+    wrap_before_ = wrap_before;
+}
+
+void fixed_formating_token::set_wrap_char(optional<unsigned> wrap_char)
+{
+    wrap_char_ = wrap_char;
+}
+
+void fixed_formating_token::set_text_transform(optional<text_transform_e> text_transform)
+{
+    text_transform_ = text_transform;
+}
+
 void fixed_formating_token::set_fill(optional<color> c)
 {
     fill_ = c;
 }
 
-void fixed_formating_token::apply(char_properties &p, const Feature &feature)
+void fixed_formating_token::set_halo_fill(optional<color> c)
 {
-    if (fill_) p.fill = *fill_;
+    halo_fill_ = c;
 }
 
-std::string fixed_formating_token::to_xml_string()
+void fixed_formating_token::set_halo_radius(optional<double> radius)
 {
-    return "<Format>";
+    halo_radius_ = radius;
 }
 
 /************************************************************/
 
-std::string end_format_token::to_xml_string()
+ptree *end_format_token::to_xml(ptree *node)
 {
-    return "</Format>";
+    return 0;
 }
 
 /************************************************************/
@@ -169,12 +281,32 @@ void text_processor::from_xml_recursive(const boost::property_tree::ptree &pt, s
             list_.push_back(token);
         } else if (itr->first == "Format") {
             fixed_formating_token *token = new fixed_formating_token();
-            token->set_fill(get_opt_attr<color>(itr->second, "fill"));
+            token->from_xml(itr->second);
             list_.push_back(token);
             from_xml_recursive(itr->second, fontsets); /* Parse children, making a list out of a tree. */
             list_.push_back(new end_format_token());
         } else if (itr->first != "<xmlcomment>" && itr->first != "<xmlattr>" && itr->first != "Placement") {
             std::cerr << "Unknown item" << itr->first;
+        }
+    }
+}
+
+void text_processor::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_processor const& dfl)
+{
+    defaults.to_xml(node, explicit_defaults, dfl.defaults);
+    std::list<abstract_token *>::iterator itr = list_.begin();
+    std::list<abstract_token *>::iterator end = list_.end();
+    std::stack<ptree *> nodes;
+    ptree *current_node = &node;
+    for (; itr != end; ++itr) {
+        abstract_token *token = *itr;
+        ptree *new_node = token->to_xml(current_node);
+        if (dynamic_cast<abstract_formating_token *>(token)) {
+            nodes.push(current_node);
+            current_node = new_node;
+        } else if (dynamic_cast<end_format_token *>(token)) {
+            current_node = nodes.top();
+            nodes.pop();
         }
     }
 }

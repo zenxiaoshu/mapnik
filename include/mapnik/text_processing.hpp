@@ -72,7 +72,7 @@ class text_processor
 public:
     text_processor();
     void from_xml(boost::property_tree::ptree const& pt, std::map<std::string,font_set> const &fontsets);
-    void to_xml(boost::property_tree::ptree &node, text_processor const& defaults);
+    void to_xml(boost::property_tree::ptree &node,  bool explicit_defaults, text_processor const& dfl);
     void process(processed_text &output, Feature const& feature);
     std::set<expression_ptr> get_all_expressions();
     char_properties defaults;

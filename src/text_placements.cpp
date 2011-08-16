@@ -180,7 +180,7 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
     {
         set_attr(node, "vertical-alignment", valign);
     }
-    //TODO: Processor
+    processor->to_xml(node, explicit_defaults, *(dfl.processor));
 }
 
 char_properties::char_properties() :
