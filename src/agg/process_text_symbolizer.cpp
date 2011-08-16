@@ -39,9 +39,11 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
     placement_finder<label_collision_detector4> finder(detector_,dims);
 
     stroker_ptr strk = font_manager_.get_stroker();
+    text_renderer<T> ren(pixmap_, font_manager_, *strk);
 
     bool placement_found = false;
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+    placement->init(scale_factor_);
 
     while (!placement_found && placement->next()) {
         text_processor &processor = *(placement->properties.processor);
@@ -51,14 +53,14 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
         processor.process(text, feature);
         string_info &info = text.get_string_info();
 
+        if (writer.first)
+            placement->collect_extents = true; // needed for inmem metawriter
+
         unsigned num_geom = feature.num_geometries();
         for (unsigned i=0; i<num_geom; ++i)
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
-
-            if (writer.first)
-                placement->collect_extents = true; // needed for inmem metawriter
 
             double angle = 0.0;
             if (p.orientation)
@@ -74,7 +76,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             } else {
                 placement_found = true;
             }
-            text_renderer<T> ren(pixmap_, font_manager_, *strk);
+
             for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
             {
                 double x = placement->placements[ii].starting_x;
