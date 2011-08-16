@@ -164,7 +164,7 @@ ptree *fixed_formating_token::to_xml(ptree *node)
 {
 
     ptree &new_node = node->push_back(ptree::value_type("Format", ptree()))->second;
-    if (text_size_) set_attr(new_node, "text-size", text_size_);
+    if (text_size_) set_attr(new_node, "size", text_size_);
     if (character_spacing_) set_attr(new_node, "character-spacing", character_spacing_);
     if (line_spacing_) set_attr(new_node, "line-spacing", line_spacing_);
     if (text_opacity_) set_attr(new_node, "opacity", text_opacity_);
@@ -181,7 +181,7 @@ void fixed_formating_token::from_xml(ptree const& node)
 {
     set_face_name(get_opt_attr<std::string>(node, "face-name"));
     /*TODO: Fontset is problematic. We don't have the fontsets pointer here... */
-    set_text_size(get_opt_attr<unsigned>(node, "text-size"));
+    set_text_size(get_opt_attr<unsigned>(node, "size"));
     set_character_spacing(get_opt_attr<unsigned>(node, "character-spacing"));
     set_line_spacing(get_opt_attr<unsigned>(node, "line-spacing"));
     set_text_opacity(get_opt_attr<double>(node, "opactity"));

@@ -25,6 +25,7 @@
 #include <mapnik/font_engine_freetype.hpp>
 #include <mapnik/text_placements.hpp>
 #include <mapnik/graphics.hpp>
+#include <mapnik/grid/grid.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -476,7 +477,7 @@ void text_renderer<T>::render_id(int feature_id,double x0, double y0, double min
     typename glyphs_t::iterator pos;
     for ( pos = glyphs_.begin(); pos != glyphs_.end();++pos)
     {
-        stroker_.init(std::max(pos->properties->halo_radius_, min_radius));
+        stroker_.init(std::max(pos->properties->halo_radius, min_radius));
         FT_Glyph g;
         error = FT_Glyph_Copy(pos->image, &g);
         if (!error)
@@ -507,4 +508,8 @@ std::map<std::string,std::string> freetype_engine::name2file_;
 template void text_renderer<image_32>::render(double, double);
 template text_renderer<image_32>::text_renderer(image_32&, face_manager<freetype_engine>&, stroker&);
 template box2d<double>text_renderer<image_32>::prepare_glyphs(text_path*);
+
+template void text_renderer<grid>::render_id(int, double, double, double);
+template text_renderer<grid>::text_renderer(grid&, face_manager<freetype_engine>&, stroker&);
+template box2d<double>text_renderer<grid>::prepare_glyphs(text_path*);
 }
