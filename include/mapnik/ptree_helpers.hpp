@@ -255,7 +255,7 @@ T get(const boost::property_tree::ptree & node, const std::string & name, bool i
     }
     else
     {
-        str = node.get_optional<std::string>(name );
+        str = node.get_optional<std::string>(name+".<xmltext>");
     }
 
     if ( str ) {
@@ -286,7 +286,7 @@ inline color get(boost::property_tree::ptree const& node, std::string const& nam
     }
     else
     {
-        str = node.get_optional<std::string>(name );
+        str = node.get_optional<std::string>(name+".<xmltext>");
     }
       
     if ( str ) 
@@ -319,7 +319,7 @@ T get(const boost::property_tree::ptree & node, const std::string & name, bool i
     }
     else
     {
-        str = node.get_optional<std::string>(name);
+        str = node.get_optional<std::string>(name+".<xmltext>");
     }
 
     if ( ! str ) {
@@ -369,7 +369,7 @@ boost::optional<T> get_optional(const boost::property_tree::ptree & node, const 
     }
     else
     {
-        str = node.get_optional<std::string>(name);
+        str = node.get_optional<std::string>(name+".<xmltext>");
     }
         
     boost::optional<T> result;
@@ -403,7 +403,7 @@ inline boost::optional<color> get_optional(const boost::property_tree::ptree & n
     }
     else
     {
-        str = node.get_optional<std::string>(name);
+        str = node.get_optional<std::string>(name+".<xmltext>");
     }
         
     boost::optional<color> result;
