@@ -33,24 +33,33 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               Feature const& feature,
                               proj_transform const& prj_trans)
 {
-    bool placement_found = false;
     metawriter_with_properties writer = sym.get_metawriter();
+
+    box2d<double> dims(0, 0, width_, height_);
+    placement_finder<label_collision_detector4> finder(detector_,dims);
+
+    stroker_ptr strk = font_manager_.get_stroker();
+
+    bool placement_found = false;
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
+
     while (!placement_found && placement->next()) {
         text_processor &processor = *(placement->properties.processor);
         text_symbolizer_properties const& p = placement->properties;
-        processed_text text(font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
+
+        processed_text text(font_manager_, scale_factor_);
         processor.process(text, feature);
         string_info &info = text.get_string_info();
-        box2d<double> dims(0, 0, width_, height_);
-        placement_finder<label_collision_detector4> finder(detector_,dims);
+
         unsigned num_geom = feature.num_geometries();
         for (unsigned i=0; i<num_geom; ++i)
         {
             geometry_type const& geom = feature.get_geometry(i);
             if (geom.num_points() == 0) continue; // don't bother with empty geometries
+
             if (writer.first)
                 placement->collect_extents = true; // needed for inmem metawriter
+
             double angle = 0.0;
             if (p.orientation)
             {
@@ -60,9 +69,11 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
             }
             finder.find_placement(*placement, info, angle, geom, t_, prj_trans);
 
-            if (!placement->placements.size()) continue;
-            placement_found = true;
-            stroker_ptr strk = font_manager_.get_stroker();
+            if (!placement->placements.size()) {
+                continue;
+            } else {
+                placement_found = true;
+            }
             text_renderer<T> ren(pixmap_, font_manager_, *strk);
             for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
             {

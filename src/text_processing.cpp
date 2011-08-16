@@ -262,8 +262,8 @@ processed_text::expression_list::const_iterator processed_text::end()
     return expr_list_.end();
 }
 
-processed_text::processed_text(face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor)
-    : dimensions_(dimensions), font_manager_(font_manager), scale_factor_(scale_factor)
+processed_text::processed_text(face_manager<freetype_engine> & font_manager, double scale_factor)
+    : font_manager_(font_manager), scale_factor_(scale_factor)
 {
 
 }
@@ -276,7 +276,7 @@ void processed_text::clear()
 
 string_info &processed_text::get_string_info()
 {
-    //info_.clear(); TODO
+    //info_.clear(); TODO: if this function is called twice invalid results are returned, so clear string_info first
     expression_list::iterator itr = expr_list_.begin();
     expression_list::iterator end = expr_list_.end();
     for (; itr != end; ++itr)

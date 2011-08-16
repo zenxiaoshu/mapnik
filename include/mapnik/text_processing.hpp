@@ -52,7 +52,7 @@ private:
 class processed_text
 {
 public:
-    processed_text(face_manager<freetype_engine> & font_manager, box2d<double> dimensions, double scale_factor);
+    processed_text(face_manager<freetype_engine> & font_manager, double scale_factor);
     void push_back(processed_expression const& exp);
     void clear();
     typedef std::list<processed_expression> expression_list;
@@ -61,7 +61,6 @@ public:
     string_info &get_string_info();
 private:
     expression_list expr_list_;
-    box2d<double> dimensions_;
     face_manager<freetype_engine> & font_manager_;
     double scale_factor_;
     string_info info_;
