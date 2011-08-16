@@ -233,6 +233,18 @@ void text_processor::process(processed_text &output, Feature const& feature)
     }
 }
 
+std::set<expression_ptr> text_processor::get_all_expressions()
+{
+    std::set<expression_ptr> result;
+    std::list<abstract_token *>::const_iterator itr = list_.begin();
+    std::list<abstract_token *>::const_iterator end = list_.end();
+    for (; itr != end; ++itr) {
+        expression_token *text = dynamic_cast<expression_token *>(*itr);
+        if (text) result.insert(text->get_expression());
+    }
+    return result;
+}
+
 /************************************************************/
 
 void processed_text::push_back(processed_expression const& exp)

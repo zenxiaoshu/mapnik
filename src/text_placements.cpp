@@ -313,8 +313,9 @@ text_placements::text_placements() : properties()
 
 std::set<expression_ptr> text_placements::get_all_expressions()
 {
-    std::set<expression_ptr> result;
-    /* TODO: Collect expressions!*/
+    std::set<expression_ptr> result, tmp;
+    tmp = properties.processor->get_all_expressions();
+    result.insert(tmp.begin(), tmp.end());
     result.insert(properties.orientation);
     return result;
 }
@@ -528,19 +529,18 @@ text_placements_list::text_placements_list() : text_placements(), list_(0)
 
 std::set<expression_ptr> text_placements_list::get_all_expressions()
 {
-    std::set<expression_ptr> result;
-#if 0
-    //TODO
-    result.insert(properties.name);
+    std::set<expression_ptr> result, tmp;
+    tmp = properties.processor->get_all_expressions();
+    result.insert(tmp.begin(), tmp.end());
     result.insert(properties.orientation);
 
-    std::vector<text_properties>::const_iterator it;
+    std::vector<text_symbolizer_properties>::const_iterator it;
     for (it=list_.begin(); it != list_.end(); it++)
     {
-        result.insert(it->name);
+        tmp = it->processor->get_all_expressions();
+        result.insert(tmp.begin(), tmp.end());
         result.insert(it->orientation);
     }
-#endif
     return result;
 }
 
