@@ -729,7 +729,14 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
         if (filter_expr)
         {
             // TODO - can we use encoding defined for XML document for filter expressions?
-            rule.set_filter(parse_expression(*filter_expr,"utf8"));
+            try {
+                rule.set_filter(parse_expression(*filter_expr,"utf8"));
+            }
+            catch (const config_error & ex)
+            {
+                ex.append_context(std::string("in Filter"));
+                throw;
+            }
         }
 
         optional<std::string> else_filter =
