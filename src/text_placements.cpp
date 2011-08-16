@@ -338,13 +338,6 @@ bool text_placement_info_dummy::next()
     return true;
 }
 
-bool text_placement_info_dummy::next_position_only()
-{
-    if (position_state) return false;
-    position_state++;
-    return true;
-}
-
 text_placement_info_ptr text_placements_dummy::get_placement_info() const
 {
     return text_placement_info_ptr(new text_placement_info_dummy(this));
@@ -362,14 +355,20 @@ void text_placement_info::init(double scale_factor_,
 
 bool text_placement_info_simple::next()
 {
-    position_state = 0;
-    if (state == 0) {
-        properties.processor->defaults.text_size = parent_->properties.processor->defaults.text_size;
-    } else {
-        if (state > parent_->text_sizes_.size()) return false;
-        properties.processor->defaults.text_size = parent_->text_sizes_[state-1];
+    while (1) {
+        if (state == 0) {
+            properties.processor->defaults.text_size = parent_->properties.processor->defaults.text_size;
+        } else {
+            if (state > parent_->text_sizes_.size()) return false;
+            properties.processor->defaults.text_size = parent_->text_sizes_[state-1];
+        }
+        if (!next_position_only()) {
+            state++;
+            position_state = 0;
+        } else {
+            break;
+        }
     }
-    state++;
     return true;
 }
 
@@ -489,7 +488,6 @@ std::string text_placements_simple::get_positions()
 
 bool text_placement_info_list::next()
 {
-    position_state = 0;
     if (state == 0) {
         properties = parent_->properties;
     } else {
@@ -498,11 +496,6 @@ bool text_placement_info_list::next()
     }
     state++;
     return true;
-}
-
-bool text_placement_info_list::next_position_only()
-{
-    return (position_state++ == 0);
 }
 
 text_symbolizer_properties & text_placements_list::add()

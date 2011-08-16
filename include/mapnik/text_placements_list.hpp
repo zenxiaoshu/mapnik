@@ -49,12 +49,10 @@ class text_placement_info_list : public text_placement_info
 {
 public:
     text_placement_info_list(text_placements_list const* parent) :
-        text_placement_info(parent), state(0), position_state(0), parent_(parent) {}
+        text_placement_info(parent), state(0), parent_(parent) {}
     bool next();
-    bool next_position_only();
 private:
     unsigned state;
-    unsigned position_state;
     text_placements_list const* parent_;
 };
 

@@ -39,7 +39,6 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
     while (!placement_found && placement->next()) {
         text_processor &processor = *(placement->properties.processor);
         text_symbolizer_properties const& p = placement->properties;
-        placement->next_position_only(); //TODO
         processed_text text(font_manager_, box2d<double>(0, 0, width_, height_), scale_factor_);
         processor.process(text, feature);
         string_info &info = text.get_string_info();

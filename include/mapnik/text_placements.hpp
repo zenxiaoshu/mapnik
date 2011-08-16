@@ -155,14 +155,11 @@ class text_placement_info : boost::noncopyable
 public:
     text_placement_info(text_placements const* parent);
     /** Get next placement.
-      * This function is also called before the first placement is tried. */
-    virtual bool next()=0;
-    /** Get next placement position.
-      * This function is also called before the first position is used.
+      * This function is also called before the first placement is tried.
       * Each class has to return at least one position!
       * If this functions returns false the placement data should be considered invalid!
       */
-    virtual bool next_position_only()=0;
+    virtual bool next()=0;
     virtual ~text_placement_info() {}
     void init(double scale_factor_,
               unsigned w = 0, unsigned h = 0, bool has_dimensions_ = false);
@@ -217,12 +214,10 @@ class text_placement_info_dummy : public text_placement_info
 {
 public:
     text_placement_info_dummy(text_placements_dummy const* parent) : text_placement_info(parent),
-        state(0), position_state(0), parent_(parent) {}
+        state(0), parent_(parent) {}
     bool next();
-    bool next_position_only();
 private:
     unsigned state;
-    unsigned position_state;
     text_placements_dummy const* parent_;
 };
 
