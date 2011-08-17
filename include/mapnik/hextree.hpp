@@ -38,6 +38,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <stdio.h>
+
 namespace mapnik {
 
 typedef boost::uint8_t byte;

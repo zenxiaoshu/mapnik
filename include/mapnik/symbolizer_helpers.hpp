@@ -25,6 +25,8 @@
 #include <mapnik/text_symbolizer.hpp>
 #include <mapnik/text_processing.hpp>
 #include <mapnik/placement_finder.hpp>
+#include <mapnik/expression_evaluator.hpp>
+#include <mapnik/feature.hpp>
 
 #include <boost/shared_ptr.hpp>
 

@@ -29,6 +29,8 @@
 #include <mapnik/unicode.hpp>
 #include <mapnik/expression_node.hpp>
 #include <mapnik/feature.hpp>
+#include <mapnik/parse_path.hpp>
+
 // boost
 #include <boost/variant.hpp>
 #include <boost/concept_check.hpp>

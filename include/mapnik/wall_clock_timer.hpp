@@ -24,6 +24,7 @@
 #define MAPNIK_WALL_CLOCK_TIMER_INCLUDED
 
 #include <cstdlib>
+#include <iostream>
 #include <sys/time.h> 
 
 namespace mapnik {

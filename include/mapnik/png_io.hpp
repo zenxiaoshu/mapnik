@@ -29,6 +29,7 @@
 #include <mapnik/octree.hpp>
 #include <mapnik/hextree.hpp>
 #include <mapnik/global.hpp>
+#include <mapnik/image_data.hpp>
 
 extern "C"
 {

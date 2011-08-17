@@ -25,6 +25,8 @@
 #ifndef GAMMA_HPP
 #define GAMMA_HPP
 
+#include <mapnik/config.hpp>
+
 #include <cmath>
 
 namespace mapnik 

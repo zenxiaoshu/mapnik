@@ -29,6 +29,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/scoped_array.hpp>
 
+// stl
+#include <vector>
+
 namespace mapnik
 {
 
