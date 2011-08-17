@@ -26,10 +26,7 @@
 #define ATTRIBUTE_COLLECTOR_HPP
 
 // mapnik
-#include <mapnik/feature_layer_desc.hpp>
 #include <mapnik/rule.hpp>
-#include <mapnik/path_expression_grammar.hpp>
-#include <mapnik/parse_path.hpp>
 // boost
 #include <boost/utility.hpp>
 #include <boost/variant.hpp>

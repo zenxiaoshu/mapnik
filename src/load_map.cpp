@@ -21,6 +21,7 @@
  *****************************************************************************/
 // mapnik
 #include <mapnik/load_map.hpp>
+#include <mapnik/map.hpp>
 
 #include <mapnik/version.hpp>
 #include <mapnik/image_reader.hpp>
@@ -48,6 +49,8 @@
 #include <mapnik/text_placements_simple.hpp>
 #include <mapnik/text_placements_list.hpp>
 #include <mapnik/text_processing.hpp>
+#include <mapnik/symbolizer.hpp>
+#include <mapnik/rule.hpp>
 
 // boost
 #include <boost/optional.hpp>

@@ -30,7 +30,6 @@
 #include <mapnik/metawriter_factory.hpp>
 #include <mapnik/text_placements_simple.hpp>
 #include <mapnik/text_placements_list.hpp>
-#include <mapnik/ptree_helpers.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>

@@ -35,8 +35,6 @@
 #include <mapnik/font_engine_freetype.hpp>
 #include <mapnik/label_collision_detector.hpp>
 #include <mapnik/placement_finder.hpp>
-#include <mapnik/map.hpp>
-//#include <mapnik/marker.hpp>
 
 // cairo
 #include <cairomm/context.h>
@@ -57,8 +55,8 @@ namespace agg {
 namespace mapnik {
 
 class marker;
-
 class cairo_face;
+class Map;
 
 typedef boost::shared_ptr<cairo_face> cairo_face_ptr;
 

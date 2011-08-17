@@ -31,8 +31,7 @@
 #include <mapnik/font_engine_freetype.hpp>
 #include <mapnik/label_collision_detector.hpp>
 #include <mapnik/placement_finder.hpp>
-#include <mapnik/map.hpp>
-//#include <mapnik/marker.hpp>
+
 
 #include <mapnik/grid/grid.hpp>
 
@@ -51,8 +50,8 @@ namespace agg {
 namespace mapnik {
 
 class marker;
-   
 struct grid_rasterizer;
+class Map;
    
 template <typename T>
 class MAPNIK_DECL grid_renderer : public feature_style_processor<grid_renderer<T> >,
