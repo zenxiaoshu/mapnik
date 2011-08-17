@@ -111,6 +111,15 @@ public:
        UChar break_char = '\n';
        return (text_.indexOf(break_char) >= 0);
     }
+
+    /** Resets object to initial state. */
+    void clear(void)
+    {
+        width_ = 0;
+        height_ = 0;
+        text_ = "";
+        characters_.clear();
+    }
 };
     
 struct text_path : boost::noncopyable

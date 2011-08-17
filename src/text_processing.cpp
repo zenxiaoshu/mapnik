@@ -377,6 +377,11 @@ std::set<expression_ptr> text_processor::get_all_expressions()
     return result;
 }
 
+void text_processor::set_old_style_expression(expression_ptr expr)
+{
+    list_.push_back(new expression_token(expr));
+}
+
 /************************************************************/
 
 void processed_text::push_back(processed_expression const& exp)
@@ -402,6 +407,7 @@ processed_text::processed_text(face_manager<freetype_engine> & font_manager, dou
 
 void processed_text::clear()
 {
+    info_.clear();
     expr_list_.clear();
 }
 
