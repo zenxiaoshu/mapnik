@@ -36,7 +36,7 @@
 #include <mapnik/svg/svg_path_adapter.hpp>
 #include <mapnik/svg/svg_path_attributes.hpp>
 #include <mapnik/segment.hpp>
-#include <mapnik/text_processing.hpp>
+#include <mapnik/symbolizer_helpers.hpp>
 
 // cairo
 #include <cairomm/context.h>
@@ -1543,54 +1543,15 @@ void cairo_renderer_base::process(text_symbolizer const& sym,
                                   Feature const& feature,
                                   proj_transform const& prj_trans)
 {
-    metawriter_with_properties writer = sym.get_metawriter();
+    text_symbolizer_helper helper;
+    text_placement_info_ptr placement = helper.get_placement(sym, feature, font_manager_, detector_, prj_trans, t_, detector_.extent().width(), detector_.extent().height(), 1.0 /*scale_factor_*/);
 
-    placement_finder<label_collision_detector4> finder(detector_); /*TODO: Needs dimensions. */
 
-    stroker_ptr strk = font_manager_.get_stroker();
     cairo_context context(context_);
 
-    bool placement_found = false;
-    text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
-
-    while (!placement_found && placement->next()) {
-        text_processor &processor = *(placement->properties.processor);
-        text_symbolizer_properties const& p = placement->properties;
-
-        processed_text text(font_manager_, 1.0 /*scale_factor_*/);
-        processor.process(text, feature);
-        string_info &info = text.get_string_info();
-
-        unsigned num_geom = feature.num_geometries();
-        for (unsigned i=0; i<num_geom; ++i)
-        {
-            geometry_type const& geom = feature.get_geometry(i);
-            if (geom.num_points() == 0) continue; // don't bother with empty geometries
-
-            if (writer.first)
-                placement->collect_extents = true; // needed for inmem metawriter
-
-            double angle = 0.0;
-            if (p.orientation)
-            {
-                // apply rotation
-                value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*(p.orientation));
-                angle = result.to_double();
-            }
-            finder.find_placement(*placement, info, angle, geom, t_, prj_trans);
-
-            if (!placement->placements.size()) {
-                continue;
-            } else {
-                placement_found = true;
-            }
-
-            for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
-            {
-                context.add_text(placement->placements[ii], face_manager_, font_manager_);
-            }
-//            if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
-        }
+    for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
+    {
+        context.add_text(placement->placements[ii], face_manager_, font_manager_);
     }
 }
 

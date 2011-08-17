@@ -54,6 +54,8 @@ class processed_text
 public:
     processed_text(face_manager<freetype_engine> & font_manager, double scale_factor);
     void push_back(processed_expression const& exp);
+    unsigned size() { return expr_list_.size(); }
+    unsigned empty() { return expr_list_.empty(); }
     void clear();
     typedef std::list<processed_expression> expression_list;
     expression_list::const_iterator begin();
