@@ -946,7 +946,7 @@ void placement_finder<DetectorT>::clear()
 }
 
 template <typename DetectorT>
-void placement_finder<DetectorT>::find_placement(text_placement_info &pi, string_info &info, double angle, geometry_type const& geom, CoordTransform const& t, proj_transform const& prj_trans, unsigned offset_x, unsigned offset_y, bool update, bool points)
+void placement_finder<DetectorT>::find_placement(text_placement_info &pi, string_info &info, double angle, geometry_type const& geom, CoordTransform const& t, proj_transform const& prj_trans)
 {
     double label_x=0.0;
     double label_y=0.0;
@@ -973,6 +973,10 @@ void placement_finder<DetectorT>::find_placement(text_placement_info &pi, string
                 break;
             case VERTEX_PLACEMENT:
                 geom.vertex(&label_x, &label_y);
+                break;
+            case LINE_PLACEMENT:
+            case label_placement_enum_MAX:
+                /*not handled here*/
                 break;
             }
             prj_trans.backward(label_x, label_y, z);
