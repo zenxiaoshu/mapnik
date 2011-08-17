@@ -78,7 +78,7 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
             if (!placement->placements.size()) {
                 continue;
             }
-//            if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
+            if (writer.first) writer.first->add_text(*placement, font_manager, feature, t_, writer.second);
 
             return placement;
         }

@@ -586,16 +586,7 @@ public:
 
             path.vertex(&c, &x, &y, &angle, &p);
 
-            face_set_ptr faces;
-
-            if (p->fontset.size() > 0)
-            {
-                faces = font_manager.get_face_set(p->fontset);
-            }
-            else
-            {
-                faces = font_manager.get_face_set(p->face_name);
-            }
+            face_set_ptr faces = font_manager.get_face_set(p->face_name, p->fontset);
 
             unsigned text_size = p->text_size;
             faces->set_pixel_sizes(text_size);
@@ -637,16 +628,8 @@ public:
             path.vertex(&c, &x, &y, &angle, &p);
 
 
-            face_set_ptr faces;
+            face_set_ptr faces  = font_manager.get_face_set(p->face_name, p->fontset);
 
-            if (p->fontset.size() > 0)
-            {
-                faces = font_manager.get_face_set(p->fontset);
-            }
-            else
-            {
-                faces = font_manager.get_face_set(p->face_name);
-            }
             unsigned text_size = p->text_size;
             faces->set_pixel_sizes(text_size);
 
@@ -1146,16 +1129,7 @@ void cairo_renderer_base::process(shield_symbolizer const& sym,
 
     if (text.length() > 0 && marker)
     {
-        face_set_ptr faces;
-
-        if (p.fontset.size() > 0)
-        {
-            faces = font_manager_.get_face_set(p.fontset);
-        }
-        else 
-        {
-            faces = font_manager_.get_face_set(p.face_name);
-        }
+        face_set_ptr faces = font_manager.get_face_set(p.face_name, p.fontset);
 
         if (faces->size() > 0)
         {

@@ -305,6 +305,18 @@ public:
         return face_set;
     }
 
+    face_set_ptr get_face_set(std::string const& name, font_set const& fset)
+    {
+        if (fset.size() > 0)
+        {
+            return get_face_set(fset);
+        }
+        else
+        {
+            return get_face_set(name);
+        }
+    }
+
     stroker_ptr get_stroker()
     {
         return stroker_;
@@ -383,6 +395,7 @@ private:
     stroker & stroker_;
     glyphs_t glyphs_;
 };
+typedef face_manager<freetype_engine> face_manager_freetype;
 }
 
 #endif // FONT_ENGINE_FREETYPE_HPP

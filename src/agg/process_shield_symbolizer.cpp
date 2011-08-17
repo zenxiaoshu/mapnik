@@ -93,16 +93,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
     
     if (text.length() > 0 && marker)
     {
-        face_set_ptr faces;
-
-        if (sym.get_fontset().size() > 0)
-        {
-            faces = font_manager_.get_face_set(sym.get_fontset());
-        }
-        else
-        {
-            faces = font_manager_.get_face_set(sym.get_face_name());
-        }
+        face_set_ptr faces = font_manager_.get_face_set(sym.get_face_name(), sym.get_fontset());
 
         stroker_ptr strk = font_manager_.get_stroker();
         if (strk && faces->size() > 0)

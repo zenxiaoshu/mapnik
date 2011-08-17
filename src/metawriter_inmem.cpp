@@ -74,7 +74,7 @@ metawriter_inmem::add_box(box2d<double> const& box, Feature const& feature,
 
 void 
 metawriter_inmem::add_text(text_placement_info const& p,
-                           face_set_ptr /*face*/,
+                           face_manager_freetype & /*face*/,
                            Feature const& feature,
                            CoordTransform const& /*t*/,
                            metawriter_properties const& properties) {

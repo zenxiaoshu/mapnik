@@ -175,7 +175,7 @@ void metawriter_json_stream::add_box(box2d<double> const &box, Feature const& fe
 }
 
 void metawriter_json_stream::add_text(text_placement_info const& p,
-    face_set_ptr face,
+    face_manager_freetype &font_manager,
     Feature const& feature,
     CoordTransform const& t,
     metawriter_properties const& properties)
@@ -192,11 +192,10 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
        Hightest y = baseline of top line
 
       */
-//    if (p.placements.size()) std::cout << p.info.get_string() << "\n";
     for (unsigned n = 0; n < p.placements.size(); n++) {
         placement_element & current_placement = const_cast<placement_element &>(p.placements[n]);
 
-        bool inside = false;
+        bool inside = false; /* Part of text is inside rendering region */
         bool straight = true;
         int c; double x, y, angle;
         current_placement.rewind();
@@ -217,8 +216,9 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             //Reduce number of polygons
             double minx = INT_MAX, miny = INT_MAX, maxx = INT_MIN, maxy = INT_MIN;
             for (int i = 0; i < current_placement.num_nodes(); ++i) {
-                char_properties *unused;
-                current_placement.vertex(&c, &x, &y, &angle, &unused);
+                char_properties *cp;
+                current_placement.vertex(&c, &x, &y, &angle, &cp);
+                face_set_ptr face = font_manager.get_face_set(cp->face_name, cp->fontset);
                 font_face_set::dimension_t ci = face->character_dimensions(c);
                 if (x < minx) minx = x;
                 if (x+ci.width > maxx) maxx = x+ci.width;
@@ -241,9 +241,10 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             if (c != ' ') {
                 *f_ << ",";
             }
-            char_properties *unused;
-            current_placement.vertex(&c, &x, &y, &angle, &unused);
+            char_properties *cp;
+            current_placement.vertex(&c, &x, &y, &angle, &cp);
             if (c == ' ') continue;
+            face_set_ptr face = font_manager.get_face_set(cp->face_name, cp->fontset);
             font_face_set::dimension_t ci = face->character_dimensions(c);
 
             double x0, y0, x1, y1, x2, y2, x3, y3;

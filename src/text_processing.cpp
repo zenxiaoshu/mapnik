@@ -420,15 +420,7 @@ string_info &processed_text::get_string_info()
     for (; itr != end; ++itr)
     {
         char_properties const &p = itr->p;
-        face_set_ptr faces;
-        if (p.fontset.size() > 0)
-        {
-            faces = font_manager_.get_face_set(p.fontset);
-        }
-        else
-        {
-            faces = font_manager_.get_face_set(p.face_name);
-        }
+        face_set_ptr faces = font_manager_.get_face_set(p.face_name, p.fontset);
         if (faces->size() <= 0)
         {
             throw config_error("Unable to find specified font face '" + p.face_name + "'");
