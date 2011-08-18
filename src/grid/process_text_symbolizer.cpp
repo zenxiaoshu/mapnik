@@ -34,14 +34,16 @@ void grid_renderer<T>::process(text_symbolizer const& sym,
                               proj_transform const& prj_trans)
 {
     text_renderer<T> ren(pixmap_, font_manager_, *(font_manager_.get_stroker()));
-    text_symbolizer_helper helper; //Must live during all rendering calls as formating information is stored in here!
-    text_placement_info_ptr placement = helper.get_placement(sym, feature, font_manager_, detector_, prj_trans, t_, width_, height_, scale_factor_);
+    text_symbolizer_helper helper; //Must live during all rendering calls as formating information is stored in there!
+    text_placement_info_ptr placement = helper.get_placement(sym, feature,
+             font_manager_, detector_, prj_trans, t_,
+             width_, height_, scale_factor_ * (1.0/pixmap_.get_resolution()));
     for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
     {
         double x = placement->placements[ii].starting_x;
         double y = placement->placements[ii].starting_y;
         ren.prepare_glyphs(&(placement->placements[ii]));
-        ren.render_id(feature.id(),x,y,2);
+        ren.render_id(feature.id(), x, y, 2);
     }
     if (placement->placements.size())
         pixmap_.add_feature(feature);
