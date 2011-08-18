@@ -134,6 +134,11 @@ def call(cmd, silent=False):
     elif not silent:
         color_print(1,'Problem encounted with SCons scripts, please post bug report to: http://trac.mapnik.org\nError was: %s' % stderr)
 
+def strip_first(string,find,replace=''):
+    if string.startswith(find):
+        return string.replace(find,replace,1)
+    return string
+
 def get_libtool_major_version():
     """libtool >= 2.1b support lt_dlopenadvise and the previous
     release appears to be 1.9f (based on NEWS) so checking for 
@@ -291,24 +296,28 @@ opts.AddVariables(
     ('CC', 'The C compiler used for configure checks of C libs (defaults to gcc).', 'gcc'),
     ('CUSTOM_CXXFLAGS', 'Custom C++ flags, e.g. -I<include dir> if you have headers in a nonstandard directory <include dir>', ''),
     ('CUSTOM_LDFLAGS', 'Custom linker flags, e.g. -L<lib dir> if you have libraries in a nonstandard directory <lib dir>', ''),
+    EnumVariable('LINKING', "Set library format for libmapnik",'shared', ['shared','static']),
+    EnumVariable('RUNTIME_LINK', "Set preference for linking dependencies",'shared', ['shared','static']),
     EnumVariable('OPTIMIZATION','Set g++ optimization level','3', ['0','1','2','3','4','s']),
     # Note: setting DEBUG=True will override any custom OPTIMIZATION level
     BoolVariable('DEBUG', 'Compile a debug version of Mapnik', 'False'),
-    BoolVariable('XML_DEBUG', 'Compile a XML verbose debug version of mapnik', 'False'),
     ListVariable('INPUT_PLUGINS','Input drivers to include',DEFAULT_PLUGINS,PLUGINS.keys()),
+    ('WARNING_CXXFLAGS', 'Compiler flags you can set to reduce warning levels which are placed after -Wall.', ''),
     
     # SCons build behavior options
     ('CONFIG', "The path to the python file in which to save user configuration options. Currently : '%s'" % SCONS_LOCAL_CONFIG,SCONS_LOCAL_CONFIG),
     BoolVariable('USE_CONFIG', "Use SCons user '%s' file (will also write variables after successful configuration)", 'True'),
     # http://www.scons.org/wiki/GoFastButton
-    BoolVariable('FAST', "Make scons faster at the cost of less precise dependency tracking", 'False'),
-    BoolVariable('PRIORITIZE_LINKING', 'Sort list of lib and inc directories to ensure preferencial compiling and linking (useful when duplicate libs)', 'True'),
+    # http://stackoverflow.com/questions/1318863/how-to-optimize-an-scons-script
+    BoolVariable('FAST', "Make SCons faster at the cost of less precise dependency tracking", 'True'),
+    BoolVariable('PRIORITIZE_LINKING', 'Sort list of lib and inc directories to ensure preferential compiling and linking (useful when duplicate libs)', 'True'),
     ('LINK_PRIORITY','Priority list in which to sort library and include paths (default order is internal, other, frameworks, user, then system - see source of `sort_paths` function for more detail)',','.join(DEFAULT_LINK_PRIORITY)),    
     
     # Install Variables
     ('PREFIX', 'The install path "prefix"', '/usr/local'),
     ('PYTHON_PREFIX','Custom install path "prefix" for python bindings (default of no prefix)',''),
     ('DESTDIR', 'The root directory to install into. Useful mainly for binary package building', '/'),
+    ('PATH_INSERT', 'A custom path to append to the $PATH env to prioritize usage of shell programs like pkg-config will be used if multiple are present on the system', ''),
     
     # Boost variables
     # default is '/usr/include', see FindBoost method below
@@ -359,7 +368,7 @@ opts.AddVariables(
     # Other variables
     BoolVariable('SHAPE_MEMORY_MAPPED_FILE', 'Utilize memory-mapped files in Shapefile Plugin (higher memory usage, better performance)', 'True'),
     ('SYSTEM_FONTS','Provide location for python bindings to register fonts (if given aborts installation of bundled DejaVu fonts)',''),
-    ('LIB_DIR_NAME','Name to use for the "lib" folder where fonts and plugins are installed','/mapnik2/'),
+    ('LIB_DIR_NAME','Name to use for the subfolder beside libmapnik where fonts and plugins are installed','mapnik2'),
     PathVariable('PYTHON','Full path to Python executable used to build bindings', sys.executable),
     BoolVariable('FRAMEWORK_PYTHON', 'Link against Framework Python on Mac OS X', 'True'),
     BoolVariable('PYTHON_DYNAMIC_LOOKUP', 'On OSX, do not directly link python lib, but rather dynamically lookup symbols', 'False'),
@@ -374,7 +383,7 @@ opts.AddVariables(
     BoolVariable('COLOR_PRINT', 'Print build status information in color', 'True'),
     BoolVariable('SAMPLE_INPUT_PLUGINS', 'Compile and install sample plugins', 'False'),
     )
-    
+
 # variables to pickle after successful configure step
 # these include all scons core variables as well as custom
 # env variables needed in SConscript files
@@ -391,6 +400,9 @@ pickle_store = [# Scons internal variables
         'LINKFLAGS',
         'CUSTOM_LDFLAGS', # user submitted
         'CUSTOM_CXXFLAGS', # user submitted
+        'MAPNIK_LIB_NAME',
+        'LINK',
+        'RUNTIME_LINK',
         # Mapnik's SConstruct build variables
         'PLUGINS',
         'ABI_VERSION',
@@ -414,6 +426,17 @@ pickle_store = [# Scons internal variables
         'LIBTOOL_SUPPORTS_ADVISE',
         'PYTHON_IS_64BIT',
         'SAMPLE_INPUT_PLUGINS',
+        'PKG_CONFIG_PATH',
+        'PATH_INSERT',
+        'MAPNIK_LIB_DIR',
+        'MAPNIK_LIB_DIR_DEST',
+        'INSTALL_PREFIX',
+        'MAPNIK_INPUT_PLUGINS',
+        'MAPNIK_INPUT_PLUGINS_DEST',
+        'MAPNIK_FONTS',
+        'MAPNIK_FONTS_DEST',
+        'MAPNIK_LIB_BASE',
+        'MAPNIK_LIB_BASE_DEST'
         ]
 
 # Add all other user configurable options to pickle pickle_store
@@ -593,6 +616,7 @@ def get_pkg_lib(context, config, lib):
     return libname
 
 def parse_pg_config(context, config):
+    # TODO - leverage `LDFLAGS_SL` if RUNTIME_LINK==static
     env = context.env
     tool = config.lower()
     context.Message( 'Checking for %s... ' % tool)
@@ -600,8 +624,8 @@ def parse_pg_config(context, config):
     if ret:
         lib_path = call('%s --libdir' % env[config])
         inc_path = call('%s --includedir' % env[config])
-        env.AppendUnique(CPPPATH = inc_path)
-        env.AppendUnique(LIBPATH = lib_path)
+        env.AppendUnique(CPPPATH = os.path.realpath(inc_path))
+        env.AppendUnique(LIBPATH = os.path.realpath(lib_path))
         lpq = env['PLUGINS']['postgis']['lib']
         env.Append(LIBS = lpq)
     else:
@@ -699,8 +723,8 @@ def FindBoost(context, prefixes, thread_flag):
             env['BOOST_APPEND'] = '-'.join(append_params)
         msg += '\n  *using boost lib naming: %s' % env['BOOST_APPEND']
 
-    env.AppendUnique(CPPPATH = env['BOOST_INCLUDES'])
-    env.AppendUnique(LIBPATH = env['BOOST_LIBS'])    
+    env.AppendUnique(CPPPATH = os.path.realpath(env['BOOST_INCLUDES']))
+    env.AppendUnique(LIBPATH = os.path.realpath(env['BOOST_LIBS']))    
     if env['COLOR_PRINT']:
         msg = "\033[94m%s\033[0m" % (msg)
     ret = context.Result(msg)
@@ -798,10 +822,12 @@ int main()
         context.Result('error, could not get major and minor version from unicode/uversion.h')
         return False
     
-    color_print(4,'\nFound icu version... %s\n' % result)
     major, minor = map(int,result.split('.'))
-    if major >= 4 and minor >= 2:
+    if major >= 4 and minor >= 0:
+        color_print(4,'\nFound icu version... %s\n' % result)
         return True
+    
+    color_print(1,'\nFound insufficient icu version... %s\n' % result)
     return False
 
 def boost_regex_has_icu(context):
@@ -915,9 +941,6 @@ if not preconfigured:
         mode = 'debug mode'
     else:
         mode = 'release mode'
-
-    if env['XML_DEBUG']:
-        mode += ' (with XML debug on)'
         
     env['PLATFORM'] = platform.uname()[0]
     color_print(4,"Configuring on %s in *%s*..." % (env['PLATFORM'],mode))
@@ -930,18 +953,52 @@ if not preconfigured:
     env['HAS_PYCAIRO'] = False
     env['HAS_LIBXML2'] = False
     env['SVN_REVISION'] = None
-    
+    env['LIBMAPNIK_LIBS'] = []
     env['LIBDIR_SCHEMA'] = LIBDIR_SCHEMA
     env['PLUGINS'] = PLUGINS
+
+    # previously a leading / was expected for LIB_DIR_NAME
+    # now strip it to ensure expected behavior
+    if env['LIB_DIR_NAME'].startswith(os.path.sep):
+        env['LIB_DIR_NAME'] = strip_first(env['LIB_DIR_NAME'],os.path.sep)
+    
+    # base install location
+    env['MAPNIK_LIB_BASE'] = os.path.join(env['PREFIX'],env['LIBDIR_SCHEMA'])
+    # directory for plugins and fonts
+    env['MAPNIK_LIB_DIR'] = os.path.join(env['MAPNIK_LIB_BASE'],env['LIB_DIR_NAME'])
+    # input plugins sub directory
+    env['MAPNIK_INPUT_PLUGINS'] = os.path.join(env['MAPNIK_LIB_DIR'],'input')
+    # fonts sub directory
+    if env['SYSTEM_FONTS']:
+        env['MAPNIK_FONTS'] = os.path.normpath(env['SYSTEM_FONTS'])
+    else:
+        env['MAPNIK_FONTS'] = os.path.join(env['MAPNIK_LIB_DIR'],'fonts')
+    
+    # install prefix is a pre-pended base location to 
+    # re-route the install and only intended for package building
+    # we normalize to ensure no trailing slash and proper pre-pending to the absolute prefix
+    install_prefix = os.path.normpath(os.path.realpath(env['DESTDIR'])) + os.path.realpath(env['PREFIX'])
+    env['INSTALL_PREFIX'] = strip_first(install_prefix,'//','/')
+    # all values from above based on install_prefix
+    # if env['DESTDIR'] == '/' these should be unchanged
+    env['MAPNIK_LIB_BASE_DEST'] = os.path.join(env['INSTALL_PREFIX'],env['LIBDIR_SCHEMA'])
+    env['MAPNIK_LIB_DIR_DEST'] =  os.path.join(env['MAPNIK_LIB_BASE_DEST'],env['LIB_DIR_NAME'])
+    env['MAPNIK_INPUT_PLUGINS_DEST'] = os.path.join(env['MAPNIK_LIB_DIR_DEST'],'input')
+    if env['SYSTEM_FONTS']:
+        env['MAPNIK_FONTS_DEST'] = os.path.normpath(env['SYSTEM_FONTS'])
+    else:
+        env['MAPNIK_FONTS_DEST'] = os.path.join(env['MAPNIK_LIB_DIR_DEST'],'fonts')
+    
+    if env['LINKING'] == 'static':
+       env['MAPNIK_LIB_NAME'] = '${LIBPREFIX}mapnik2${LIBSUFFIX}'
+    else:
+       env['MAPNIK_LIB_NAME'] = '${SHLIBPREFIX}mapnik2${SHLIBSUFFIX}'
         
     if env['PKG_CONFIG_PATH']:
-        env['ENV']['PKG_CONFIG_PATH'] = env['PKG_CONFIG_PATH']
+        env['ENV']['PKG_CONFIG_PATH'] = os.path.realpath(env['PKG_CONFIG_PATH'])
         # otherwise this variable == os.environ["PKG_CONFIG_PATH"]
-
-    thread_suffix = 'mt'
-    if env['PLATFORM'] == 'FreeBSD':
-        thread_suffix = ''
-        env.Append(LIBS = 'pthread')
+    if env['PATH_INSERT']:
+        env['ENV']['PATH'] = os.path.realpath(env['PATH_INSERT']) + ':' + env['ENV']['PATH']
     
     if env['SYSTEM_FONTS']:
         if not os.path.isdir(env['SYSTEM_FONTS']):
@@ -955,11 +1012,17 @@ if not preconfigured:
     # set any custom cxxflags to come first
     env.Append(CXXFLAGS = env['CUSTOM_CXXFLAGS'])
 
+    ### platform specific bits
+
+    thread_suffix = 'mt'
+    if env['PLATFORM'] == 'FreeBSD':
+        thread_suffix = ''
+        env.Append(LIBS = 'pthread')
+
     # Solaris & Sun Studio settings (the `SUNCC` flag will only be
     # set if the `CXX` option begins with `CC`)
     SOLARIS = env['PLATFORM'] == 'SunOS'
     env['SUNCC'] = SOLARIS and env['CXX'].startswith('CC')
-    
     
     # If the Sun Studio C++ compiler (`CC`) is used instead of GCC.
     if env['SUNCC']:
@@ -970,24 +1033,7 @@ if not preconfigured:
         env['CXX'] = 'CC -library=stlport4'
         if env['THREADING'] == 'multi':
             env.Append(CXXFLAGS = '-mt')
-        
-    # Adding the required prerequisite library directories to the include path for
-    # compiling and the library path for linking, respectively.
-    for required in ('PNG', 'JPEG', 'TIFF','PROJ','ICU'):
-        inc_path = env['%s_INCLUDES' % required]
-        lib_path = env['%s_LIBS' % required]
-        env.AppendUnique(CPPPATH = inc_path)
-        env.AppendUnique(LIBPATH = lib_path)
 
-    conf.parse_config('FREETYPE_CONFIG')
-
-    if env['XMLPARSER'] == 'tinyxml':
-        env['CPPPATH'].append('#tinyxml')
-        env.Append(CXXFLAGS = '-DBOOST_PROPERTY_TREE_XML_PARSER_TINYXML -DTIXML_USE_STL')
-    elif env['XMLPARSER'] == 'libxml2':
-        if conf.parse_config('XML2_CONFIG'):
-            env['HAS_LIBXML2'] = True
-            
     # allow for mac osx /usr/lib/libicucore.dylib compatibility
     # requires custom supplied headers since Apple does not include them
     # details: http://lists.apple.com/archives/xcode-users/2005/Jun/msg00633.html
@@ -1000,6 +1046,23 @@ if not preconfigured:
         if os.path.exists(env['ICU_LIB_NAME']):
             #-sICU_LINK=" -L/usr/lib -licucore
             env['ICU_LIB_NAME'] = os.path.basename(env['ICU_LIB_NAME']).replace('.dylib','').replace('lib','')
+        
+    # Adding the required prerequisite library directories to the include path for
+    # compiling and the library path for linking, respectively.
+    for required in ('PNG', 'JPEG', 'TIFF','PROJ','ICU', 'SQLITE'):
+        inc_path = env['%s_INCLUDES' % required]
+        lib_path = env['%s_LIBS' % required]
+        env.AppendUnique(CPPPATH = os.path.realpath(inc_path))
+        env.AppendUnique(LIBPATH = os.path.realpath(lib_path))
+
+    conf.parse_config('FREETYPE_CONFIG')
+
+    if env['XMLPARSER'] == 'tinyxml':
+        env['CPPPATH'].append('#tinyxml')
+        env.Append(CXXFLAGS = '-DBOOST_PROPERTY_TREE_XML_PARSER_TINYXML -DTIXML_USE_STL')
+    elif env['XMLPARSER'] == 'libxml2':
+        if conf.parse_config('XML2_CONFIG'):
+            env['HAS_LIBXML2'] = True
 
     LIBSHEADERS = [
         ['m', 'math.h', True,'C'],
@@ -1016,7 +1079,6 @@ if not preconfigured:
         LIBSHEADERS.append(['jpeg', ['stdio.h', 'jpeglib.h'], True,'C'])
     else:
         env['SKIPPED_DEPS'].extend(['jpeg'])
-
 
     # if requested, sort LIBPATH and CPPPATH before running CheckLibWithHeader tests
     if env['PRIORITIZE_LINKING']:
@@ -1068,7 +1130,6 @@ if not preconfigured:
         # of attaching to cxxflags after configure
         if env['PLATFORM'] == 'SunOS':
             env.Append(CXXFLAGS = '-pthreads')
-
 
     # if requested, sort LIBPATH and CPPPATH before running CheckLibWithHeader tests
     if env['PRIORITIZE_LINKING']:
@@ -1132,7 +1193,7 @@ if not preconfigured:
                 # Note, the 'delete_existing' keyword makes sure that these paths are prepended
                 # to the beginning of the path list even if they already exist
                 incpath = env['%s_INCLUDES' % details['path']]
-                env.PrependUnique(CPPPATH = incpath,delete_existing=True)
+                env.PrependUnique(CPPPATH = os.path.realpath(incpath),delete_existing=True)
                 env.PrependUnique(LIBPATH = env['%s_LIBS' % details['path']],delete_existing=True)
                 if not conf.CheckLibWithHeader(details['lib'], details['inc'], details['lang']):
                     env.Replace(**backup)
@@ -1162,6 +1223,7 @@ if not preconfigured:
     # Decide which libagg to use
     # if we are using internal agg, then prepend to make sure
     # we link locally
+    
     if env['INTERNAL_LIBAGG']:
         env.Prepend(CPPPATH = '#agg/include')
         env.Prepend(LIBPATH = '#agg')
@@ -1280,10 +1342,7 @@ if not preconfigured:
         # Common debugging flags.
         debug_flags  = '-g -DDEBUG -DMAPNIK_DEBUG'
         ndebug_flags = '-DNDEBUG'
-        
-        if env['XML_DEBUG']: 
-            common_cxx_flags += '-DMAPNIK_XML_DEBUG '
-        
+       
         # Customizing the C++ compiler flags depending on: 
         #  (1) the C++ compiler used; and
         #  (2) whether debug binaries are requested.
@@ -1294,7 +1353,7 @@ if not preconfigured:
                 env.Append(CXXFLAGS = common_cxx_flags + '-O %s' % ndebug_flags)
         else:
             # Common flags for GCC.
-            gcc_cxx_flags = '-ansi %s -ftemplate-depth-200 %s' % (pthread, common_cxx_flags)        
+            gcc_cxx_flags = '-ansi -Wall %s %s -ftemplate-depth-200 %s' % (env['WARNING_CXXFLAGS'], pthread, common_cxx_flags)        
             if env['DEBUG']:
                 env.Append(CXXFLAGS = gcc_cxx_flags + '-O0 -fno-inline %s' % debug_flags)
             else: 
@@ -1336,14 +1395,14 @@ if not preconfigured:
                 env['PYTHON_SYS_PREFIX'] = os.popen('''%s -c "import sys; print sys.prefix"''' % env['PYTHON']).read().strip()
                 env['PYTHON_VERSION'] = os.popen('''%s -c "import sys; print sys.version"''' % env['PYTHON']).read()[0:3]
                 env['PYTHON_INCLUDES'] = env['PYTHON_SYS_PREFIX'] + '/include/python' + env['PYTHON_VERSION']
-                env['PYTHON_SITE_PACKAGES'] = env['DESTDIR'] + '/' + env['PYTHON_SYS_PREFIX'] + '/' + env['LIBDIR_SCHEMA'] + '/python' + env['PYTHON_VERSION'] + '/site-packages/'
+                env['PYTHON_SITE_PACKAGES'] = env['DESTDIR'] + os.path.sep + env['PYTHON_SYS_PREFIX'] + os.path.sep + env['LIBDIR_SCHEMA'] + '/python' + env['PYTHON_VERSION'] + '/site-packages/'
         
             # if user-requested custom prefix fall back to manual concatenation for building subdirectories       
             if env['PYTHON_PREFIX']:
                 py_relative_install = env['LIBDIR_SCHEMA'] + '/python' + env['PYTHON_VERSION'] + '/site-packages/' 
-                env['PYTHON_INSTALL_LOCATION'] = env['DESTDIR'] + '/' + env['PYTHON_PREFIX'] + '/' +  py_relative_install            
+                env['PYTHON_INSTALL_LOCATION'] = env['DESTDIR'] + os.path.sep + env['PYTHON_PREFIX'] + os.path.sep +  py_relative_install            
             else:
-                env['PYTHON_INSTALL_LOCATION'] = env['DESTDIR'] + '/' + env['PYTHON_SITE_PACKAGES']
+                env['PYTHON_INSTALL_LOCATION'] = env['DESTDIR'] + os.path.sep + env['PYTHON_SITE_PACKAGES']
 
             if py3:
                 is_64_bit = '''%s -c "import sys; print(sys.maxsize == 9223372036854775807)"''' % env['PYTHON']
@@ -1361,7 +1420,7 @@ if not preconfigured:
             # as they are later set in the python SConscript
             # ugly hack needed until we have env specific conf
             backup = env.Clone().Dictionary()
-            env.AppendUnique(CPPPATH = env['PYTHON_INCLUDES'])
+            env.AppendUnique(CPPPATH = os.path.realpath(env['PYTHON_INCLUDES']))
             
             if not conf.CheckHeader(header='Python.h',language='C'):
                 color_print(1,'Could not find required header files for the Python language (version %s)' % env['PYTHON_VERSION'])
@@ -1420,9 +1479,6 @@ if not preconfigured:
 # autogenerate help on default/current SCons options
 Help(opts.GenerateHelpText(env))
 
-#env.Prepend(CPPPATH = '/usr/local/include')
-#env.Prepend(LIBPATH = '/usr/local/lib')
-
 #### Builds ####
 if not HELP_REQUESTED:
 
@@ -1432,9 +1488,12 @@ if not HELP_REQUESTED:
     env['create_uninstall_target'] = create_uninstall_target
 
     if env['PKG_CONFIG_PATH']:
-        env['ENV']['PKG_CONFIG_PATH'] = env['PKG_CONFIG_PATH']
+        env['ENV']['PKG_CONFIG_PATH'] = os.path.realpath(env['PKG_CONFIG_PATH'])
         # otherwise this variable == os.environ["PKG_CONFIG_PATH"]
     
+    if env['PATH_INSERT']:
+        env['ENV']['PATH'] = os.path.realpath(env['PATH_INSERT']) + ':' + env['ENV']['PATH']
+
     # export env so it is available in Sconscript files
     Export('env')
 
@@ -1462,7 +1521,7 @@ if not HELP_REQUESTED:
         SetOption("num_jobs", env['JOBS'])  
         
     # Build agg first, doesn't need anything special
-    if env['INTERNAL_LIBAGG']:
+    if env['RUNTIME_LINK'] == 'shared' and env['INTERNAL_LIBAGG']:
         SConscript('agg/SConscript')
     
     # Build the core library
@@ -1486,20 +1545,18 @@ if not HELP_REQUESTED:
             # build internal shape and raster plugins
             SConscript('plugins/input/%s/SConscript' % plugin)
         else:
-            color_print(1,"Notice: depedencies not met for plugin '%s', not building..." % plugin)
+            color_print(1,"Notice: dependencies not met for plugin '%s', not building..." % plugin)
     
-    # todo - generalize this path construction, also used in plugin SConscript...
-    plugin_dir = os.path.normpath(env['DESTDIR'] + '/' + env['PREFIX'] + '/' + env['LIBDIR_SCHEMA'] + env['LIB_DIR_NAME'])
-    create_uninstall_target(env, plugin_dir, False)
-    create_uninstall_target(env, plugin_dir + '/input' , False)
-    create_uninstall_target(env, plugin_dir + '/fonts' , False)
+    create_uninstall_target(env, env['MAPNIK_LIB_DIR_DEST'], False)
+    create_uninstall_target(env, env['MAPNIK_INPUT_PLUGINS_DEST'] , False)
+    create_uninstall_target(env, env['MAPNIK_INPUT_PLUGINS_DEST'] , False)
 
     # before installing plugins, wipe out any previously
     # installed plugins that we are no longer building
     if 'install' in COMMAND_LINE_TARGETS:
         for plugin in PLUGINS.keys():
             if plugin not in env['REQUESTED_PLUGINS']:
-                plugin_path = os.path.join(plugin_dir,'input','%s.input' % plugin)
+                plugin_path = os.path.join(env['MAPNIK_INPUT_PLUGINS_DEST'],'%s.input' % plugin)
                 if os.path.exists(plugin_path):
                     color_print(1,"Notice: removing out of date plugin: '%s'" % plugin_path)
                     os.unlink(plugin_path)

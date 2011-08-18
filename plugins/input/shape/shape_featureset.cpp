@@ -24,6 +24,9 @@
 // mapnik
 #include <mapnik/feature_factory.hpp>
 
+// boost
+#include <boost/algorithm/string.hpp>
+
 // stl
 #include <iostream>
 
@@ -34,13 +37,13 @@ using mapnik::feature_factory;
 
 template <typename filterT>
 shape_featureset<filterT>::shape_featureset(const filterT& filter, 
-                                            const std::string& shape_file,
+                                            const std::string& shape_name,
                                             const std::set<std::string>& attribute_names,
                                             std::string const& encoding,
                                             long file_length )
     : filter_(filter),
       //shape_type_(shape_io::shape_null),
-      shape_(shape_file, false),
+      shape_(shape_name, false),
       query_ext_(),
       tr_(new transcoder(encoding)),
       file_length_(file_length),
@@ -65,12 +68,14 @@ shape_featureset<filterT>::shape_featureset(const filterT& filter,
         {
             std::ostringstream s;
 
-            s << "error no attribute by the name of '" << *pos << "'"
-                << ", available attributes are:";
+            s << "no attribute '" << *pos << "' in '"
+              << shape_name << "'. Valid attributes are: ";
+            std::vector<std::string> list;
             for (int i=0;i<shape_.dbf().num_fields();++i)
             {
-                s << " '" << shape_.dbf().descriptor(i).name_ << "'";
+                list.push_back(shape_.dbf().descriptor(i).name_);
             }
+            s << boost::algorithm::join(list, ",") << ".";
             
             throw mapnik::datasource_exception( "Shape Plugin: " + s.str() );
         }
@@ -83,12 +88,22 @@ template <typename filterT>
 feature_ptr shape_featureset<filterT>::next()
 {
     std::streampos pos=shape_.shp().pos();
+    // skip null shapes
+    while (pos > 0 && pos < std::streampos(file_length_ * 2))
+    {
+        shape_.move_to(pos);
+        if (shape_.type() ==  shape_io::shape_null)
+        {
+            pos += std::streampos(12);
+        }
+        else break;        
+    }
     
     if (pos < std::streampos(file_length_ * 2))
     {
-        shape_.move_to(pos);
         int type=shape_.type();
         feature_ptr feature(feature_factory::create(shape_.id_));
+        
         if (type == shape_io::shape_point)
         {
             double x=shape_.shp().read_double();
@@ -127,19 +142,26 @@ feature_ptr shape_featureset<filterT>::next()
         }
         else
         {
-            while (!filter_.pass(shape_.current_extent()))
-            {        
-                if (!shape_.shp().is_eof())
+            // skip shapes 
+            for (;;)
+            {
+                std::streampos pos = shape_.shp().pos();
+                if (shape_.type() == shape_io::shape_null)
                 {
-                    std::streampos pos = shape_.shp().pos();
-                    if (shape_.type() != shape_io::shape_null)
-                    {
-                       pos += std::streampos(2 * shape_.reclength_ - 36);
-                    }
-                    shape_.move_to(pos);                    
+                    pos += std::streampos(12);                    
+                    std::cerr << "NULL SHAPE len=" << shape_.reclength_ << std::endl;
+                }                    
+                else if (filter_.pass(shape_.current_extent())) break;
+                else pos += std::streampos(2 * shape_.reclength_ - 36);                
+                if (pos > 0 && pos < std::streampos(file_length_ * 2))
+                {
+                    shape_.move_to(pos);
                 }
                 else
                 {
+#ifdef MAPNIK_DEBUG
+                    std::clog << "Shape Plugin: total shapes read=" << count_ << std::endl;
+#endif
                     return feature_ptr();
                 }
             }
@@ -251,20 +273,18 @@ feature_ptr shape_featureset<filterT>::next()
         if (attr_ids_.size())
         {
             shape_.dbf().move_to(shape_.id_);
-            std::vector<int>::const_iterator pos=attr_ids_.begin();
+            std::vector<int>::const_iterator itr=attr_ids_.begin();
             std::vector<int>::const_iterator end=attr_ids_.end();
-             
-            while (pos!=end)
+            try 
             {
-                try 
-                {
-                    shape_.dbf().add_attribute(*pos,*tr_,*feature);//TODO optimize!!!
+                for (;itr!=end;++itr)
+                {                    
+                    shape_.dbf().add_attribute(*itr,*tr_,*feature);//TODO optimize!!!
                 }
-                catch (...)
-                {
-                    std::clog << "Shape Plugin: error processing attributes " << std::endl;
-                }
-                ++pos;
+            }
+            catch (...)
+            {
+                std::clog << "Shape Plugin: error processing attributes " << std::endl;
             }
         }
         return feature;
