@@ -210,11 +210,11 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
 
     error = FT_Load_Glyph (face, glyph->get_index(), FT_LOAD_NO_HINTING);
     if ( error )
-        return dimension_t(0, 0, 0);
+        return dimension_t(0, 0, 0, 0);
 
     error = FT_Get_Glyph(face->glyph, &image);
     if ( error )
-        return dimension_t(0, 0, 0);
+        return dimension_t(0, 0, 0, 0);
 
     FT_Glyph_Get_CBox(image, ft_glyph_bbox_pixels, &glyph_bbox);
     FT_Done_Glyph(image);
@@ -222,7 +222,7 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
     unsigned tempx = face->glyph->advance.x >> 6;
 
     //std::clog << "glyph: " << glyph_index << " x: " << tempx << " y: " << tempy << std::endl;
-    dimension_t dim(tempx, glyph_bbox.yMax, glyph_bbox.yMin);
+    dimension_t dim(tempx, glyph_bbox.yMax, glyph_bbox.yMin, face->size->metrics.height);
     //dimension_cache_[c] = dim; would need an default constructor for dimension_t
     dimension_cache_.insert(std::pair<unsigned, dimension_t>(c, dim));
     return dim;

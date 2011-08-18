@@ -147,8 +147,8 @@ class MAPNIK_DECL font_face_set : private boost::noncopyable
 public:
     class dimension_t {
     public:
-        dimension_t(unsigned width_, int ymax_, int ymin_) :  width(width_), height(ymax_-ymin_), ymin(ymin_) {}
-        unsigned width, height;
+        dimension_t(unsigned width_, int ymax_, int ymin_, unsigned linespacing_) :  width(width_), height(ymax_-ymin_), linespacing(linespacing_), ymin(ymin_) {}
+        unsigned width, height, linespacing;
         int ymin;
     };
 

@@ -189,13 +189,25 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
     double x, y;
     std::auto_ptr<placement_element> current_placement(new placement_element);
     
-    std::pair<double, double> string_dimensions = info.get_dimensions();
-    double string_width = string_dimensions.first /* TODO + (character_spacing * (info.num_characters()-1))*/;
-    double string_height = string_dimensions.second;
+    if (!info.num_characters()) return; //At least one character is required
+    // Get total string size
+    double string_width = 0;
+    double string_height = 0;
+    for (unsigned i = 0; i < info.num_characters(); i++)
+    {
+        character_info ci = info.at(i);
+        if (!ci.width || !ci.height) continue; //Skip empty chars (add no character_spacing for them)
+        string_width += ci.width + ci.format->character_spacing;
+        string_height = std::max(string_height, ci.height + ci.format->line_spacing);
+    }
+    string_width -= ci.format;
 
     // use height of tallest character in the string for the 'line' spacing to obtain consistent line spacing
     double max_character_height = string_height;  // height of the tallest character in the string
 
+/*****************************************************************************/
+/**************************** Find wrap postions *****************************/
+/*****************************************************************************/
     // check if we need to wrap the string
     double wrap_at = string_width + 1.0;
     if (p.wrap_width && string_width > p.wrap_width)
@@ -210,7 +222,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
     std::vector<int> line_breaks;
     std::vector<double> line_widths;
 
-    if ((info.num_characters() > 0) && ((wrap_at < string_width) || info.has_line_breaks()))
+    if ((wrap_at < string_width) || info.has_line_breaks())
     {
         int last_wrap_char = 0;
         int last_wrap_char_width = 0;
