@@ -200,7 +200,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &pi,
         string_width += ci.width + ci.format->character_spacing;
         string_height = std::max(string_height, ci.height + ci.format->line_spacing);
     }
-    string_width -= ci.format;
+    string_width -= info.at(info.num_characters()-1).format->character_spacing; //Remove last space
 
     // use height of tallest character in the string for the 'line' spacing to obtain consistent line spacing
     double max_character_height = string_height;  // height of the tallest character in the string
