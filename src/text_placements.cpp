@@ -100,7 +100,7 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     processor->from_xml(sym, fontsets);
     optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
     if (name_) {
-        std::clog << "### WARNING: Using 'name' in TextSymbolizer is depecated!\n";
+        std::clog << "### WARNING: Using 'name' in TextSymbolizer is deprecated!\n";
         processor->set_old_style_expression(parse_expression(*name_, "utf8"));
     }
 }
