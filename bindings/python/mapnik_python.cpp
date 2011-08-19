@@ -79,6 +79,7 @@ void export_inmem_metawriter();
 #include <mapnik/config_error.hpp>
 #include <mapnik/value_error.hpp>
 #include <mapnik/save_map.hpp>
+#include <mapnik/scale_denominator.hpp>
 #include "python_grid_utils.hpp"
 
 #if defined(HAVE_CAIRO) && defined(HAVE_PYCAIRO)

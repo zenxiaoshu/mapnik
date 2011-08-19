@@ -25,6 +25,7 @@
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
 #include <mapnik/marker_cache.hpp>
+#include <mapnik/polygon_pattern_symbolizer.hpp>
 
 // agg
 #include "agg_basics.h"

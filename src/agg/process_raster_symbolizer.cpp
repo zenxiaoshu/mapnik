@@ -25,6 +25,7 @@
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
 #include <mapnik/image_util.hpp>
+#include <mapnik/raster_symbolizer.hpp>
 
 // stl
 #include <cmath>

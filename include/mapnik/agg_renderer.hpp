@@ -30,6 +30,7 @@
 #include <mapnik/feature_style_processor.hpp>
 #include <mapnik/font_engine_freetype.hpp>
 #include <mapnik/label_collision_detector.hpp>
+#include <mapnik/feature.hpp>
 
 
 // boost
@@ -49,6 +50,17 @@ namespace mapnik {
 class Map;
 class marker;
 struct rasterizer;
+struct point_symbolizer;
+struct line_symbolizer;
+struct line_pattern_symbolizer;
+struct polygon_symbolizer;
+struct polygon_pattern_symbolizer;
+struct raster_symbolizer;
+struct shield_symbolizer;
+struct text_symbolizer;
+struct building_symbolizer;
+struct markers_symbolizer;
+struct glyph_symbolizer;
    
 template <typename T>
 class MAPNIK_DECL agg_renderer : public feature_style_processor<agg_renderer<T> >,
@@ -97,13 +109,6 @@ public:
     void process(glyph_symbolizer const& sym,
                  Feature const& feature,
                  proj_transform const& prj_trans);    
-    inline bool process(rule::symbolizers const& /*syms*/,
-                        Feature const& /*feature*/,
-                        proj_transform const& /*prj_trans*/)
-    {
-        // agg renderer doesn't support processing of multiple symbolizers.
-        return false;
-    };
 
 private:
     T & pixmap_;

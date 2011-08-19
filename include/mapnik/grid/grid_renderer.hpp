@@ -52,6 +52,17 @@ namespace mapnik {
 class marker;
 struct grid_rasterizer;
 class Map;
+struct point_symbolizer;
+struct line_symbolizer;
+struct line_pattern_symbolizer;
+struct polygon_symbolizer;
+struct polygon_pattern_symbolizer;
+struct raster_symbolizer;
+struct shield_symbolizer;
+struct text_symbolizer;
+struct building_symbolizer;
+struct markers_symbolizer;
+struct glyph_symbolizer;
    
 template <typename T>
 class MAPNIK_DECL grid_renderer : public feature_style_processor<grid_renderer<T> >,
@@ -100,13 +111,6 @@ public:
     void process(glyph_symbolizer const& sym,
                  Feature const& feature,
                  proj_transform const& prj_trans);    
-    inline bool process(rule::symbolizers const& /*syms*/,
-                        Feature const& /*feature*/,
-                        proj_transform const& /*prj_trans*/)
-    {
-        // grid renderer doesn't support processing of multiple symbolizers.
-        return false;
-    };
 
 private:
     T & pixmap_;

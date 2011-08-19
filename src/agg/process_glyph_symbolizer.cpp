@@ -23,6 +23,7 @@
 
 // mapnik
 #include <mapnik/agg_renderer.hpp>
+#include <mapnik/glyph_symbolizer.hpp>
 
 // agg
 #include "agg_basics.h"

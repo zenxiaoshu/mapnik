@@ -28,6 +28,7 @@
 #include <mapnik/grid/grid_pixel.hpp>
 #include <mapnik/grid/grid.hpp>
 #include <mapnik/segment.hpp>
+#include <mapnik/polygon_symbolizer.hpp>
 
 // boost
 #include <boost/scoped_ptr.hpp>

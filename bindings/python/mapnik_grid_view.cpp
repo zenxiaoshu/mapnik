@@ -28,6 +28,7 @@
 
 // mapnik
 #include <string>
+#include <mapnik/map.hpp>
 #include <mapnik/grid/grid_view.hpp>
 #include <mapnik/grid/grid.hpp>
 #include "python_grid_utils.hpp"

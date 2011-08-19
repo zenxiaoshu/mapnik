@@ -25,6 +25,7 @@
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
 #include <mapnik/segment.hpp>
+#include <mapnik/polygon_symbolizer.hpp>
 
 // boost
 #include <boost/scoped_ptr.hpp>
@@ -37,6 +38,9 @@
 #include "agg_scanline_u.h"
 #include "agg_renderer_scanline.h"
 #include "agg_conv_stroke.h"
+
+// stl
+#include <deque>
 
 namespace mapnik 
 {

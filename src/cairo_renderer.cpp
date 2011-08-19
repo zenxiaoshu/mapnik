@@ -37,6 +37,9 @@
 #include <mapnik/svg/svg_path_attributes.hpp>
 #include <mapnik/segment.hpp>
 #include <mapnik/symbolizer_helpers.hpp>
+#include <mapnik/feature.hpp>
+#include <mapnik/stroke.hpp>
+#include <mapnik/map.hpp>
 
 // cairo
 #include <cairomm/context.h>

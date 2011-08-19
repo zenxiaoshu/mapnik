@@ -48,6 +48,7 @@
 
 namespace mapnik
 {
+
 inline bool operator==(point_symbolizer const& lhs,
                        point_symbolizer const& rhs)
 {

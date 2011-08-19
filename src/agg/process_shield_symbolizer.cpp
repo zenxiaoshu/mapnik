@@ -28,6 +28,7 @@
 #include <mapnik/svg/svg_converter.hpp>
 #include <mapnik/svg/svg_renderer.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
+#include <mapnik/shield_symbolizer.hpp>
 
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
