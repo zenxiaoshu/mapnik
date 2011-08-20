@@ -676,7 +676,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
 
     std::auto_ptr<placement_element> current_placement(new placement_element);
 
-    double string_height = info.get_dimensions().second;
+//    double string_height = info.get_dimensions().second;
     double old_x = path_positions[index-1].x;
     double old_y = path_positions[index-1].y;
 
@@ -790,14 +790,15 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         double render_y = start_y;
 
         //Center the text on the line
-        render_x -= (((double)string_height/2.0) - 1.0)*cos(render_angle+M_PI/2);
-        render_y += (((double)string_height/2.0) - 1.0)*sin(render_angle+M_PI/2);
+        double char_height = ci.height;
+        render_x -= (((double)char_height/2.0) - 1.0)*cos(render_angle+M_PI/2);
+        render_y += (((double)char_height/2.0) - 1.0)*sin(render_angle+M_PI/2);
 
         if (orientation < 0)
         {
             // rotate in place
-            render_x += ci.width*cos(render_angle) - (string_height-2)*sin(render_angle);
-            render_y -= ci.width*sin(render_angle) + (string_height-2)*cos(render_angle);
+            render_x += ci.width*cos(render_angle) - (char_height-2)*sin(render_angle);
+            render_y -= ci.width*sin(render_angle) + (char_height-2)*cos(render_angle);
             render_angle += M_PI;
         }
         current_placement->add_node(c,render_x - current_placement->starting_x,
