@@ -89,9 +89,24 @@ private:
         const double &x1, const double &y1, const double &x2, const double &y2,
         double &ix, double &iy);
 
+    void find_line_breaks();
+    void init_string_size();
+    void init_alignment();
+    void adjust_position(placement_element *current_placement, double label_x, double label_y);
+
     ///General Internals
     DetectorT & detector_;
     box2d<double> const& dimensions_;
+    string_info *info_;
+    text_symbolizer_properties *p;
+    text_placement_info *pi;
+    double string_width_;
+    double string_height_;
+    unsigned max_line_spacing_;
+    vertical_alignment_e valign_;
+    horizontal_alignment_e halign_;
+    std::vector<int> line_breaks_;
+    std::vector<std::pair<double, double> > line_sizes_;
 };
 }
 
