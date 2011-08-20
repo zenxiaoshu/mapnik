@@ -186,15 +186,13 @@ void placement_finder<DetectorT>::init_string_size()
     // Get total string size
     string_width_ = 0;
     string_height_ = 0;
-    max_line_spacing_ = 0;
     if (!info_->num_characters()) return; //At least one character is required
     for (unsigned i = 0; i < info_->num_characters(); i++)
     {
         character_info ci = info_->at(i);
         if (!ci.width || !ci.height) continue; //Skip empty chars (add no character_spacing for them)
         string_width_ += ci.width + ci.format->character_spacing;
-        string_height_ = std::max(string_height_, ci.height);
-        max_line_spacing_ = std::max(max_line_spacing_, ci.format->line_spacing);
+        string_height_ = std::max(string_height_, ci.height+ci.format->line_spacing);
     }
     string_width_ -= info_->at(info_->num_characters()-1).format->character_spacing; //Remove last space
 }
@@ -226,7 +224,6 @@ void placement_finder<DetectorT>::find_line_breaks()
         string_height_ = 0.0;
         double line_width = 0.0;
         double line_height = 0.0; //Height of tallest char in line
-        unsigned line_spacing = 0.0; //Additional linespacing
         double word_width = 0.0; //Current unfinished word width
         double word_height = 0.0;
 //        unsigned word_spaces = 0, spaces = 0;
@@ -256,8 +253,7 @@ void placement_finder<DetectorT>::find_line_breaks()
                 word_width += last_char_spacing + ci.width;
 //                if (last_char_spacing > 0.1) word_spaces++;
                 last_char_spacing = ci.format->character_spacing;
-                word_height = std::max(word_height, ci.height);
-                line_spacing = std::max(line_spacing, ci.format->line_spacing);
+                word_height = std::max(word_height, ci.height + ci.format->line_spacing);
             }
 //            std::cout << "Processed i:" << ii << " c:'"<< (char)c << "' ww:" << word_width << " lw:" << line_width << " last_wrap_char_width:" << last_wrap_char_width << " last_char_spacing:" << last_char_spacing << " spaces:" << spaces << " word_spaces:" << word_spaces << "\n";
 
@@ -269,19 +265,18 @@ void placement_finder<DetectorT>::find_line_breaks()
                 // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
 //                std::cout << "line break: word width:" << word_width << "line width:" << line_width<<" spaces:"<<spaces<<"\n";
                 string_width_ = std::max(string_width_, line_width); //Total width is the longest line
-                string_height_ += line_height + line_spacing;
+                string_height_ += line_height;
                 line_breaks_.push_back(last_wrap_char_pos);
                 line_sizes_.push_back(std::make_pair(line_width, line_height));
                 line_width = 0.0;
                 line_height = 0.0;
-                line_spacing = 0.0;
                 last_wrap_char_width = 0; //Wrap char supressed
             }
         }
-        line_width += last_wrap_char_width + word_width;
         string_width_ = std::max(string_width_, line_width);
+        string_height_ += line_height;
+        line_width += last_wrap_char_width + word_width;
         line_height = std::max(line_height, word_height);
-        string_height_ += line_height + line_spacing;
         line_sizes_.push_back(std::make_pair(line_width, line_height));
     } else {
         //No linebreaks
@@ -403,7 +398,6 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &plac
             line_width = line_sizes_[line_number].first;
             line_height= line_sizes_[line_number].second;
 
-            //TODO: Use old or new line height
             y -= line_height;  // move position down to line start
 
             // reset to begining of line position
