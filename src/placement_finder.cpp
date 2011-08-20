@@ -214,14 +214,14 @@ void placement_finder<DetectorT>::find_line_breaks()
         else
             wrap_at = p->wrap_width;
     }
-    std::cout << "Starting with " << string_width_ << "," << string_height_ << ", " << wrap_at << "\n";
+//    std::cout << "Starting with " << string_width_ << "," << string_height_ << ", " << wrap_at << "\n";
 
     // work out where our line breaks need to be and the resultant width to the 'wrapped' string
     if ((wrap_at < string_width_) || info_->has_line_breaks())
     {
-        int last_wrap_char = 0; //Position of last char where wrapping is possible
-        unsigned last_char_spacing = 0;
-        int last_wrap_char_width = 0;
+        int last_wrap_char_pos = 0; //Position of last char where wrapping is possible
+        double last_char_spacing = 0.0;
+        double last_wrap_char_width = 0.0; //Include char_spacing before and after
         string_width_ = 0.0;
         string_height_ = 0.0;
         double line_width = 0.0;
@@ -229,49 +229,56 @@ void placement_finder<DetectorT>::find_line_breaks()
         unsigned line_spacing = 0.0; //Additional linespacing
         double word_width = 0.0; //Current unfinished word width
         double word_height = 0.0;
+//        unsigned word_spaces = 0, spaces = 0;
         //line_width, word_width does include char width + spacing, but no the spacing after the last char
 
         for (unsigned int ii = 0; ii < info_->num_characters(); ii++)
         {
             character_info ci = info_->at(ii);
             unsigned c = ci.character;
-            std::cout << "Processing i:" << ii << " c:'"<< (char)c << "' ww:" << word_width << " lw:" << line_width << "\n";
-
-            word_width += last_char_spacing + ci.width; //Add char to current word width + space before it
-            word_height = std::max(word_height, ci.height);
-            line_spacing = std::max(line_spacing, ci.format->line_spacing);
-            last_char_spacing = ci.format->character_spacing;
 
             if ((c == ci.format->wrap_char) || (c == '\n'))
             {
-                last_wrap_char = ii;
-                last_wrap_char_width = ci.width;
-                line_width += word_width;
+                last_wrap_char_pos = ii;
+                //No wrap at previous position
+                line_width += word_width + last_wrap_char_width;
                 line_height = std::max(line_height, word_height);
+//                if (last_wrap_char_width > 0.1) spaces += 2;
+//                spaces += word_spaces;
+                last_wrap_char_width = last_char_spacing + ci.width + ci.format->character_spacing;
+                last_char_spacing = 0.0;
                 word_width = 0.0;
                 word_height = 0.0;
-                std::cout << "line width:" << line_width << " height: "  << line_height << "\n";
+//                word_spaces = 0;
+//                std::cout << "line width:" << line_width << " height: "  << line_height << "spaces:"<< spaces<<"\n";
+            } else {
+                //No wrap char
+                word_width += last_char_spacing + ci.width;
+//                if (last_char_spacing > 0.1) word_spaces++;
+                last_char_spacing = ci.format->character_spacing;
+                word_height = std::max(word_height, ci.height);
+                line_spacing = std::max(line_spacing, ci.format->line_spacing);
             }
+//            std::cout << "Processed i:" << ii << " c:'"<< (char)c << "' ww:" << word_width << " lw:" << line_width << " last_wrap_char_width:" << last_wrap_char_width << " last_char_spacing:" << last_char_spacing << " spaces:" << spaces << " word_spaces:" << word_spaces << "\n";
 
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
             if ((c == '\n') ||
                 (line_width > 0 && ((line_width > wrap_at && !ci.format->wrap_before) ||
-                                   ((line_width + word_width) > wrap_at && ci.format->wrap_before)) ))
+                                   ((line_width + last_wrap_char_width + word_width) > wrap_at && ci.format->wrap_before)) ))
             {
                 // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
-                std::cout << "linebreak word width:" << word_width << "line width:" << line_width<<"\n";
-                line_width -= last_wrap_char_width; // + ci.format->character_spacing;
+//                std::cout << "line break: word width:" << word_width << "line width:" << line_width<<" spaces:"<<spaces<<"\n";
                 string_width_ = std::max(string_width_, line_width); //Total width is the longest line
                 string_height_ += line_height + line_spacing;
-                line_breaks_.push_back(last_wrap_char);
+                line_breaks_.push_back(last_wrap_char_pos);
                 line_sizes_.push_back(std::make_pair(line_width, line_height));
-//                ii = last_wrap_char; TODO: Why start again?
                 line_width = 0.0;
                 line_height = 0.0;
                 line_spacing = 0.0;
+                last_wrap_char_width = 0; //Wrap char supressed
             }
         }
-        line_width += word_width;
+        line_width += last_wrap_char_width + word_width;
         string_width_ = std::max(string_width_, line_width);
         line_height = std::max(line_height, word_height);
         string_height_ += line_height + line_spacing;
@@ -282,7 +289,7 @@ void placement_finder<DetectorT>::find_line_breaks()
         line_sizes_.push_back(std::make_pair(string_width_, string_height_));
     }
     line_breaks_.push_back(info_->num_characters());
-    std::cout << "linebreaks:" << line_breaks_.size() << "sw:" << string_width_ << ", sh:" << string_height_ << "\n";
+//    std::cout << "line breaks:" << line_breaks_.size() << "sw:" << string_width_ << ", sh:" << string_height_ << "\n";
 }
 
 
@@ -377,8 +384,8 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &plac
     else
         x = -(line_width / 2.0);
 
-    std::cout << "lx:" << label_x << "ly:" << label_y << "\n";
-    std::cout << "sx:" << current_placement->starting_x << "sy:" << current_placement->starting_y << "\n";
+//    std::cout << "lx:" << label_x << "ly:" << label_y << "\n";
+//    std::cout << "sx:" << current_placement->starting_x << "sy:" << current_placement->starting_y << "\n";
 
     // save each character rendering position and build envelope as go thru loop
     std::queue< box2d<double> > c_envelopes;
@@ -415,7 +422,7 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &plac
             double dy = x * sina + y*cosa;
 
             current_placement->add_node(c, dx, dy, rad, ci.format);
-            std::cout << "Added "<<(char)c<<", dx"<<dx<<", dy"<<dy<<"\n";
+//            std::cout << "Added "<<(char)c<<", dx"<<dx<<", dy"<<dy<<"\n";
             
             // compute the Bounding Box for each character and test for:
             // overlap, minimum distance or edge avoidance - exit if condition occurs
