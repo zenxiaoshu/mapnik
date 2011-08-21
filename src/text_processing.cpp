@@ -148,6 +148,7 @@ fixed_formating_token::fixed_formating_token():
 
 void fixed_formating_token::apply(char_properties &p, const Feature &feature)
 {
+    if (face_name_) p.face_name = *face_name_;
     if (text_size_) p.text_size = *text_size_;
     if (character_spacing_) p.character_spacing = *character_spacing_;
     if (line_spacing_) p.line_spacing = *line_spacing_;
@@ -164,6 +165,7 @@ ptree *fixed_formating_token::to_xml(ptree *node)
 {
 
     ptree &new_node = node->push_back(ptree::value_type("Format", ptree()))->second;
+    if (face_name_) set_attr(new_node, "face-name", face_name_);
     if (text_size_) set_attr(new_node, "size", text_size_);
     if (character_spacing_) set_attr(new_node, "character-spacing", character_spacing_);
     if (line_spacing_) set_attr(new_node, "line-spacing", line_spacing_);
