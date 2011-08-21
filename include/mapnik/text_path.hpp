@@ -38,12 +38,12 @@ struct char_properties;
 
 struct character_info
 { 
-    int character;
-    double width, height;
+    unsigned character;
+    double width, height, avg_height;
     char_properties *format;
       
-    character_info() : character(0), width(0), height(0), format(0) {}
-    character_info(int c_, double width_, double height_, char_properties *format_) : character(c_), width(width_), height(height_), format(format_) {}
+    character_info() : character(0), width(0), height(0), avg_height(0), format(0) {}
+    character_info(int c_, double width_, double height_, double avg_height_, char_properties *format_) : character(c_), width(width_), height(height_), avg_height(avg_height_), format(format_) {}
     ~character_info() {}
 };
     
@@ -65,9 +65,9 @@ public:
           width_(0),
           height_(0) {}
 
-    void add_info(int c, double width, double height, char_properties *format)
+    void add_info(int c, double width, double height, double avg_height, char_properties *format)
     {
-        characters_.push_back(new character_info(c, width, height, format));
+        characters_.push_back(new character_info(c, width, height, avg_height, format));
     }
 
     void add_text(UnicodeString text)

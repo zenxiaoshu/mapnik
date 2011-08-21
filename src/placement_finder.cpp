@@ -280,7 +280,6 @@ void placement_finder<DetectorT>::find_line_breaks()
         line_sizes_.push_back(std::make_pair(line_width, line_height));
     } else {
         //No linebreaks
-        string_height_ += max_line_spacing_;
         line_sizes_.push_back(std::make_pair(string_width_, string_height_));
     }
     line_breaks_.push_back(info_->num_characters());
@@ -790,9 +789,9 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         double render_y = start_y;
 
         //Center the text on the line
-        double char_height = ci.height;
-        render_x -= (((double)char_height/2.0) - 1.0)*cos(render_angle+M_PI/2);
-        render_y += (((double)char_height/2.0) - 1.0)*sin(render_angle+M_PI/2);
+        double char_height = ci.avg_height;
+        render_x -= char_height/2.0*cos(render_angle+M_PI/2);
+        render_y += char_height/2.0*sin(render_angle+M_PI/2);
 
         if (orientation < 0)
         {

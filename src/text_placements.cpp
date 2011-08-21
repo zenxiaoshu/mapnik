@@ -200,9 +200,9 @@ char_properties::char_properties() :
 void char_properties::set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets)
 {
 
-    optional<unsigned> text_size_ = get_opt_attr<unsigned>(sym, "size");
+    optional<double> text_size_ = get_opt_attr<double>(sym, "size");
     if (text_size_) text_size = *text_size_;
-    optional<unsigned> character_spacing_ = get_opt_attr<unsigned>(sym, "character-spacing");
+    optional<double> character_spacing_ = get_opt_attr<double>(sym, "character-spacing");
     if (character_spacing_) character_spacing = *character_spacing_;
     optional<color> fill_ = get_opt_attr<color>(sym, "fill");
     if (fill_) fill = *fill_;
@@ -214,7 +214,7 @@ void char_properties::set_values_from_xml(boost::property_tree::ptree const &sym
     if (wrap_before_) wrap_before = *wrap_before_;
     optional<text_transform_e> tconvert_ = get_opt_attr<text_transform_e>(sym, "text-transform");
     if (tconvert_) text_transform = *tconvert_;
-    optional<unsigned> line_spacing_ = get_opt_attr<unsigned>(sym, "line-spacing");
+    optional<double> line_spacing_ = get_opt_attr<double>(sym, "line-spacing");
     if (line_spacing_) line_spacing = *line_spacing_;
     optional<double> opacity_ = get_opt_attr<double>(sym, "opacity");
     if (opacity_) text_opacity = *opacity_;

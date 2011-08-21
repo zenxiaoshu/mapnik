@@ -222,7 +222,6 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
 
     unsigned tempx = face->glyph->advance.x >> 6;
 
-    //std::clog << "glyph: " << glyph_index << " x: " << tempx << " y: " << tempy << std::endl;
     dimension_t dim(tempx, glyph_bbox.yMax, glyph_bbox.yMin, face->size->metrics.height/64.0 /* >> 6 */);
     //dimension_cache_[c] = dim; would need an default constructor for dimension_t
     dimension_cache_.insert(std::pair<unsigned, dimension_t>(c, dim));
@@ -232,7 +231,8 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
 
 void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format)
 {
-    unsigned width = 0;
+    double avg_height = character_dimensions('X').height;
+    double width = 0.0;
     double height = 0.0;
     UErrorCode err = U_ZERO_ERROR;
     const UChar * text = ustr.getBuffer();
@@ -255,7 +255,7 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
                     do {
                         UChar ch = text[logicalStart++];
                         dimension_t char_dim = character_dimensions(ch);
-                        info.add_info(ch, char_dim.width, char_dim.linespacing, format);
+                        info.add_info(ch, char_dim.width, char_dim.linespacing, avg_height, format);
                         width += char_dim.width;
                         height = std::max(char_dim.linespacing, height);
                     } while (--length > 0);
@@ -288,7 +288,7 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
                             for (int j=0;j<shaped.length();++j)
                             {
                                 dimension_t char_dim = character_dimensions(shaped[j]);
-                                info.add_info(shaped[j], char_dim.width, char_dim.linespacing, format);
+                                info.add_info(shaped[j], char_dim.width, char_dim.linespacing, avg_height, format);
                                 width += char_dim.width;
                                 height = std::max(char_dim.linespacing, height);
                             }
@@ -298,7 +298,7 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
                         for (int j=0;j<arabic.length();++j)
                         {
                             dimension_t char_dim = character_dimensions(arabic[j]);
-                            info.add_info(arabic[j], char_dim.width, char_dim.linespacing, format);
+                            info.add_info(arabic[j], char_dim.width, char_dim.linespacing, avg_height, format);
                             width += char_dim.width;
                             height = std::max(char_dim.linespacing, height);
                         }

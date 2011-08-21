@@ -112,10 +112,10 @@ struct char_properties
     std::string face_name;
     font_set fontset;
     unsigned text_size;
-    unsigned character_spacing;
-    unsigned line_spacing; //Largest value per line is chosen (TODO)
+    double character_spacing;
+    double line_spacing; //Largest total height (fontsize+line_spacing) per line is chosen
     double text_opacity;
-    bool wrap_before; // wraps text at wrap_char immediately before current word
+    bool wrap_before;
     unsigned wrap_char;
     text_transform_e text_transform; //Per expression
     color fill;
