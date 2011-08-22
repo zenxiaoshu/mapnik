@@ -29,10 +29,8 @@
 #include <mapnik/svg/svg_renderer.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
 #include <mapnik/shield_symbolizer.hpp>
-
-#include "agg_basics.h"
-#include "agg_rendering_buffer.h"
-#include "agg_scanline_u.h"
+#include <mapnik/text_processing.hpp>
+#include <mapnik/placement_finder.hpp>
 
 // boost
 #include <boost/make_shared.hpp>
@@ -44,195 +42,152 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                                Feature const& feature,
                                proj_transform const& prj_trans)
 {
-#if 0
     typedef  coord_transform2<CoordTransform,geometry_type> path_type;
+    metawriter_with_properties writer = sym.get_metawriter();
 
+    box2d<double> dims(0, 0, width_, height_);
+    placement_finder<label_collision_detector4> finder(detector_, dims);
 
+    stroker_ptr strk = font_manager_.get_stroker();
+    text_renderer<T> ren(pixmap_, font_manager_, *strk);
+
+    bool placement_found = false;
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
-    placement->next();
-    placement->next_position_only();
-    text_symbolizer_properties &p = placement->properties;
+    if (writer.first)
+        placement->collect_extents = true; // needed for inmem metawriter
+    while (!placement_found && placement->next()) {
+        text_processor &processor = *(placement->properties.processor);
+        text_symbolizer_properties const& p = placement->properties;
 
-    UnicodeString text;
-    if( sym.get_no_text() )
-        text = UnicodeString( " " );  // TODO: fix->use 'space' as the text to render
-    else
-    {
-        expression_ptr name_expr = sym.get_name();
-        if (!name_expr) return;
-        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*name_expr);
-        text = result.to_unicode();
-    }
-    
-    if ( sym.get_text_transform() == UPPERCASE)
-    {
-        text = text.toUpper();
-    }
-    else if ( sym.get_text_transform() == LOWERCASE)
-    {
-        text = text.toLower();
-    }
-    else if ( sym.get_text_transform() == CAPITALIZE)
-    {
-        text = text.toTitle(NULL);
-    }
-    
-    agg::trans_affine tr;
-    boost::array<double,6> const& m = sym.get_transform();
-    tr.load_from(&m[0]);
-    
-    std::string filename = path_processor_type::evaluate( *sym.get_filename(), feature);
-    boost::optional<mapnik::marker_ptr> marker;
-    if ( !filename.empty() )
-    {
-        marker = marker_cache::instance()->find(filename, true);
-    }
-    else
-    {
-        marker.reset(boost::make_shared<mapnik::marker>());
-    }
-    
-    if (text.length() > 0 && marker)
-    {
-        face_set_ptr faces = font_manager_.get_face_set(sym.get_face_name(), sym.get_fontset());
+        processed_text text(font_manager_, scale_factor_);
+        processor.process(text, feature);
+        if (!sym.get_no_text() && text.empty()) {
+            std::cout << "No text";
+            continue;
+        }
 
-        stroker_ptr strk = font_manager_.get_stroker();
-        if (strk && faces->size() > 0)
+        string_info &info = text.get_string_info();
+        if (!info.num_characters()) info.add_info(0, 0, 0, 0, &(processor.defaults)); //Initialize dummy string info
+        agg::trans_affine tr;
+        boost::array<double,6> const& m = sym.get_transform(); /* TODO: placements */
+        tr.load_from(&m[0]);
+
+        std::string filename = path_processor_type::evaluate(*sym.get_filename(), feature); /* TODO: placements */
+        mapnik::marker_ptr marker;
+        if (!filename.empty())
         {
-            text_renderer<T> ren(pixmap_, faces, *strk);
+            boost::optional<marker_ptr> marker_tmp = marker_cache::instance()->find(filename, true);
+            if (marker_tmp) marker = *marker_tmp; else continue;
+        }
+        else continue;
+        // At this point marker is initalized and text is not empty (except if no_text is set)
 
-            ren.set_pixel_size(sym.get_text_size() * scale_factor_);
-            ren.set_fill(sym.get_fill());
-            ren.set_halo_fill(sym.get_halo_fill());
-            ren.set_halo_radius(sym.get_halo_radius() * scale_factor_);
-            ren.set_opacity(sym.get_text_opacity());
+        double w = marker->width();
+        double h = marker->height();
+        placement->init(scale_factor_, w, h, p.label_placement == LINE_PLACEMENT);
 
-            placement_finder<label_collision_detector4> finder(detector_);
+        for (unsigned i = 0; i < feature.num_geometries(); ++i)
+        {
+            geometry_type const& geom = feature.get_geometry(i);
+            if (geom.num_points() == 0 ) continue;
 
-            string_info info(text);
+            path_type path(t_, geom, prj_trans);
 
-            faces->get_string_info(info);
-
-            int w = (*marker)->width();
-            int h = (*marker)->height();
-
-            metawriter_with_properties writer = sym.get_metawriter();
-
-            for (unsigned i = 0; i < feature.num_geometries(); ++i)
+            if (p.label_placement == POINT_PLACEMENT || p.label_placement == VERTEX_PLACEMENT || p.label_placement == INTERIOR_PLACEMENT)
             {
-                geometry_type const& geom = feature.get_geometry(i);
-                if (geom.num_points() > 0 )
+                // for every vertex, try and place a shield/text
+                geom.rewind(0);
+                position const& shield_pos = sym.get_shield_displacement();
+                // I think this loop should terminate after just one iteration for INTERIOR and POINT placement.
+                for( unsigned jj = 0; jj < geom.num_points(); jj++ )
                 {
-                    path_type path(t_,geom,prj_trans);
+                    double label_x;
+                    double label_y;
+                    double z=0.0;
 
-                    label_placement_enum how_placed = sym.get_label_placement();
-                    if (how_placed == POINT_PLACEMENT || how_placed == VERTEX_PLACEMENT || how_placed == INTERIOR_PLACEMENT)
+                    if (p.label_placement == VERTEX_PLACEMENT)
+                        geom.vertex(&label_x,&label_y);  // by vertex
+                    else if (p.label_placement == INTERIOR_PLACEMENT)
+                        geom.label_interior_position(&label_x,&label_y);
+                    else
+                        geom.label_position(&label_x, &label_y);  // by middle of line or by point
+                    prj_trans.backward(label_x,label_y, z);
+                    t_.forward(&label_x,&label_y);
+
+                    label_x += boost::get<0>(shield_pos);
+                    label_y += boost::get<1>(shield_pos);
+
+                    finder.find_point_placement(*placement, info, label_x, label_y, 0.0 /*angle*/);
+
+                    // check to see if image overlaps anything too, there is only ever 1 placement found for points and verticies
+                    if(placement->placements.size() == 0) continue;
+                    double x = floor(placement->placements[0].starting_x);
+                    double y = floor(placement->placements[0].starting_y);
+                    int px;
+                    int py;
+                    box2d<double> label_ext;
+
+                    if(!sym.get_unlock_image()) /*TODO: Placements */
                     {
-                        // for every vertex, try and place a shield/text
-                        geom.rewind(0);
-                        placement->init(&info, scale_factor_, w, h, false);
-                        if (writer.first)
-                            placement->collect_extents = true; // needed for inmem metawriter
-                        position const& pos = sym.get_displacement();
-                        position const& shield_pos = sym.get_shield_displacement();
-                        for( unsigned jj = 0; jj < geom.num_points(); jj++ )
-                        {
-                            double label_x;
-                            double label_y;
-                            double z=0.0;
-
-                            if( how_placed == VERTEX_PLACEMENT )
-                                geom.vertex(&label_x,&label_y);  // by vertex
-                            else if( how_placed == INTERIOR_PLACEMENT )
-                                geom.label_interior_position(&label_x,&label_y);
-                            else
-                                geom.label_position(&label_x, &label_y);  // by middle of line or by point
-                            prj_trans.backward(label_x,label_y, z);
-                            t_.forward(&label_x,&label_y);
-
-                            label_x += boost::get<0>(shield_pos);
-                            label_y += boost::get<1>(shield_pos);
-
-                            finder.find_point_placement(*placement,
-                                                        label_x, label_y, 0.0,
-                                                        p.line_spacing,
-                                                        p.character_spacing);
-
-                            // check to see if image overlaps anything too, there is only ever 1 placement found for points and verticies
-                            if( placement->placements.size() > 0)
-                            {
-                                double x = floor(placement->placements[0].starting_x);
-                                double y = floor(placement->placements[0].starting_y);
-                                int px;
-                                int py;
-                                box2d<double> label_ext;
-
-                                if( !sym.get_unlock_image() )
-                                {
-                                    // center image at text center position
-                                    // remove displacement from image label
-                                    double lx = x - boost::get<0>(pos);
-                                    double ly = y - boost::get<1>(pos);
-                                    px=int(floor(lx - (0.5 * w))) + 1;
-                                    py=int(floor(ly - (0.5 * h))) + 1;
-                                    label_ext.init( floor(lx - 0.5 * w), floor(ly - 0.5 * h), ceil (lx + 0.5 * w), ceil (ly + 0.5 * h) );
-                                }
-                                else
-                                {  // center image at reference location
-                                    px=int(floor(label_x - 0.5 * w));
-                                    py=int(floor(label_y - 0.5 * h));
-                                    label_ext.init( floor(label_x - 0.5 * w), floor(label_y - 0.5 * h), ceil (label_x + 0.5 * w), ceil (label_y + 0.5 * h));
-                                }
-
-                                if ( sym.get_allow_overlap() || detector_.has_placement(label_ext) )
-                                {
-                                    render_marker(px,py,**marker,tr,sym.get_opacity());
-
-                                    /*box2d<double> dim = */ren.prepare_glyphs(&(placement->placements[0]));
-                                    ren.render(x,y);
-                                    detector_.insert(label_ext);
-                                    finder.update_detector(*placement);
-                                    if (writer.first) {
-                                        writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
-                                        writer.first->add_text(*placement, faces, feature, t_, writer.second);
-                                    }
-                                }
-                            }
-                        }
+                        // center image at text center position
+                        // remove displacement from image label
+                        double lx = x - boost::get<0>(p.displacement);
+                        double ly = y - boost::get<1>(p.displacement);
+                        px=int(floor(lx - (0.5 * w))) + 1;
+                        py=int(floor(ly - (0.5 * h))) + 1;
+                        label_ext.init( floor(lx - 0.5 * w), floor(ly - 0.5 * h), ceil (lx + 0.5 * w), ceil (ly + 0.5 * h) );
+                    }
+                    else
+                    {  // center image at reference location
+                        px=int(floor(label_x - 0.5 * w));
+                        py=int(floor(label_y - 0.5 * h));
+                        label_ext.init( floor(label_x - 0.5 * w), floor(label_y - 0.5 * h), ceil (label_x + 0.5 * w), ceil (label_y + 0.5 * h));
                     }
 
-                    else if (geom.num_points() > 1 && how_placed == LINE_PLACEMENT)
+                    if (p.allow_overlap || detector_.has_placement(label_ext) )
                     {
-                        placement->init(&info, scale_factor_, w, h, true);
+                        render_marker(px, py, *marker, tr, sym.get_opacity()); /*TODO: Placement*/
 
-                        finder.find_point_placements<path_type>(*placement, path);
-
-                        position const&  pos = sym.get_displacement();
-                        for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
-                        {
-                            double x = floor(placement->placements[ii].starting_x);
-                            double y = floor(placement->placements[ii].starting_y);
-
-                            double lx = x - boost::get<0>(pos);
-                            double ly = y - boost::get<1>(pos);
-                            int px=int(floor(lx - (0.5*w))) + 1;
-                            int py=int(floor(ly - (0.5*h))) + 1;
-
-                            render_marker(px,py,**marker,tr,sym.get_opacity());
-
-                            if (writer.first) writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
-
-                            /*box2d<double> dim = */ren.prepare_glyphs(&(placement->placements[ii]));
-                            ren.render(x,y);
+                        ren.prepare_glyphs(&(placement->placements[0]));
+                        ren.render(x,y);
+                        detector_.insert(label_ext);
+                        finder.update_detector(*placement, info);
+                        if (writer.first) {
+                            writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
+                            writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
                         }
-                        finder.update_detector(*placement);
-                        if (writer.first) writer.first->add_text(*placement, faces, feature, t_, writer.second);
                     }
                 }
             }
+            else if (geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
+            {
+
+                finder.find_point_placements<path_type>(*placement, info, path);
+
+                for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
+                {
+                    double x = floor(placement->placements[ii].starting_x);
+                    double y = floor(placement->placements[ii].starting_y);
+
+                    double lx = x - boost::get<0>(p.displacement);
+                    double ly = y - boost::get<1>(p.displacement);
+                    int px=int(floor(lx - (0.5*w))) + 1;
+                    int py=int(floor(ly - (0.5*h))) + 1;
+
+                    render_marker(px, py, *marker, tr, sym.get_opacity());
+                    std::cout << "Render marker at "<<px<<","<<py<<"\n";
+
+                    if (writer.first)
+                        writer.first->add_box(box2d<double>(px, py, px+w, py+h), feature, t_, writer.second);
+
+                    ren.prepare_glyphs(&(placement->placements[ii]));
+                    ren.render(x,y);
+                }
+                finder.update_detector(*placement, info);
+                if (writer.first) writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
+            }
         }
     }
-#endif
 }
 
 

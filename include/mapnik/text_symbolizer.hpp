@@ -49,6 +49,9 @@ namespace mapnik
 
 struct MAPNIK_DECL text_symbolizer : public symbolizer_base
 {
+    text_symbolizer(text_placements_ptr placements = text_placements_ptr(
+                        boost::make_shared<text_placements_dummy>())
+                    );
     text_symbolizer(expression_ptr name, std::string const& face_name,
                     unsigned size, color const& fill,
                     text_placements_ptr placements = text_placements_ptr(

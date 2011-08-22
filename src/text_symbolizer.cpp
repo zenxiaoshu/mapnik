@@ -86,6 +86,12 @@ static const char * text_transform_strings[] = {
 IMPLEMENT_ENUM( text_transform_e, text_transform_strings )
 
 
+text_symbolizer::text_symbolizer(text_placements_ptr placements)
+    : symbolizer_base(),
+      placement_options_(placements)
+{
+
+}
 
 text_symbolizer::text_symbolizer(expression_ptr name, std::string const& face_name,
                                  unsigned size, color const& fill,
@@ -128,7 +134,7 @@ expression_ptr text_symbolizer::get_name() const
 
 void text_symbolizer::set_name(expression_ptr name)
 {
-    //TODO: Remove this
+    placement_options_->properties.processor->set_old_style_expression(name);
 }
 
 expression_ptr text_symbolizer::get_orientation() const

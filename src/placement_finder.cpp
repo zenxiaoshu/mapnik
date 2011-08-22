@@ -439,13 +439,13 @@ void placement_finder<DetectorT>::find_point_placement(text_placement_info &plac
             
             // if there is an overlap with existing envelopes, then exit - no placement
             if (!detector_.extent().intersects(e) || (!p->allow_overlap && !detector_.has_point_placement(e, pi->get_actual_minimum_distance()))) {
-                std::cout << "No placement\n";
+//                std::cout << "No placement\n";
                 return;
             }
 
             // if avoid_edges test dimensions contains e 
             if (p->avoid_edges && !dimensions_.contains(e)) {
-                std::cout << "Avoid edges! \n";
+//                std::cout << "Avoid edges! \n";
                 return;
             }
             
