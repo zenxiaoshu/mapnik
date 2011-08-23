@@ -146,16 +146,16 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
 
                     if (p.allow_overlap || detector_.has_placement(label_ext) )
                     {
-                        render_marker(px, py, *marker, tr, sym.get_opacity()); /*TODO: Placement*/
-
-                        ren.prepare_glyphs(&(placement->placements[0]));
-                        ren.render(x,y);
                         detector_.insert(label_ext);
                         finder.update_detector(*placement, info);
                         if (writer.first) {
                             writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
                             writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
                         }
+                        render_marker(px, py, *marker, tr, sym.get_opacity()); /*TODO: Placement*/
+                        ren.prepare_glyphs(&(placement->placements[0]));
+                        ren.render(x,y);
+                        placement_found = true;
                     }
                 }
             }
@@ -163,6 +163,9 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
             {
 
                 finder.find_point_placements<path_type>(*placement, info, path);
+
+                finder.update_detector(*placement, info);
+                if (writer.first) writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
 
                 for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)
                 {
@@ -174,17 +177,15 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                     int px=int(floor(lx - (0.5*w))) + 1;
                     int py=int(floor(ly - (0.5*h))) + 1;
 
-                    render_marker(px, py, *marker, tr, sym.get_opacity());
-                    std::cout << "Render marker at "<<px<<","<<py<<"\n";
-
                     if (writer.first)
                         writer.first->add_box(box2d<double>(px, py, px+w, py+h), feature, t_, writer.second);
+                    placement_found = true;
 
+                    render_marker(px, py, *marker, tr, sym.get_opacity());
                     ren.prepare_glyphs(&(placement->placements[ii]));
                     ren.render(x,y);
+
                 }
-                finder.update_detector(*placement, info);
-                if (writer.first) writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
             }
         }
     }
