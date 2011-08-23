@@ -13,7 +13,7 @@
     <Style name="My Style">
     <Rule>
       <PointSymbolizer/>
-      <TextSymbolizer name="[name]" face-name="DejaVu Sans Book" size="16" placement="point" dx="5" dy="16" placement-type="simple" placements="N,S,E,W,SW,10,5"/>
+      <TextSymbolizer face-name="DejaVu Sans Book" size="16" placement="point" dx="5" dy="16" placement-type="simple" placements="N,S,E,W,SW,10,5">[name]</TextSymbolizer>
     </Rule>
   </Style>
 

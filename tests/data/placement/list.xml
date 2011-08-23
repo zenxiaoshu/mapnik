@@ -13,10 +13,10 @@
     <Style name="My Style">
     <Rule>
       <PointSymbolizer/>
-      <TextSymbolizer name="[name]" face-name="DejaVu Sans Book" size="16" placement="point" dy="8" fill="blue" placement-type="list">
-          <Placement size="10"  dy="-8" fill="red"/>
-          <Placement name="'S'+[nr]" fill="green"/>
-	  <Placement name="[nr]" fill="orange" dy="8"/>
+      <TextSymbolizer face-name="DejaVu Sans Book" size="16" placement="point" dy="8" fill="blue" placement-type="list">[name]
+          <Placement size="10" dy="-8" fill="red"/>
+	  <Placement fill="green">'S'+[nr]</Placement>
+	  <Placement fill="orange" dy="8">[nr]</Placement>
       </TextSymbolizer>
     </Rule>
   </Style>
