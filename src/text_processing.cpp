@@ -260,12 +260,20 @@ ptree *end_format_token::to_xml(ptree *node)
 /************************************************************/
 
 text_processor::text_processor():
-    list_()
+    list_(), clear_on_write(false)
 {
+}
+
+void text_processor::push_back(abstract_token *token)
+{
+    if (clear_on_write) list_.clear();
+    clear_on_write = false;
+    list_.push_back(token);
 }
 
 void text_processor::from_xml(const boost::property_tree::ptree &pt, std::map<std::string,font_set> const &fontsets)
 {
+    clear_on_write = true;
     defaults.set_values_from_xml(pt, fontsets);
     from_xml_recursive(pt, fontsets);
 }
@@ -280,24 +288,24 @@ void text_processor::from_xml_recursive(const boost::property_tree::ptree &pt, s
             boost::trim(data);
             if (data.empty()) continue;
             expression_token *token = new expression_token(parse_expression(data, "utf8"));
-            list_.push_back(token);
+            push_back(token);
         } else if (itr->first == "Format") {
             fixed_formating_token *token = new fixed_formating_token();
             token->from_xml(itr->second);
-            list_.push_back(token);
+            push_back(token);
             from_xml_recursive(itr->second, fontsets); /* Parse children, making a list out of a tree. */
-            list_.push_back(new end_format_token());
+            push_back(new end_format_token());
         } else if (itr->first != "<xmlcomment>" && itr->first != "<xmlattr>" && itr->first != "Placement") {
             std::cerr << "Unknown item" << itr->first;
         }
     }
 }
 
-void text_processor::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_processor const& dfl)
+void text_processor::to_xml(boost::property_tree::ptree &node, bool explicit_defaults, text_processor const& dfl) const
 {
     defaults.to_xml(node, explicit_defaults, dfl.defaults);
-    std::list<abstract_token *>::iterator itr = list_.begin();
-    std::list<abstract_token *>::iterator end = list_.end();
+    std::list<abstract_token *>::const_iterator itr = list_.begin();
+    std::list<abstract_token *>::const_iterator end = list_.end();
     std::stack<ptree *> nodes;
     ptree *current_node = &node;
     for (; itr != end; ++itr) {
@@ -367,7 +375,7 @@ void text_processor::process(processed_text &output, Feature const& feature)
     }
 }
 
-std::set<expression_ptr> text_processor::get_all_expressions()
+std::set<expression_ptr> text_processor::get_all_expressions() const
 {
     std::set<expression_ptr> result;
     std::list<abstract_token *>::const_iterator itr = list_.begin();

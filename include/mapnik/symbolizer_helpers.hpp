@@ -53,7 +53,7 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
         placement->collect_extents = true; // needed for inmem metawriter
 
     while (placement->next()) {
-        text_processor &processor = *(placement->properties.processor);
+        text_processor &processor = placement->properties.processor;
         text_symbolizer_properties const& p = placement->properties;
 
         text->clear();

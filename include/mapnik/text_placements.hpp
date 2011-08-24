@@ -23,12 +23,11 @@
 #define TEXT_PLACEMENTS_HPP
 
 //mapnik
-#include <mapnik/enumeration.hpp>
-#include <mapnik/filter_factory.hpp>
 #include <mapnik/color.hpp>
 #include <mapnik/font_set.hpp>
 #include <mapnik/text_path.hpp>
 #include <mapnik/box2d.hpp>
+#include <mapnik/text_processing.hpp>
 
 //stl
 #include <vector>
@@ -46,7 +45,6 @@ namespace mapnik {
 
 class text_placements;
 class string_info;
-class text_processor;
 typedef text_path placement_element;
 
 typedef boost::tuple<double,double> position;
@@ -93,36 +91,6 @@ enum justify_alignment
 
 DEFINE_ENUM( justify_alignment_e, justify_alignment );
 
-enum text_transform
-{
-    NONE = 0,
-    UPPERCASE,
-    LOWERCASE,
-    CAPITALIZE,
-    text_transform_MAX
-};
-
-DEFINE_ENUM( text_transform_e, text_transform );
-
-struct char_properties
-{
-    char_properties();
-    void set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets);
-    void to_xml(boost::property_tree::ptree &node, bool explicit_defaults, char_properties const &dfl=char_properties()) const;
-    std::string face_name;
-    font_set fontset;
-    unsigned text_size;
-    double character_spacing;
-    double line_spacing; //Largest total height (fontsize+line_spacing) per line is chosen
-    double text_opacity;
-    bool wrap_before;
-    unsigned wrap_char;
-    text_transform_e text_transform; //Per expression
-    color fill;
-    color halo_fill;
-    double halo_radius;
-};
-
 struct text_symbolizer_properties
 {
     text_symbolizer_properties();
@@ -146,8 +114,7 @@ struct text_symbolizer_properties
     bool allow_overlap;
     unsigned text_ratio;
     unsigned wrap_width;
-    text_processor *processor; //Contains expressions and text formats
-    //TODO: Change to real member object
+    text_processor processor; //Contains expressions and text formats
 };
 
 class text_placement_info : boost::noncopyable

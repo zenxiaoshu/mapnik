@@ -56,7 +56,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
     if (writer.first)
         placement->collect_extents = true; // needed for inmem metawriter
     while (!placement_found && placement->next()) {
-        text_processor &processor = *(placement->properties.processor);
+        text_processor &processor = placement->properties.processor;
         text_symbolizer_properties const& p = placement->properties;
 
         processed_text text(font_manager_, scale_factor_);

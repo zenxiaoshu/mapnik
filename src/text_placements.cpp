@@ -57,9 +57,10 @@ text_symbolizer_properties::text_symbolizer_properties() :
     force_odd_labels(false),
     allow_overlap(false),
     text_ratio(0),
-    wrap_width(0)
+    wrap_width(0),
+    processor()
 {
-    processor = new text_processor();
+
 }
 
 void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree const &sym, std::map<std::string,font_set> const & fontsets)
@@ -97,11 +98,11 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     if (dy) displacement.get<1>() = *dy;
     optional<double> max_char_angle_delta_ = get_opt_attr<double>(sym, "max-char-angle-delta");
     if (max_char_angle_delta_) max_char_angle_delta=(*max_char_angle_delta_)*(M_PI/180);
-    processor->from_xml(sym, fontsets);
+    processor.from_xml(sym, fontsets);
     optional<std::string> name_ = get_opt_attr<std::string>(sym, "name");
     if (name_) {
         std::clog << "### WARNING: Using 'name' in TextSymbolizer/ShieldSymbolizer is deprecated!\n";
-        processor->set_old_style_expression(parse_expression(*name_, "utf8"));
+        processor.set_old_style_expression(parse_expression(*name_, "utf8"));
     }
 }
 
@@ -179,7 +180,7 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
     {
         set_attr(node, "vertical-alignment", valign);
     }
-    processor->to_xml(node, explicit_defaults, *(dfl.processor));
+    processor.to_xml(node, explicit_defaults, dfl.processor);
 }
 
 char_properties::char_properties() :
@@ -313,7 +314,7 @@ text_placements::text_placements() : properties()
 std::set<expression_ptr> text_placements::get_all_expressions()
 {
     std::set<expression_ptr> result, tmp;
-    tmp = properties.processor->get_all_expressions();
+    tmp = properties.processor.get_all_expressions();
     result.insert(tmp.begin(), tmp.end());
     result.insert(properties.orientation);
     return result;
@@ -357,10 +358,10 @@ bool text_placement_info_simple::next()
 {
     while (1) {
         if (state == 0) {
-            properties.processor->defaults.text_size = parent_->properties.processor->defaults.text_size;
+            properties.processor.defaults.text_size = parent_->properties.processor.defaults.text_size;
         } else {
             if (state > parent_->text_sizes_.size()) return false;
-            properties.processor->defaults.text_size = parent_->text_sizes_[state-1];
+            properties.processor.defaults.text_size = parent_->text_sizes_[state-1];
         }
         if (!next_position_only()) {
             state++;
@@ -529,14 +530,14 @@ text_placements_list::text_placements_list() : text_placements(), list_(0)
 std::set<expression_ptr> text_placements_list::get_all_expressions()
 {
     std::set<expression_ptr> result, tmp;
-    tmp = properties.processor->get_all_expressions();
+    tmp = properties.processor.get_all_expressions();
     result.insert(tmp.begin(), tmp.end());
     result.insert(properties.orientation);
 
     std::vector<text_symbolizer_properties>::const_iterator it;
     for (it=list_.begin(); it != list_.end(); it++)
     {
-        tmp = it->processor->get_all_expressions();
+        tmp = it->processor.get_all_expressions();
         result.insert(tmp.begin(), tmp.end());
         result.insert(it->orientation);
     }
