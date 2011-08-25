@@ -193,6 +193,7 @@ void placement_finder<DetectorT>::init_string_size()
         if (!ci.width || !ci.line_height) continue; //Skip empty chars (add no character_spacing for them)
         string_width_ += ci.width + ci.format->character_spacing;
         string_height_ = std::max(string_height_, ci.line_height+ci.format->line_spacing);
+        first_line_space_ = std::max(first_line_space_, ci.line_height-ci.avg_height);
     }
     string_width_ -= info_->at(info_->num_characters()-1).format->character_spacing; //Remove last space
 }
@@ -203,6 +204,7 @@ void placement_finder<DetectorT>::init_string_size()
 template <typename DetectorT>
 void placement_finder<DetectorT>::find_line_breaks()
 {
+    bool first_line = true;
     line_breaks_.clear();
     line_sizes_.clear();
     // check if we need to wrap the string
@@ -218,6 +220,7 @@ void placement_finder<DetectorT>::find_line_breaks()
     // work out where our line breaks need to be and the resultant width to the 'wrapped' string
     if ((wrap_at < string_width_) || info_->has_line_breaks())
     {
+        first_line_space_ = 0.0;
         int last_wrap_char_pos = 0; //Position of last char where wrapping is possible
         double last_char_spacing = 0.0;
         double last_wrap_char_width = 0.0; //Include char_spacing before and after
@@ -249,6 +252,7 @@ void placement_finder<DetectorT>::find_line_breaks()
                 word_width += last_char_spacing + ci.width;
                 last_char_spacing = ci.format->character_spacing;
                 word_height = std::max(word_height, ci.line_height + ci.format->line_spacing);
+                if (first_line) first_line_space_ = std::max(first_line_space_, ci.line_height-ci.avg_height);
             }
 
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
@@ -264,6 +268,7 @@ void placement_finder<DetectorT>::find_line_breaks()
                 line_width = 0.0;
                 line_height = 0.0;
                 last_wrap_char_width = 0; //Wrap char supressed
+                first_line = false;
             }
         }
         string_width_ = std::max(string_width_, line_width);
@@ -312,8 +317,10 @@ void placement_finder<DetectorT>::adjust_position(placement_element *current_pla
     current_placement->starting_y = label_y;  // no adjustment, default is MIDDLE
     if (valign_ == V_TOP)
         current_placement->starting_y -= 0.5 * string_height_;  // move center up by 1/2 the total height
-    else if (valign_ == V_BOTTOM)
+    else if (valign_ == V_BOTTOM) {
         current_placement->starting_y += 0.5 * string_height_;  // move center down by the 1/2 the total height
+        current_placement->starting_y -= first_line_space_;
+    }
 
     // set horizontal position to middle of text
     current_placement->starting_x = label_x;  // no adjustment, default is MIDDLE

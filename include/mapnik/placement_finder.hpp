@@ -102,6 +102,7 @@ private:
     text_placement_info *pi;
     double string_width_;
     double string_height_;
+    double first_line_space_;
     vertical_alignment_e valign_;
     horizontal_alignment_e halign_;
     std::vector<unsigned> line_breaks_;
