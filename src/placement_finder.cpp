@@ -203,6 +203,8 @@ void placement_finder<DetectorT>::init_string_size()
 template <typename DetectorT>
 void placement_finder<DetectorT>::find_line_breaks()
 {
+    line_breaks_.clear();
+    line_sizes_.clear();
     // check if we need to wrap the string
     double wrap_at = string_width_ + 1.0;
     if (p->wrap_width && string_width_ > p->wrap_width)
