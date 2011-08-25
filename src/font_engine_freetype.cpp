@@ -180,10 +180,10 @@ stroker_ptr freetype_engine::create_stroker()
     return stroker_ptr();
 }
 
-font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
+char_info font_face_set::character_dimensions(const unsigned c)
 {
     //Check if char is already in cache
-    std::map<unsigned, dimension_t>::const_iterator itr;
+    std::map<unsigned, char_info>::const_iterator itr;
     itr = dimension_cache_.find(c);
     if (itr != dimension_cache_.end()) {
         return itr->second;
@@ -211,32 +211,29 @@ font_face_set::dimension_t font_face_set::character_dimensions(const unsigned c)
 
     error = FT_Load_Glyph (face, glyph->get_index(), FT_LOAD_NO_HINTING);
     if ( error )
-        return dimension_t(0, 0, 0, 0);
+        return char_info();
 
     error = FT_Get_Glyph(face->glyph, &image);
     if ( error )
-        return dimension_t(0, 0, 0, 0);
+        return char_info();
 
     FT_Glyph_Get_CBox(image, ft_glyph_bbox_pixels, &glyph_bbox);
     FT_Done_Glyph(image);
 
     unsigned tempx = face->glyph->advance.x >> 6;
 
-    dimension_t dim(tempx, glyph_bbox.yMax, glyph_bbox.yMin, face->size->metrics.height/64.0 /* >> 6 */);
-    //dimension_cache_[c] = dim; would need an default constructor for dimension_t
-    dimension_cache_.insert(std::pair<unsigned, dimension_t>(c, dim));
+    char_info dim(c, tempx, glyph_bbox.yMax, glyph_bbox.yMin, face->size->metrics.height/64.0 /* >> 6 */);
+    dimension_cache_.insert(std::pair<unsigned, char_info>(c, dim));
     return dim;
 }
 
 
 void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format)
 {
-    double avg_height = character_dimensions('X').height;
-    double width = 0.0;
-    double height = 0.0;
+    double avg_height = character_dimensions('X').height();
     UErrorCode err = U_ZERO_ERROR;
     const UChar * text = ustr.getBuffer();
-    UBiDi * bidi = ubidi_openSized(ustr.length(),0,&err);
+    UBiDi * bidi = ubidi_openSized(ustr.length(), 0, &err);
 
     if (U_SUCCESS(err))
     {
@@ -254,10 +251,10 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
                 {
                     do {
                         UChar ch = text[logicalStart++];
-                        dimension_t char_dim = character_dimensions(ch);
-                        info.add_info(ch, char_dim.width, char_dim.linespacing, avg_height, format);
-                        width += char_dim.width;
-                        height = std::max(char_dim.linespacing, height);
+                        char_info char_dim = character_dimensions(ch);
+                        char_dim.format = format;
+                        char_dim.avg_height = avg_height;
+                        info.add_info(char_dim);
                     } while (--length > 0);
                 }
                 else
@@ -287,20 +284,20 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
                         {
                             for (int j=0;j<shaped.length();++j)
                             {
-                                dimension_t char_dim = character_dimensions(shaped[j]);
-                                info.add_info(shaped[j], char_dim.width, char_dim.linespacing, avg_height, format);
-                                width += char_dim.width;
-                                height = std::max(char_dim.linespacing, height);
+                                char_info char_dim = character_dimensions(shaped[j]);
+                                char_dim.format = format;
+                                char_dim.avg_height = avg_height;
+                                info.add_info(char_dim);
                             }
                         }
                     } else {
                         // Non-Arabic RTL
                         for (int j=0;j<arabic.length();++j)
                         {
-                            dimension_t char_dim = character_dimensions(arabic[j]);
-                            info.add_info(arabic[j], char_dim.width, char_dim.linespacing, avg_height, format);
-                            width += char_dim.width;
-                            height = std::max(char_dim.linespacing, height);
+                            char_info char_dim = character_dimensions(arabic[j]);
+                            char_dim.format = format;
+                            char_dim.avg_height = avg_height;
+                            info.add_info(char_dim);
                         }
                     }
                 }
@@ -308,8 +305,6 @@ void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr
         }
         ubidi_close(bidi);
     }
-
-    info.set_dimensions(width, height);
 }
 
 template <typename T>

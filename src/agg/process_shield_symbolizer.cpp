@@ -67,7 +67,9 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
         }
 
         string_info &info = text.get_string_info();
-        if (!info.num_characters()) info.add_info(0, 0, 0, 0, &(processor.defaults)); //Initialize dummy string info
+        char_info dummy(0, 1, 1, 0, 1);
+        dummy.format = &(processor.defaults);
+        if (!info.num_characters()) info.add_info(dummy); //Initialize dummy string info
         agg::trans_affine tr;
         boost::array<double,6> const& m = sym.get_transform(); /* TODO: placements */
         tr.load_from(&m[0]);

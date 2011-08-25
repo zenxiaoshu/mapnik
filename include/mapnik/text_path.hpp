@@ -26,6 +26,8 @@
 #ifndef __TEXT_PATH_H__
 #define __TEXT_PATH_H__
 
+#include <mapnik/char_info.hpp>
+
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -34,40 +36,27 @@
 
 namespace mapnik
 {
-struct char_properties;
 
-struct character_info
-{ 
-    unsigned character;
-    double width, height, avg_height;
-    char_properties *format;
-      
-    character_info() : character(0), width(0), height(0), avg_height(0), format(0) {}
-    character_info(int c_, double width_, double height_, double avg_height_, char_properties *format_) : character(c_), width(width_), height(height_), avg_height(avg_height_), format(format_) {}
-    ~character_info() {}
-};
-    
+
 class string_info : private boost::noncopyable
 {
 protected:
-    typedef boost::ptr_vector<character_info> characters_t;
+    typedef std::vector<char_info> characters_t;
     characters_t characters_;
     UnicodeString text_;
-    double width_;
-    double height_;
 public:
     string_info(UnicodeString const& text)
-        : text_(text),
-          width_(0),
-          height_(0) {}
+        : characters_(),
+          text_(text)
+    {}
     string_info()
-        : text_(),
-          width_(0),
-          height_(0) {}
+        : characters_(),
+          text_()
+    {}
 
-    void add_info(int c, double width, double height, double avg_height, char_properties *format)
+    void add_info(char_info const& info)
     {
-        characters_.push_back(new character_info(c, width, height, avg_height, format));
+        characters_.push_back(info);
     }
 
     void add_text(UnicodeString text)
@@ -80,27 +69,16 @@ public:
         return characters_.size();
     }
       
-    character_info at(unsigned i) const
+    char_info const& at(unsigned i) const
     {
         return characters_[i];
     }
       
-    character_info operator[](unsigned i) const
+    char_info const& operator[](unsigned i) const
     {
         return at(i);
     }
       
-    void set_dimensions(double width, double height)
-    {
-        width_ = width;
-        height_ = height;
-    }
-      
-    std::pair<double, double> get_dimensions() const
-    {
-        return std::pair<double, double>(width_, height_);
-    }
-
     UnicodeString const&  get_string() const 
     {
         return text_;
@@ -115,8 +93,6 @@ public:
     /** Resets object to initial state. */
     void clear(void)
     {
-        width_ = 0;
-        height_ = 0;
         text_ = "";
         characters_.clear();
     }

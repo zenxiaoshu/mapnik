@@ -219,13 +219,11 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
                 char_properties *cp;
                 current_placement.vertex(&c, &x, &y, &angle, &cp);
                 face_set_ptr face = font_manager.get_face_set(cp->face_name, cp->fontset);
-                font_face_set::dimension_t ci = face->character_dimensions(c);
-                if (x < minx) minx = x;
-                if (x+ci.width > maxx) maxx = x+ci.width;
-                if (y+ci.height+ci.ymin > maxy) maxy = y+ci.height+ci.ymin;
-                if (y+ci.ymin < miny) miny = y+ci.ymin;
-                //                std::cout << (char) c << " height:" << ci.height << " ymin:" << ci.ymin << " y:" << y << " miny:"<< miny << " maxy:"<< maxy <<"\n";
-
+                char_info ci = face->character_dimensions(c);
+                minx = std::min(minx, x);
+                maxx = std::max(maxx, x+ci.width);
+                maxy = std::max(maxy, y+ci.ymax);
+                miny = std::min(miny, y+ci.ymin);
             }
             add_box(box2d<double>(current_placement.starting_x+minx,
                                   current_placement.starting_y-miny,
@@ -245,7 +243,7 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             current_placement.vertex(&c, &x, &y, &angle, &cp);
             if (c == ' ') continue;
             face_set_ptr face = font_manager.get_face_set(cp->face_name, cp->fontset);
-            font_face_set::dimension_t ci = face->character_dimensions(c);
+            char_info ci = face->character_dimensions(c);
 
             double x0, y0, x1, y1, x2, y2, x3, y3;
             double sina = sin(angle);
@@ -254,10 +252,10 @@ void metawriter_json_stream::add_text(text_placement_info const& p,
             y0 = current_placement.starting_y - y - cosa*ci.ymin;
             x1 = x0 + ci.width * cosa;
             y1 = y0 - ci.width * sina;
-            x2 = x0 + (ci.width * cosa - ci.height * sina);
-            y2 = y0 - (ci.width * sina + ci.height * cosa);
-            x3 = x0 - ci.height * sina;
-            y3 = y0 - ci.height * cosa;
+            x2 = x0 + (ci.width * cosa - ci.height() * sina);
+            y2 = y0 - (ci.width * sina + ci.height() * cosa);
+            x3 = x0 - ci.height() * sina;
+            y3 = y0 - ci.height() * cosa;
 
             *f_ << "\n     [[";
             write_point(t, x0, y0);

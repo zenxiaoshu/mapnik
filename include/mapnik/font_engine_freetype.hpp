@@ -20,8 +20,6 @@
  *
  *****************************************************************************/
 
-//$Id$
-
 #ifndef FONT_ENGINE_FREETYPE_HPP
 #define FONT_ENGINE_FREETYPE_HPP
 // mapnik
@@ -29,8 +27,8 @@
 #include <mapnik/utils.hpp>
 #include <mapnik/ctrans.hpp>
 #include <mapnik/geometry.hpp>
-#include <mapnik/text_path.hpp>
 #include <mapnik/font_set.hpp>
+#include <mapnik/char_info.hpp>
 
 // freetype2
 extern "C"
@@ -61,10 +59,13 @@ extern "C"
 // icu
 #include <unicode/ubidi.h>
 #include <unicode/ushape.h>
+#include <unicode/unistr.h>
 
 namespace mapnik
 {
 class font_face;
+class string_info;
+struct text_path;
 
 typedef boost::shared_ptr<font_face> face_ptr;
 
@@ -145,14 +146,6 @@ private:
 class MAPNIK_DECL font_face_set : private boost::noncopyable
 {
 public:
-    class dimension_t {
-    public:
-        dimension_t(double width_, double ymax_, double ymin_, double linespacing_) :  width(width_), height(ymax_-ymin_), linespacing(linespacing_), ymin(ymin_) {}
-        double width, height;
-        double linespacing;
-        double ymin;
-    };
-
     font_face_set(void)
         : faces_() {}
 
@@ -180,7 +173,7 @@ public:
         return boost::make_shared<font_glyph>(*faces_.begin(), 0);
     }
 
-    dimension_t character_dimensions(const unsigned c);
+    char_info character_dimensions(const unsigned c);
 
     void get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format = 0);
 
@@ -193,7 +186,7 @@ public:
     }
 private:
     std::vector<face_ptr> faces_;
-    std::map<unsigned, dimension_t> dimension_cache_;
+    std::map<unsigned, char_info> dimension_cache_;
 };
 
 // FT_Stroker wrapper

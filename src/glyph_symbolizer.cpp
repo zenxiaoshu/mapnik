@@ -15,6 +15,7 @@ IMPLEMENT_ENUM( angle_mode_e, angle_mode_strings )
 text_path_ptr glyph_symbolizer::get_text_path(face_set_ptr const& faces,
                                               Feature const& feature) const
 {
+#if 0
     // Try to evaulate expressions against feature
     UnicodeString char_ = eval_char(feature);
     double angle = eval_angle(feature);
@@ -41,6 +42,8 @@ text_path_ptr glyph_symbolizer::get_text_path(face_set_ptr const& faces,
     text_path_ptr path_ptr = text_path_ptr(new text_path());
     path_ptr->add_node(ci.character, -xoff, -yoff, angle, ci.format);
     return path_ptr;
+#endif
+    return text_path_ptr();
 }
 
 
