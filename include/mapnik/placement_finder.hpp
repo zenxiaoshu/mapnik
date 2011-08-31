@@ -36,10 +36,8 @@ template <typename DetectorT>
 class placement_finder : boost::noncopyable
 {
 public:
-    placement_finder(DetectorT & detector);
-    placement_finder(DetectorT & detector, box2d<double> const& extent);
-
-    void initialize(text_placement_info &p, string_info &info);
+    placement_finder(text_placement_info &p, string_info &info, DetectorT & detector);
+    placement_finder(text_placement_info &p, string_info &info, DetectorT & detector, box2d<double> const& extent);
     
     //Try place a single label at the given point
     void find_point_placement(double pos_x, double pos_y, double angle=0.0);
@@ -97,9 +95,9 @@ private:
     ///General Internals
     DetectorT & detector_;
     box2d<double> const& dimensions_;
-    string_info *info_;
-    text_symbolizer_properties *p;
-    text_placement_info *pi;
+    string_info &info_;
+    text_symbolizer_properties &p;
+    text_placement_info &pi;
     double string_width_;
     double string_height_;
     double first_line_space_;
@@ -107,7 +105,6 @@ private:
     horizontal_alignment_e halign_;
     std::vector<unsigned> line_breaks_;
     std::vector<std::pair<double, double> > line_sizes_;
-    bool initialized_;
 };
 }
 

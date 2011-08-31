@@ -45,7 +45,6 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
     metawriter_with_properties writer = sym.get_metawriter();
 
     box2d<double> dims(0, 0, width, height);
-    placement_finder<label_collision_detector4> finder(detector, dims);
 
     text_placement_info_ptr placement = sym.get_placement_options()->get_placement_info();
     placement->init(scale_factor);
@@ -59,7 +58,7 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
         text->clear();
         processor.process(*text, feature);
         string_info &info = text->get_string_info();
-        finder.initialize(*placement, info);
+        placement_finder<label_collision_detector4> finder(*placement, info, detector, dims);
 
         unsigned num_geom = feature.num_geometries();
         for (unsigned i=0; i<num_geom; ++i)

@@ -46,7 +46,6 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
     metawriter_with_properties writer = sym.get_metawriter();
 
     box2d<double> dims(0, 0, width_, height_);
-    placement_finder<label_collision_detector4> finder(detector_, dims);
 
     stroker_ptr strk = font_manager_.get_stroker();
     text_renderer<T> ren(pixmap_, font_manager_, *strk);
@@ -71,7 +70,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
         dummy.format = &(processor.defaults);
         if (!info.num_characters()) info.add_info(dummy); //Initialize dummy string info
 
-        finder.initialize(*placement, info);
+        placement_finder<label_collision_detector4> finder(*placement, info, detector_, dims);
 
         agg::trans_affine tr;
         boost::array<double,6> const& m = sym.get_transform(); /* TODO: placements */
