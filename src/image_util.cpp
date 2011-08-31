@@ -33,6 +33,7 @@ extern "C"
 #include <mapnik/graphics.hpp>
 #include <mapnik/memory.hpp>
 #include <mapnik/image_view.hpp>
+#include <mapnik/palette.hpp>
 #include <mapnik/map.hpp>
 
 // boost
@@ -74,24 +75,27 @@ extern "C"
 
 namespace mapnik
 {    
+
 template <typename T>
 std::string save_to_string(T const& image,
-                           std::string const& type)
+                           std::string const& type,
+                           rgba_palette& palette)
 {
     std::ostringstream ss(std::ios::out|std::ios::binary);
-    save_to_stream(image, ss, type);
+    save_to_stream(image, ss, type, palette);
     return ss.str();
 }
 
 template <typename T>
 void save_to_file(T const& image,
                   std::string const& filename,
-                  std::string const& type)
+                  std::string const& type,
+                  rgba_palette& palette)
 {
     std::ofstream file (filename.c_str(), std::ios::out| std::ios::trunc|std::ios::binary);
     if (file)
     {
-        save_to_stream(image, file, type);
+        save_to_stream(image, file, type, palette);
     }
     else throw ImageWriterException("Could not write file to " + filename );
 }
@@ -99,37 +103,50 @@ void save_to_file(T const& image,
 template <typename T>
 void save_to_stream(T const& image,
                     std::ostream & stream,
-                    std::string const& type)
+                    std::string const& type,
+                    rgba_palette& palette)
 {
     if (stream)
     {
         //all this should go into image_writer factory
-        if (type == "png")  save_as_png(stream, image);
-        else if (boost::algorithm::istarts_with(type, std::string("png256")) ||
-                 boost::algorithm::istarts_with(type, std::string("png8"))
-            ) 
+        if (type == "png" || boost::algorithm::istarts_with(type, std::string("png")))
         {
             int colors  = 256;
+            int compression = Z_DEFAULT_COMPRESSION;
+            int strategy = Z_DEFAULT_STRATEGY;
             int trans_mode = -1;
             double gamma = -1;
             bool use_octree = true;
+
+            if (type == "png" || type == "png24" || type == "png32")
+            {
+                // Shortcut when the user didn't specify any flags after the colon.
+                // Paletted images specify "png8 or png256".
+                colors = -1;
+            }
             if (type.length() > 6){
                 boost::char_separator<char> sep(":");
                 boost::tokenizer< boost::char_separator<char> > tokens(type, sep);
                 BOOST_FOREACH(std::string t, tokens)
                 {
-                    if (t == "m=h")
+                    if (t == "png" || t == "png24" || t == "png32")
+                    {
+                        colors = -1;
+                    }
+                    else if (t == "m=h")
                     {
                         use_octree = false;
                     }
-                    if (t == "m=o")
+                    else if (t == "m=o")
                     {
                         use_octree = true;
                     }
-                    if (boost::algorithm::istarts_with(t,std::string("c=")))
+                    else if (boost::algorithm::istarts_with(t,std::string("c=")))
                     {
                         try 
                         {
+                            if (colors < 0)
+                                throw ImageWriterException("invalid color parameter: unavailable for true color images");
                             colors = boost::lexical_cast<int>(t.substr(2));
                             if (colors < 0 || colors > 256)
                                 throw ImageWriterException("invalid color parameter: " + t.substr(2) + " out of bounds");
@@ -139,11 +156,13 @@ void save_to_stream(T const& image,
                             throw ImageWriterException("invalid color parameter: " + t.substr(2));
                         }
                     }
-                    if (boost::algorithm::istarts_with(t, std::string("t=")))
+                    else if (boost::algorithm::istarts_with(t, std::string("t=")))
                     {
                         try 
                         {
-                            trans_mode= boost::lexical_cast<int>(t.substr(2));
+                            if (colors < 0)
+                                throw ImageWriterException("invalid trans_mode parameter: unavailable for true color images");
+                            trans_mode = boost::lexical_cast<int>(t.substr(2));
                             if (trans_mode < 0 || trans_mode > 2)
                                 throw ImageWriterException("invalid trans_mode parameter: " + t.substr(2) + " out of bounds");
                         }
@@ -152,11 +171,13 @@ void save_to_stream(T const& image,
                             throw ImageWriterException("invalid trans_mode parameter: " + t.substr(2));
                         }
                     }
-                    if (boost::algorithm::istarts_with(t, std::string("g=")))
+                    else if (boost::algorithm::istarts_with(t, std::string("g=")))
                     {
                         try 
                         {
-                            gamma= boost::lexical_cast<double>(t.substr(2));
+                            if (colors < 0)
+                                throw ImageWriterException("invalid gamma parameter: unavailable for true color images");
+                            gamma = boost::lexical_cast<double>(t.substr(2));
                             if (gamma < 0)
                                 throw ImageWriterException("invalid gamma parameter: " + t.substr(2) + " out of bounds");
                         }
@@ -165,13 +186,53 @@ void save_to_stream(T const& image,
                             throw ImageWriterException("invalid gamma parameter: " + t.substr(2));
                         }
                     }
+                    else if (boost::algorithm::istarts_with(t,std::string("z=")))
+                    {
+                        try
+                        {
+                            compression = boost::lexical_cast<int>(t.substr(2));
+                            /*
+                             #define Z_NO_COMPRESSION         0
+                             #define Z_BEST_SPEED             1
+                             #define Z_BEST_COMPRESSION       9
+                             #define Z_DEFAULT_COMPRESSION  (-1)
+                            */
+                             if (compression < Z_DEFAULT_COMPRESSION || compression > Z_BEST_COMPRESSION)
+                                throw ImageWriterException("invalid compression parameter: " + t.substr(2) + " out of bounds (only -1 through 9 are valid)");
+                        }
+                        catch(boost::bad_lexical_cast &)
+                        {
+                            throw ImageWriterException("invalid compression parameter: " + t.substr(2));
+                        }
+                    }
+                    else if (boost::algorithm::istarts_with(t,std::string("s=")))
+                    {
+                        try
+                        {
+                            std::string s = boost::lexical_cast<std::string>(t.substr(2));
+                            if (s == "default") strategy = Z_DEFAULT_STRATEGY;
+                            else if (s == "filtered") strategy = Z_FILTERED;
+                            else if (s == "huff") strategy = Z_HUFFMAN_ONLY;
+                            else if (s == "rle") strategy = Z_RLE;
+                            else
+                                throw ImageWriterException("invalid compression strategy parameter: " + s);
+                        }
+                        catch(boost::bad_lexical_cast &)
+                        {
+                            throw ImageWriterException("invalid compression strategy parameter: " + t.substr(2));
+                        }
+                    }
                 }
-
             }
-            if (use_octree)
-                save_as_png256(stream, image, colors);
+
+            if (&palette != NULL && palette.valid())
+                save_as_png8_pal(stream, image, palette, compression, strategy);
+            else if (colors < 0)
+                save_as_png(stream, image, compression, strategy);
+            else if (use_octree)
+                save_as_png8_oct(stream, image, colors, compression, strategy);
             else
-                save_as_png256_hex(stream, image, colors, trans_mode, gamma);
+                save_as_png8_hex(stream, image, colors, compression, strategy, trans_mode, gamma);
         }
 #if defined(HAVE_JPEG)
         else if (boost::algorithm::istarts_with(type,std::string("jpeg")))
@@ -197,15 +258,14 @@ void save_to_stream(T const& image,
     } 
     else throw ImageWriterException("Could not write to empty stream" );
 }
-        
-        
+
 template <typename T>
-void save_to_file(T const& image,std::string const& filename)
+void save_to_file(T const& image,std::string const& filename, rgba_palette& palette)
 {
     boost::optional<std::string> type = type_from_filename(filename);
     if (type)
     {
-        save_to_file<T>(image,filename,*type);
+        save_to_file<T>(image, filename, *type, palette);
     }
 }
 
@@ -268,23 +328,29 @@ void save_to_cairo_file(mapnik::Map const& map,
 
 template void save_to_file<image_data_32>(image_data_32 const&,
                                           std::string const&,
-                                          std::string const&);
+                                          std::string const&,
+                                          rgba_palette& palette);
 
 template void save_to_file<image_data_32>(image_data_32 const&,
-                                          std::string const&);
+                                          std::string const&,
+                                          rgba_palette& palette);
 
 template std::string save_to_string<image_data_32>(image_data_32 const&,
-                                                   std::string const&);
+                                                   std::string const&,
+                                                   rgba_palette& palette);
 
 template void save_to_file<image_view<image_data_32> > (image_view<image_data_32> const&,
                                                         std::string const&,
-                                                        std::string const&);
+                                                        std::string const&,
+                                                        rgba_palette& palette);
    
 template void save_to_file<image_view<image_data_32> > (image_view<image_data_32> const&,
-                                                        std::string const&);
+                                                        std::string const&,
+                                                        rgba_palette& palette);
    
 template std::string save_to_string<image_view<image_data_32> > (image_view<image_data_32> const&,
-                                                                 std::string const&);
+                                                                 std::string const&,
+                                                                 rgba_palette& palette);
 
 
 

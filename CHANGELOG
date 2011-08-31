@@ -14,7 +14,11 @@ For a complete change history, see the SVN log.
 Mapnik Trunk
 ------------
 
-- SQLite Plugin: optimize io using shared cache and no mutexes (#797)
+- Add support for png quantization using fixed palettes (#843)
+
+- Add AlsoFilter functionality - http://trac.mapnik.org/wiki/AlsoFilter
+
+- SQLite Plugin: optimize i/o using shared cache and no mutexes (#797)
 
 - Directly link input plugins to libmapnik to avoid having to set dlopen flags from binding languages (#790)
 

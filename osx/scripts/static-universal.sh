@@ -71,6 +71,7 @@ export LDFLAGS=$CORE_LDFLAGS
 wget http://www.sqlite.org/sqlite-autoconf-3070701.tar.gz
 tar xvf sqlite-autoconf-3070701.tar.gz
 cd sqlite-autoconf-3070701
+export CFLAGS="-DSQLITE_ENABLE_RTREE=1 -O3 "$CFLAGS
 ./configure --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking
 make -j4
 make install
@@ -144,9 +145,11 @@ cd ../
 
 
 # postgis
-# install postgres 9.x client from http://www.kyngchaos.com/software/postgres
-# then copy the static libpq.a to a prioritized directory:
-cp /usr/local/pgsql/lib/libpq.a osx/sources/lib/libpq_s.a
+# install postgres 9.x client from somewhere. 
+# http://www.kyngchaos.com/software/postgres works nicely
+# then copy the clients static libpq.a to a prioritized directory:
+cp /usr/local/pgsql/lib/libpq.a osx/sources/lib/libpq.a
+# then edit plugins/input/postgis/SConscript adding more libs to link to
 
 
 # gdal 1.8.1
@@ -182,10 +185,15 @@ cd ../
 # cairo and friends
 
 # pkg-config so we get cairo and friends configured correctly
-wget http://pkgconfig.freedesktop.org/releases/pkg-config-0.26.tar.gz
-tar xvf pkg-config-0.26.tar.gz
-cd pkg-config-0.26
-./configure --disable-dependency-tracking --prefix=$PREFIX
+# note: we use 0.25 because >= 0.26 no long bundles glib and we don't
+# want to have to depend on an external glib dep
+wget http://pkgconfig.freedesktop.org/releases/pkg-config-0.25.tar.gz
+tar xvf pkg-config-0.25.tar.gz
+cd pkg-config-0.25
+# patch glib.h
+# change line 198 to:
+#      ifndef G_INLINE_FUNC inline
+./configure --disable-debug --disable-dependency-tracking --prefix=$PREFIX
 make -j4
 make install
 cd ../
@@ -321,4 +329,12 @@ PKG_CONFIG_PATH = './osx/sources/lib/pkgconfig'
 SQLITE_INCLUDES = './osx/sources/include'
 SQLITE_LIBS = './osx/sources/lib'
 BINDINGS = 'none'
+
+
+# fixup the mapnik-config
+# we need to remove the local paths so that 'other-libs' and 'other-includes' look something like:
+
+other_libs='-Wl,-search_paths_first -arch x86_64 -arch i386 -Wl,-syslibroot,/Developer/SDKs/MacOSX10.6.sdk -L/usr/lib -lfreetype -licucore -lboost_filesystem -lboost_regex -lcairomm-1.0 -lcairo -lboost_thread -lboost_system'
+
+other_includes='-arch x86_64 -arch i386 -mmacosx-version-min=10.6 -isysroot /Developer/SDKs/MacOSX10.6.sdk -arch x86_64 -arch i386 -mmacosx-version-min=10.6 -isysroot /Developer/SDKs/MacOSX10.6.sdk -DU_HIDE_DRAFT_API -DUDISABLE_RENAMING -DHAVE_JPEG -ansi -Wall -ftemplate-depth-200 -DDARWIN -DBOOST_SPIRIT_THREADSAFE -DMAPNIK_THREADSAFE -O3 -finline-functions -Wno-inline -DNDEBUG -DHAVE_CAIRO -I/usr/include/libxml2 -DHAVE_CAIRO -DLIBTOOL_SUPPORTS_ADVISE'
 

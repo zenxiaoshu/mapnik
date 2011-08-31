@@ -230,7 +230,7 @@ def sort_paths(items,priority):
             else:
                 path_types['user'].append(i)
         # key system libs (likely others will fall into 'other')
-        elif '/usr/' in i or '/System' in i or i.startswith('/lib'):
+        elif '/usr/' in i or '/System' in i or '/lib' in i:
             path_types['system'].append(i)
         # anything not yet matched...
         # likely a combo of rare system lib paths and
@@ -356,6 +356,8 @@ opts.AddVariables(
     # Note: cairo, cairomm, and pycairo all optional but configured automatically through pkg-config
     # Therefore, we use a single boolean for whether to attempt to build cairo support.
     BoolVariable('CAIRO', 'Attempt to build with Cairo rendering support', 'True'),
+    PathVariable('CAIRO_INCLUDES', 'Search path for cairo/cairomm include files', '',PathVariable.PathAccept),
+    PathVariable('CAIRO_LIBS', 'Search path for cairo/cairomm library files','',PathVariable.PathAccept),
     ('GDAL_CONFIG', 'The path to the gdal-config executable for finding gdal and ogr details.', 'gdal-config'),
     ('PG_CONFIG', 'The path to the pg_config executable.', 'pg_config'),
     PathVariable('OCCI_INCLUDES', 'Search path for OCCI include files', '/usr/lib/oracle/10.2.0.3/client/include', PathVariable.PathAccept),
@@ -436,7 +438,13 @@ pickle_store = [# Scons internal variables
         'MAPNIK_FONTS',
         'MAPNIK_FONTS_DEST',
         'MAPNIK_LIB_BASE',
-        'MAPNIK_LIB_BASE_DEST'
+        'MAPNIK_LIB_BASE_DEST',
+        'EXTRA_FREETYPE_LIBS',
+        'LIBMAPNIK_CPPATHS',
+        'LIBMAPNIK_CXXFLAGS',
+        'CAIROMM_LIBPATHS',
+        'CAIROMM_LINKFLAGS',
+        'CAIROMM_CPPPATHS',
         ]
 
 # Add all other user configurable options to pickle pickle_store
@@ -950,12 +958,18 @@ if not preconfigured:
     env['MISSING_DEPS'] = []
     env['SKIPPED_DEPS'] = []
     env['HAS_CAIRO'] = False
+    env['CAIROMM_LIBPATHS'] = []
+    env['CAIROMM_LINKFLAGS'] = []
+    env['CAIROMM_CPPPATHS'] = []
     env['HAS_PYCAIRO'] = False
     env['HAS_LIBXML2'] = False
     env['SVN_REVISION'] = None
     env['LIBMAPNIK_LIBS'] = []
+    env['LIBMAPNIK_CPPATHS'] = []
+    env['LIBMAPNIK_CXXFLAGS'] = []
     env['LIBDIR_SCHEMA'] = LIBDIR_SCHEMA
     env['PLUGINS'] = PLUGINS
+    env['EXTRA_FREETYPE_LIBS'] = []
 
     # previously a leading / was expected for LIB_DIR_NAME
     # now strip it to ensure expected behavior
@@ -1055,7 +1069,16 @@ if not preconfigured:
         env.AppendUnique(CPPPATH = os.path.realpath(inc_path))
         env.AppendUnique(LIBPATH = os.path.realpath(lib_path))
 
+    
     conf.parse_config('FREETYPE_CONFIG')
+
+    # check if freetype links to bz2
+    if env['RUNTIME_LINK'] == 'static':
+        temp_env = env.Clone()
+        temp_env['LIBS'] = []
+        temp_env.ParseConfig('%s --libs' % env['FREETYPE_CONFIG'])
+        if 'bz2' in temp_env['LIBS']:
+            env['EXTRA_FREETYPE_LIBS'].append('bz2')
 
     if env['XMLPARSER'] == 'tinyxml':
         env['CPPPATH'].append('#tinyxml')
@@ -1193,8 +1216,9 @@ if not preconfigured:
                 # Note, the 'delete_existing' keyword makes sure that these paths are prepended
                 # to the beginning of the path list even if they already exist
                 incpath = env['%s_INCLUDES' % details['path']]
+                libpath = env['%s_LIBS' % details['path']]
                 env.PrependUnique(CPPPATH = os.path.realpath(incpath),delete_existing=True)
-                env.PrependUnique(LIBPATH = env['%s_LIBS' % details['path']],delete_existing=True)
+                env.PrependUnique(LIBPATH = os.path.realpath(libpath),delete_existing=True)
                 if not conf.CheckLibWithHeader(details['lib'], details['inc'], details['lang']):
                     env.Replace(**backup)
                     env['SKIPPED_DEPS'].append(details['lib'])
@@ -1231,20 +1255,67 @@ if not preconfigured:
         env.ParseConfig('pkg-config --libs --cflags libagg')
 
     if env['CAIRO']:
-        if not conf.CheckPKGConfig('0.15.0'):
-            env['HAS_CAIRO'] = False
-            env['SKIPPED_DEPS'].append('pkg-config')
-        elif not conf.CheckPKG('cairo'):
-            env['HAS_CAIRO'] = False
-            env['SKIPPED_DEPS'].append('cairo')
-        elif not conf.CheckPKG('cairomm-1.0'):
-            env['HAS_CAIRO'] = False
-            env['SKIPPED_DEPS'].append('cairomm')
-        elif not conf.CheckPKGVersion('cairomm-1.0',CAIROMM_MIN_VERSION):
-            env['HAS_CAIRO'] = False
-            env['SKIPPED_DEPS'].append('cairomm-version')
+        if env['CAIRO_LIBS'] or env['CAIRO_INCLUDES']:
+            c_inc = env['CAIRO_INCLUDES']
+            if env['CAIRO_LIBS']:
+                env["CAIROMM_LIBPATHS"].append(os.path.realpath(env['CAIRO_LIBS']))
+                if not env['CAIRO_INCLUDES']:
+                    c_inc = env['CAIRO_LIBS'].replace('lib','',1) 
+            if c_inc:
+                c_inc = os.path.normpath(os.path.realpath(env['CAIRO_INCLUDES']))
+                if c_inc.endswith('include'):
+                    c_inc = os.path.dirname(c_inc)
+                env["CAIROMM_CPPPATHS"].extend(
+                    [
+                      os.path.join(c_inc,'include/cairomm-1.0'),
+                      os.path.join(c_inc,'lib/cairomm-1.0/include'),
+                      os.path.join(c_inc,'include/cairo'),
+                      os.path.join(c_inc,'include/sigc++-2.0'),
+                      os.path.join(c_inc,'lib/sigc++-2.0/include'),
+                      os.path.join(c_inc,'include/pixman-1'),
+                      #os.path.join(c_inc,'include/freetype2'),
+                      #os.path.join(c_inc,'include/libpng'),
+                    ]
+                )
+                env["CAIROMM_LINKFLAGS"] = ['cairo','cairomm-1.0']
+                if env['RUNTIME_LINK'] == 'static':
+                    env["CAIROMM_LINKFLAGS"].extend(
+                        ['sigc-2.0','pixman-1','expat','fontconfig','iconv']
+                    )
+                # todo - run actual checkLib?
+                env['HAS_CAIRO'] = True
         else:
-            env['HAS_CAIRO'] = True
+            if not conf.CheckPKGConfig('0.15.0'):
+                env['HAS_CAIRO'] = False
+                env['SKIPPED_DEPS'].append('pkg-config')
+                env['SKIPPED_DEPS'].append('cairo')
+                env['SKIPPED_DEPS'].append('cairomm')
+            elif not conf.CheckPKG('cairo'):
+                env['HAS_CAIRO'] = False
+                env['SKIPPED_DEPS'].append('cairo')
+            elif not conf.CheckPKG('cairomm-1.0'):
+                env['HAS_CAIRO'] = False
+                env['SKIPPED_DEPS'].append('cairomm')
+            elif not conf.CheckPKGVersion('cairomm-1.0',CAIROMM_MIN_VERSION):
+                env['HAS_CAIRO'] = False
+                env['SKIPPED_DEPS'].append('cairomm-version')
+            else:
+                cmd = 'pkg-config --libs --cflags cairomm-1.0'
+                if env['RUNTIME_LINK'] == 'static':
+                    cmd += ' --static'
+                cairo_env = env.Clone()
+                cairo_env.ParseConfig(cmd)
+                for lib in cairo_env['LIBS']:
+                    if not lib in env['LIBS']:
+                        env["CAIROMM_LINKFLAGS"].append(lib)
+                for lpath in cairo_env['LIBPATH']:
+                    if not lpath in env['LIBPATH']:
+                        env["CAIROMM_LIBPATHS"].append(lpath)
+                for inc in cairo_env['CPPPATH']:
+                    if not inc in env['CPPPATH']:
+                        env["CAIROMM_CPPPATHS"].append(inc)
+                env['HAS_CAIRO'] = True
+            
     else:
         color_print(4,'Not building with cairo support, pass CAIRO=True to enable')
     
@@ -1269,7 +1340,7 @@ if not preconfigured:
     if env['MISSING_DEPS']:
         # if required dependencies are missing, print warnings and then let SCons finish without building or saving local config
         color_print(1,'\nExiting... the following required dependencies were not found:\n   - %s' % '\n   - '.join([pretty_dep(dep) for dep in env['MISSING_DEPS']]))
-        color_print(1,"\nSee '%s' for details on possible problems." % (os.path.abspath(SCONS_LOCAL_LOG)))
+        color_print(1,"\nSee '%s' for details on possible problems." % (os.path.realpath(SCONS_LOCAL_LOG)))
         if env['SKIPPED_DEPS']:
             color_print(4,'\nAlso, these OPTIONAL dependencies were not found:\n   - %s' % '\n   - '.join([pretty_dep(dep) for dep in env['SKIPPED_DEPS']]))
         color_print(4,"\nSet custom paths to these libraries and header files on the command-line or in a file called '%s'" % SCONS_LOCAL_CONFIG)
@@ -1302,7 +1373,7 @@ if not preconfigured:
             print
 
         # fetch the mapnik version header in order to set the
-        # ABI version used to build libmapnik.so on linux in src/SConscript
+        # ABI version used to build libmapnik.so on linux in src/build.py
         abi = conf.GetMapnikLibVersion()
         abi_fallback = [2,0,0]
         if not abi:
@@ -1417,7 +1488,7 @@ if not preconfigured:
             majver, minver = env['PYTHON_VERSION'].split('.')
  
             # we don't want the includes it in the main environment...
-            # as they are later set in the python SConscript
+            # as they are later set in the python build.py
             # ugly hack needed until we have env specific conf
             backup = env.Clone().Dictionary()
             env.AppendUnique(CPPPATH = os.path.realpath(env['PYTHON_INCLUDES']))
@@ -1494,7 +1565,7 @@ if not HELP_REQUESTED:
     if env['PATH_INSERT']:
         env['ENV']['PATH'] = os.path.realpath(env['PATH_INSERT']) + ':' + env['ENV']['PATH']
 
-    # export env so it is available in Sconscript files
+    # export env so it is available in build.py files
     Export('env')
 
 
@@ -1522,10 +1593,10 @@ if not HELP_REQUESTED:
         
     # Build agg first, doesn't need anything special
     if env['RUNTIME_LINK'] == 'shared' and env['INTERNAL_LIBAGG']:
-        SConscript('agg/SConscript')
+        SConscript('agg/build.py')
     
     # Build the core library
-    SConscript('src/SConscript')
+    SConscript('src/build.py')
     
     # Build the requested and able-to-be-compiled input plug-ins
     GDAL_BUILT = False
@@ -1533,7 +1604,7 @@ if not HELP_REQUESTED:
     for plugin in env['REQUESTED_PLUGINS']:
         details = env['PLUGINS'][plugin]
         if details['lib'] in env['LIBS']:
-            SConscript('plugins/input/%s/SConscript' % plugin)
+            SConscript('plugins/input/%s/build.py' % plugin)
             if plugin == 'ogr': OGR_BUILT = True
             if plugin == 'gdal': GDAL_BUILT = True
             if plugin == 'ogr' or plugin == 'gdal':
@@ -1543,7 +1614,7 @@ if not HELP_REQUESTED:
                 env['LIBS'].remove(details['lib'])
         elif not details['lib']:
             # build internal shape and raster plugins
-            SConscript('plugins/input/%s/SConscript' % plugin)
+            SConscript('plugins/input/%s/build.py' % plugin)
         else:
             color_print(1,"Notice: dependencies not met for plugin '%s', not building..." % plugin)
     
@@ -1563,44 +1634,49 @@ if not HELP_REQUESTED:
     
     # Build the c++ rundemo app if requested
     if env['DEMO']:
-        SConscript('demo/c++/SConscript')
+        SConscript('demo/c++/build.py')
     
     # Build the pgsql2psqlite app if requested
     if env['PGSQL2SQLITE']:
-        SConscript('utils/pgsql2sqlite/SConscript')
+        SConscript('utils/pgsql2sqlite/build.py')
     
     # Build shapeindex and remove its dependency from the LIBS
     if 'boost_program_options%s' % env['BOOST_APPEND'] in env['LIBS']:
-        SConscript('utils/shapeindex/SConscript')
-        SConscript('utils/svg2png/SConscript')
+        SConscript('utils/shapeindex/build.py')
+        
+        # devtools not ready for public 
+        #SConscript('utils/ogrindex/build.py')
+        #SConscript('utils/svg2png/build.py')
         env['LIBS'].remove('boost_program_options%s' % env['BOOST_APPEND'])
     else :
         color_print(1,"WARNING: Cannot find boost_program_options. 'shapeindex' won't be available")
         
     # Build the Python bindings
     if 'python' in env['BINDINGS']:
-        SConscript('bindings/python/SConscript')
+        SConscript('bindings/python/build.py')
         
         # Install the python speed testing scripts if python bindings will be available
-        SConscript('utils/performance/SConscript')
+        SConscript('utils/performance/build.py')
 
     # Install the mapnik2 upgrade script
-    SConscript('utils/upgrade_map_xml/SConscript')
+    SConscript('utils/upgrade_map_xml/build.py')
     
     # Configure fonts and if requested install the bundled DejaVu fonts
-    SConscript('fonts/SConscript')
+    SConscript('fonts/build.py')
     
     # build C++ tests
-    SConscript('tests/cpp_tests/SConscript')
+    # not ready for release
+    #SConscript('tests/cpp_tests/build.py')
     
-    if env['SVG_RENDERER']:
-        SConscript('tests/cpp_tests/svg_renderer_tests/SConscript')
+    # not ready for release
+    #if env['SVG_RENDERER']:
+    #    SConscript('tests/cpp_tests/svg_renderer_tests/build.py')
 
     # install pkg-config script and mapnik-config script
-    SConscript('utils/mapnik-config/SConscript')
+    SConscript('utils/mapnik-config/build.py')
 
     # write the viewer.ini file
-    SConscript('demo/viewer/SConscript')
+    SConscript('demo/viewer/build.py')
     
     # if requested, build the sample input plugins
     if env['SAMPLE_INPUT_PLUGINS']:

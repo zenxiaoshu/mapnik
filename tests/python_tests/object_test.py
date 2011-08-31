@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 
+import os
 from nose.tools import *
+from utilities import execution_path
 from utilities import Todo
 
 import mapnik2, pickle
+
+def setup():
+    # All of the paths used are relative, if we run the tests
+    # from another directory we need to chdir()
+    os.chdir(execution_path('.'))
 
 # Tests that exercise the functionality of Mapnik classes.
 
@@ -537,6 +544,20 @@ def test_rule_init():
     eq_(r.title, '')
     eq_(r.min_scale, 0)
     eq_(r.max_scale, float('inf'))
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), False)
+    
+    r = mapnik2.Rule()
+    
+    r.set_else(True)
+    eq_(r.has_else(), True)
+    eq_(r.has_also(), False)
+    
+    r = mapnik2.Rule()
+    
+    r.set_also(True)
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), True)
     
     r = mapnik2.Rule("Name")
     
@@ -544,6 +565,8 @@ def test_rule_init():
     eq_(r.title, '')
     eq_(r.min_scale, 0)
     eq_(r.max_scale, float('inf'))
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), False)
     
     r = mapnik2.Rule("Name", "Title")
     
@@ -551,6 +574,8 @@ def test_rule_init():
     eq_(r.title, 'Title')
     eq_(r.min_scale, 0)
     eq_(r.max_scale, float('inf'))
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), False)
     
     r = mapnik2.Rule("Name", "Title", min_scale)
     
@@ -558,6 +583,8 @@ def test_rule_init():
     eq_(r.title, 'Title')
     eq_(r.min_scale, min_scale)
     eq_(r.max_scale, float('inf'))
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), False)
     
     r = mapnik2.Rule("Name", "Title", min_scale, max_scale)
     
@@ -565,6 +592,8 @@ def test_rule_init():
     eq_(r.title, 'Title')
     eq_(r.min_scale, min_scale)
     eq_(r.max_scale, max_scale)
+    eq_(r.has_else(), False)
+    eq_(r.has_also(), False)
     
 # Coordinate initialization
 def test_coord_init():
@@ -718,4 +747,8 @@ def test_envelope_pickle():
     e2 = mapnik2.Box2d(173.7378, -39.6395, 174.4849, -38.9252)
     e1.clip(e2)
     eq_(e1,e2)
-    
+
+if __name__ == "__main__":
+    setup()
+    [eval(run)() for run in dir() if 'test_' in run]
+

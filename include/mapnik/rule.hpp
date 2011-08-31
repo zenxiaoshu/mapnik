@@ -139,6 +139,7 @@ private:
     symbolizers syms_;
     expression_ptr filter_;
     bool else_filter_;
+    bool also_filter_;
 public:
     rule()
         : name_(),
@@ -148,7 +149,8 @@ public:
           max_scale_(std::numeric_limits<double>::infinity()),
           syms_(),
           filter_(boost::make_shared<mapnik::expr_node>(true)),
-          else_filter_(false) {}
+          else_filter_(false), 
+          also_filter_(false) {}
     
     rule(const std::string& name,
          const std::string& title="",
@@ -160,7 +162,8 @@ public:
           max_scale_(max_scale_denominator),
           syms_(),
           filter_(boost::make_shared<mapnik::expr_node>(true)),
-          else_filter_(false) {}
+          else_filter_(false), 
+          also_filter_(false)  {}
     
     rule(const rule& rhs)    
         : name_(rhs.name_),
@@ -170,7 +173,8 @@ public:
           max_scale_(rhs.max_scale_),
           syms_(rhs.syms_),
           filter_(rhs.filter_),
-          else_filter_(rhs.else_filter_) {}
+          else_filter_(rhs.else_filter_), 
+          also_filter_(rhs.also_filter_) {}
     
     rule& operator=(rule const& rhs) 
     {
@@ -291,6 +295,16 @@ public:
         return else_filter_;
     }
     
+    void set_also(bool also_filter)
+    {
+        also_filter_=also_filter;
+    }
+    
+    bool has_also_filter() const
+    {
+        return also_filter_;
+    }
+    
     bool active(double scale) const
     {
         return ( scale >= min_scale_ - 1e-6 && scale < max_scale_ + 1e-6);
@@ -308,6 +322,7 @@ private:
         syms_=rhs.syms_;
         filter_=rhs.filter_;
         else_filter_=rhs.else_filter_;
+        also_filter_=rhs.also_filter_;
     }
 };
 

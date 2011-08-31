@@ -96,6 +96,12 @@ public:
         return sqlite3_column_double (stmt_, col);
     }
 
+    const char* column_text (int col, int& len)
+    {
+        len = sqlite3_column_bytes (stmt_, col);
+        return (const char*) sqlite3_column_text (stmt_, col);
+    }
+
     const char* column_text (int col)
     {
         return (const char*) sqlite3_column_text (stmt_, col);
@@ -104,7 +110,6 @@ public:
     const void* column_blob (int col, int& bytes)
     {
         bytes = sqlite3_column_bytes (stmt_, col);
-    
         return sqlite3_column_blob (stmt_, col);
     }
 
@@ -127,10 +132,19 @@ public:
     sqlite_connection (const std::string& file)
         : db_(0)
     {
-        #ifdef sqlite3_open_v2
-        sqlite3_enable_shared_cache(1);
-        if (sqlite3_open_v2 (file.c_str(), &db_, SQLITE_OPEN_NOMUTEX|SQLITE_OPEN_SHAREDCACHE, 0))
+        // sqlite3_open_v2 is available earlier but 
+        // shared cache not available until >= 3.6.18
+        #if SQLITE_VERSION_NUMBER >= 3006018
+        int rc = sqlite3_enable_shared_cache(1);
+        if (rc != SQLITE_OK)
+        {
+           throw mapnik::datasource_exception (sqlite3_errmsg (db_));
+        }
+        
+        int mode = SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_SHAREDCACHE;
+        if (sqlite3_open_v2 (file.c_str(), &db_, mode, NULL))
         #else
+        #warning "Mapnik's sqlite plugin is compiling against an version of sqlite older than 3.6.18 which may make rendering slow..."
         if (sqlite3_open (file.c_str(), &db_))
         #endif
         {

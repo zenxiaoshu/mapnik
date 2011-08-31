@@ -43,7 +43,7 @@ int main ( int argc , char** argv)
 {    
     if (argc != 2)
     {
-        std::cout << "usage: ./rundemo <mapnik_install_dir>\nUsually /usr/local/lib/mapnik\n";
+        std::cout << "usage: ./rundemo <mapnik_install_dir>\nUsually /usr/local/lib/mapnik2\n";
         std::cout << "Warning: ./rundemo looks for data in ../data/,\nTherefore must be run from within the demo/c++ folder.\n";
         return EXIT_SUCCESS;
     }
@@ -162,7 +162,7 @@ int main ( int argc , char** argv)
         
         feature_type_style popplaces_style;
         rule popplaces_rule;
-        text_symbolizer popplaces_text_symbolizer(parse_expression("GEONAME"),"DejaVu Sans Book",10,color(0,0,0));
+        text_symbolizer popplaces_text_symbolizer(parse_expression("[GEONAME]"),"DejaVu Sans Book",10,color(0,0,0));
         popplaces_text_symbolizer.set_halo_fill(color(255,255,200));
         popplaces_text_symbolizer.set_halo_radius(1);
         popplaces_rule.append(popplaces_text_symbolizer);

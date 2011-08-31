@@ -27,6 +27,8 @@
 #include <mapnik/image_reader.hpp>
 #include <mapnik/color.hpp>
 #include <mapnik/color_factory.hpp>
+#include <mapnik/symbolizer.hpp>
+#include <mapnik/feature_type_style.hpp>
 
 #include <mapnik/layer.hpp>
 #include <mapnik/datasource_cache.hpp>
@@ -536,7 +538,8 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
       << "minzoom,"
       << "maxzoom,"
       << "queryable,"
-      << "clear-label-cache";
+      << "clear-label-cache,"
+      << "cache-features";
     ensure_attrs(lay, "Layer", s.str());
     try
     {
@@ -677,21 +680,14 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
                     lyr.set_datasource(ds);
                 }
 
-                // catch problem at datasource registration
-                catch (const mapnik::config_error & ex )
-                {
-                    throw config_error( ex.what() );
-                }
-
-                // catch problem at the datasource creation
-                catch (const mapnik::datasource_exception & ex )
+                catch (const std::exception & ex )
                 {
                     throw config_error( ex.what() );
                 }
 
                 catch (...)
                 {
-                    //throw config_error("exception...");
+                    throw config_error("Unknown exception occured attempting to create datasoure for layer '" + lyr.name() + "'");
                 }
             }
             else if (child.first != "<xmlattr>" &&
@@ -747,6 +743,13 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
         if (else_filter)
         {
             rule.set_else(true);
+        }
+
+        optional<std::string> also_filter =
+            get_opt_child<std::string>(r, "AlsoFilter");
+        if (also_filter)
+        {
+            rule.set_also(true);
         }
 
         optional<double> min_scale =
@@ -819,6 +822,7 @@ void map_parser::parse_rule( feature_type_style & style, ptree const & r )
                       sym.first != "MaxScaleDenominator" &&
                       sym.first != "Filter" &&
                       sym.first != "ElseFilter" &&
+                      sym.first != "AlsoFilter" &&
                       sym.first != "<xmlcomment>" &&
                       sym.first != "<xmlattr>" )
             {
