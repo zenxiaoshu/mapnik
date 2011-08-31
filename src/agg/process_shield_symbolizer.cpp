@@ -70,6 +70,9 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
         char_info dummy(0, 1, 1, 0, 1);
         dummy.format = &(processor.defaults);
         if (!info.num_characters()) info.add_info(dummy); //Initialize dummy string info
+
+        finder.initialize(*placement, info);
+
         agg::trans_affine tr;
         boost::array<double,6> const& m = sym.get_transform(); /* TODO: placements */
         tr.load_from(&m[0]);
@@ -119,7 +122,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                     label_x += boost::get<0>(shield_pos);
                     label_y += boost::get<1>(shield_pos);
 
-                    finder.find_point_placement(*placement, info, label_x, label_y, 0.0 /*angle*/);
+                    finder.find_point_placement(label_x, label_y, 0.0 /*angle*/);
 
                     // check to see if image overlaps anything too, there is only ever 1 placement found for points and verticies
                     if(placement->placements.size() == 0) continue;
@@ -149,7 +152,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                     if (p.allow_overlap || detector_.has_placement(label_ext) )
                     {
                         detector_.insert(label_ext);
-                        finder.update_detector(*placement, info);
+                        finder.update_detector();
                         if (writer.first) {
                             writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);
                             writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
@@ -164,9 +167,9 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
             else if (geom.num_points() > 1 && p.label_placement == LINE_PLACEMENT)
             {
 
-                finder.find_point_placements<path_type>(*placement, info, path);
+                finder.find_point_placements<path_type>(path);
 
-                finder.update_detector(*placement, info);
+                finder.update_detector();
                 if (writer.first) writer.first->add_text(*placement, font_manager_, feature, t_, writer.second);
 
                 for (unsigned int ii = 0; ii < placement->placements.size(); ++ ii)

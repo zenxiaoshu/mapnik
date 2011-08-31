@@ -59,6 +59,7 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
         text->clear();
         processor.process(*text, feature);
         string_info &info = text->get_string_info();
+        finder.initialize(*placement, info);
 
         unsigned num_geom = feature.num_geometries();
         for (unsigned i=0; i<num_geom; ++i)
@@ -73,7 +74,7 @@ text_placement_info_ptr get_placement(const text_symbolizer &sym, const Feature 
                 value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature),*(p.orientation));
                 angle = result.to_double();
             }
-            finder.find_placement(*placement, info, angle, geom, t_, prj_trans);
+            finder.find_placement(angle, geom, t_, prj_trans);
 
             if (!placement->placements.size()) {
                 continue;
