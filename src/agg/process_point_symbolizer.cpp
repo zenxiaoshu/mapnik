@@ -28,6 +28,7 @@
 #include <mapnik/metawriter.hpp>
 #include <mapnik/marker_cache.hpp>
 #include <mapnik/point_symbolizer.hpp>
+#include <mapnik/expression_evaluator.hpp>
 
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"

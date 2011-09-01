@@ -40,6 +40,7 @@
 #include <mapnik/feature.hpp>
 #include <mapnik/stroke.hpp>
 #include <mapnik/map.hpp>
+#include <mapnik/expression_evaluator.hpp>
 
 // cairo
 #include <cairomm/context.h>

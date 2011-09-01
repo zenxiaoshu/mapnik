@@ -23,6 +23,7 @@
 
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
+#include <mapnik/expression_evaluator.hpp>
 #include <mapnik/image_util.hpp>
 #include <mapnik/marker_cache.hpp>
 #include <mapnik/svg/svg_converter.hpp>
@@ -31,6 +32,7 @@
 #include <mapnik/shield_symbolizer.hpp>
 #include <mapnik/text_processing.hpp>
 #include <mapnik/placement_finder.hpp>
+#include <mapnik/expression_evaluator.hpp>
 
 // boost
 #include <boost/make_shared.hpp>

@@ -29,6 +29,7 @@
 #include <mapnik/grid/grid.hpp>
 #include <mapnik/markers_symbolizer.hpp>
 
+#include <mapnik/expression_evaluator.hpp>
 #include <mapnik/marker_cache.hpp>
 #include <mapnik/svg/svg_renderer.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
