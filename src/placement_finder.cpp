@@ -261,7 +261,6 @@ void placement_finder<DetectorT>::find_line_breaks()
                 (line_width > 0 && ((line_width > wrap_at && !ci.format->wrap_before) ||
                                    ((line_width + last_wrap_char_width + word_width) > wrap_at && ci.format->wrap_before)) ))
             {
-                // Remove width of breaking space character since it is not rendered and the character_spacing for the last character on the line
                 string_width_ = std::max(string_width_, line_width); //Total width is the longest line
                 string_height_ += line_height;
                 line_breaks_.push_back(last_wrap_char_pos);
@@ -272,10 +271,10 @@ void placement_finder<DetectorT>::find_line_breaks()
                 first_line = false;
             }
         }
-        string_width_ = std::max(string_width_, line_width);
-        string_height_ += line_height;
         line_width += last_wrap_char_width + word_width;
         line_height = std::max(line_height, word_height);
+        string_width_ = std::max(string_width_, line_width);
+        string_height_ += line_height;
         line_sizes_.push_back(std::make_pair(line_width, line_height));
     } else {
         //No linebreaks
@@ -321,6 +320,8 @@ void placement_finder<DetectorT>::adjust_position(placement_element *current_pla
     else if (valign_ == V_BOTTOM) {
         current_placement->starting_y += 0.5 * string_height_;  // move center down by the 1/2 the total height
         current_placement->starting_y -= first_line_space_;
+    } else if (valign_ == V_MIDDLE) {
+        current_placement->starting_y -= first_line_space_/2.0;
     }
 
     // set horizontal position to middle of text
