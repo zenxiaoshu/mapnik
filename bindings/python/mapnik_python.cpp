@@ -64,7 +64,6 @@ void export_projection();
 void export_proj_transform();
 void export_view_transform();
 void export_raster_colorizer();
-void export_glyph_symbolizer();
 void export_inmem_metawriter();
 
 #include <mapnik/version.hpp>
@@ -426,7 +425,6 @@ BOOST_PYTHON_MODULE(_mapnik2)
     export_coord();
     export_map();
     export_raster_colorizer();
-    export_glyph_symbolizer();
     export_inmem_metawriter();
 
     def("render_grid",&render_grid,
