@@ -60,7 +60,6 @@ struct shield_symbolizer;
 struct text_symbolizer;
 struct building_symbolizer;
 struct markers_symbolizer;
-struct glyph_symbolizer;
    
 template <typename T>
 class MAPNIK_DECL agg_renderer : public feature_style_processor<agg_renderer<T> >,
@@ -106,9 +105,6 @@ public:
     void process(markers_symbolizer const& sym,
                  Feature const& feature,
                  proj_transform const& prj_trans);
-    void process(glyph_symbolizer const& sym,
-                 Feature const& feature,
-                 proj_transform const& prj_trans);    
 
 private:
     T & pixmap_;

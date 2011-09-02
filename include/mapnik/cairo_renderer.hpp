@@ -68,7 +68,6 @@ struct shield_symbolizer;
 struct text_symbolizer;
 struct building_symbolizer;
 struct markers_symbolizer;
-struct glyph_symbolizer;
 
 typedef boost::shared_ptr<cairo_face> cairo_face_ptr;
 
@@ -123,9 +122,6 @@ public:
                  Feature const& feature,
                  proj_transform const& prj_trans);
     void process(markers_symbolizer const& sym,
-                 Feature const& feature,
-                 proj_transform const& prj_trans);
-    void process(glyph_symbolizer const& sym,
                  Feature const& feature,
                  proj_transform const& prj_trans);
 protected:
