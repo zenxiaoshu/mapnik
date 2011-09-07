@@ -63,7 +63,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
         processed_text text(font_manager_, scale_factor_);
         processor.process(text, feature);
         if (!sym.get_no_text() && text.empty()) {
-            std::cout << "No text";
+//            std::cout << "No text";
             continue;
         }
 
