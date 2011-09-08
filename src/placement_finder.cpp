@@ -100,7 +100,7 @@ template <typename DetectorT>
 placement_finder<DetectorT>::placement_finder(text_placement_info &placement_info, string_info &info, DetectorT & detector)
     : detector_(detector),
       dimensions_(detector_.extent()),
-      info_(info), p(placement_info.properties), pi(placement_info)
+      info_(info), p(placement_info.properties), pi(placement_info), string_width_(0), string_height_(0), first_line_space_(0), valign_(V_AUTO), halign_(H_AUTO), line_breaks_(), line_sizes_()
 {
 }
 
@@ -108,7 +108,7 @@ template <typename DetectorT>
 placement_finder<DetectorT>::placement_finder(text_placement_info &placement_info, string_info &info, DetectorT & detector, box2d<double> const& extent)
     : detector_(detector),
       dimensions_(extent),
-      info_(info), p(placement_info.properties), pi(placement_info)
+      info_(info), p(placement_info.properties), pi(placement_info), string_width_(0), string_height_(0), first_line_space_(0), valign_(V_AUTO), halign_(H_AUTO), line_breaks_(), line_sizes_()
 {
 }
 
@@ -187,6 +187,7 @@ void placement_finder<DetectorT>::init_string_size()
     // Get total string size
     string_width_ = 0;
     string_height_ = 0;
+    first_line_space_ = 0;
     if (!info_.num_characters()) return; //At least one character is required
     for (unsigned i = 0; i < info_.num_characters(); i++)
     {
