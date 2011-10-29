@@ -159,6 +159,24 @@ boost::python::list field_types(boost::shared_ptr<mapnik::datasource> const& ds)
     return fld_types;
 }}
 
+mapnik::featureset_ptr features1(boost::shared_ptr<mapnik::datasource> const& ds, mapnik::query const& q)
+{
+    return ds->features(q);
+}
+
+
+mapnik::featureset_ptr features2(boost::shared_ptr<mapnik::datasource> const& ds, boost::python::list const& names)
+{
+    std::set<std::string> attributes;
+    for (int i=0; i<len(names); ++i)
+    {
+        std::string key = extract<std::string>(names[i]);
+        attributes.insert(key);
+    }
+    return ds->features(attributes);
+}
+
+
 void export_datasource()
 {
     using namespace boost::python;
@@ -167,7 +185,12 @@ void export_datasource()
         boost::noncopyable>("Datasource",no_init)
         .def("envelope",&datasource::envelope)
         .def("descriptor",&datasource::get_descriptor) //todo
-        .def("features",&datasource::features)
+        .def("features",&features1,
+         ( arg("self"),arg("query") )
+        )
+        .def("features",&features2,
+         ( arg("self"),arg("fields")=boost::python::list() )
+        )
         .def("bind",&datasource::bind)
         .def("fields",&fields)
         .def("field_types",&field_types)
@@ -194,5 +217,6 @@ void export_datasource()
              ">>> feature = Feature(1)\n"
              ">>> ms.add_feature(Feature(1))\n")
         .def("num_features",&memory_datasource::size)
+        .def("calculate_extent",&memory_datasource::calculate_extent)
         ;
 }

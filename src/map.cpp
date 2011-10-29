@@ -29,6 +29,9 @@
 #include <mapnik/hit_test_filter.hpp>
 #include <mapnik/scale_denominator.hpp>
 
+// boost
+#include <boost/optional.hpp>
+
 // icu
 #include <unicode/uversion.h>
 
@@ -399,23 +402,27 @@ void Map::zoom_all()
                     
                     proj_transform prj_trans(proj0,proj1);
                         
-                    box2d<double> layer_ext = itr->envelope();
-                    // TODO - consider using more robust method: http://trac.mapnik.org/ticket/751
-                    if (prj_trans.backward(layer_ext))
+                    boost::optional<box2d<double> > layer_envelope = itr->envelope();
+                    if (layer_envelope)
                     {
-                        success = true;
-            #ifdef MAPNIK_DEBUG
-                        std::clog << " layer " << itr->name() << " original ext: " << itr->envelope() << "\n";
-                        std::clog << " layer " << itr->name() << " transformed to map srs: " << layer_ext << "\n";
-            #endif                
-                        if (first)
+                        box2d<double> layer_ext = *layer_envelope;
+                        // TODO - consider using more robust method: http://trac.mapnik.org/ticket/751
+                        if (prj_trans.backward(layer_ext))
                         {
-                            ext = layer_ext;
-                            first = false;
-                        }
-                        else 
-                        {
-                            ext.expand_to_include(layer_ext);
+                            success = true;
+                #ifdef MAPNIK_DEBUG
+                            std::clog << " layer " << itr->name() << " original ext: " << itr->envelope() << "\n";
+                            std::clog << " layer " << itr->name() << " transformed to map srs: " << layer_ext << "\n";
+                #endif                
+                            if (first)
+                            {
+                                ext = layer_ext;
+                                first = false;
+                            }
+                            else 
+                            {
+                                ext.expand_to_include(layer_ext);
+                            }
                         }
                     }
                 }
@@ -423,7 +430,7 @@ void Map::zoom_all()
             }
             if (success) {
                 zoom_to_box(ext);
-            } else {
+            } else if (!first) {
                 std::ostringstream s;
                 s << "could not zoom to combined layer extents "
                   << "using zoom_all because proj4 could not "

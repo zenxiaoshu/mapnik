@@ -28,7 +28,12 @@
 #include <mapnik/datasource.hpp>
 #include <mapnik/box2d.hpp>
 
+// boost
 #include <boost/shared_ptr.hpp>
+#include <boost/optional.hpp>
+
+//stl
+#include <set>
 
 #include "shape_io.hpp"
 
@@ -48,8 +53,9 @@ public:
     int type() const;
     static std::string name();
     featureset_ptr features(const query& q) const;
+    featureset_ptr features(const std::set<std::string>& names) const;
     featureset_ptr features_at_point(coord2d const& pt) const;
-    box2d<double> envelope() const;
+    boost::optional<box2d<double> > envelope() const;
     layer_descriptor get_descriptor() const;
     void bind() const;   
 private:
@@ -61,7 +67,7 @@ private:
     std::string shape_name_;
     mutable boost::shared_ptr<shape_io> shape_;
     mutable long file_length_;
-    mutable box2d<double> extent_;
+    mutable boost::optional<box2d<double> > extent_;
     mutable bool indexed_;
     const int row_limit_;
     mutable layer_descriptor desc_;

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
+from nose.plugins import Plugin
 
 import os, sys, inspect
 
@@ -14,7 +15,7 @@ class TodoPlugin(ErrorClassPlugin):
     name = "todo"
 
     todo = ErrorClass(Todo, label='TODO', isfailure=False)
-
+  
 def save_data(filename, data, key='MAPNIK_TEST_DATA_DIR'):
     """Saves bytestring 'data' into os.environ[key]/filename if
     key in os.environ"""

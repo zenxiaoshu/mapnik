@@ -230,38 +230,57 @@ void feature_style_processor<Processor>::apply_to_layer(layer const& lay, Proces
         map_ext.clip(*maximum_extent);
     }
 
-    box2d<double> layer_ext = lay.envelope();
-
-    // first, try intersection of map extent forward projected into layer srs
-    if (prj_trans.forward(map_ext, PROJ_ENVELOPE_POINTS) && map_ext.intersects(layer_ext))
+    box2d<double> layer_ext;
+    boost::optional<box2d<double> > layer_envelope = lay.envelope();
+    if (layer_envelope)
     {
-        layer_ext.clip(map_ext);
-    } 
-    // if no intersection and projections are also equal, early return
-    else if (prj_trans.equal())
-    {
-        #if defined(RENDERING_STATS)
-        layer_timer.discard();
-        #endif
-        return;
-    }
-    // next try intersection of layer extent back projected into map srs
-    else if (prj_trans.backward(layer_ext, PROJ_ENVELOPE_POINTS) && map_ext.intersects(layer_ext))
-    {
-        layer_ext.clip(map_ext);
-        // forward project layer extent back into native projection
-        if (!prj_trans.forward(layer_ext))
-            std::clog << "WARNING: layer " << lay.name()
-                << " extent " << layer_ext << " in map projection "
-                << " did not reproject properly back to layer projection\n";
+        layer_ext = *layer_envelope;
+        // first, try intersection of map extent forward projected into layer srs
+        if (prj_trans.forward(map_ext, PROJ_ENVELOPE_POINTS) && map_ext.intersects(layer_ext))
+        {
+            layer_ext.clip(map_ext);
+        } 
+        // if no intersection and projections are also equal, early return
+        else if (prj_trans.equal())
+        {
+            #if defined(RENDERING_STATS)
+            layer_timer.discard();
+            #endif
+            return;
+        }
+        // next try intersection of layer extent back projected into map srs
+        else if (prj_trans.backward(layer_ext, PROJ_ENVELOPE_POINTS) && map_ext.intersects(layer_ext))
+        {
+            layer_ext.clip(map_ext);
+            // forward project layer extent back into native projection
+            if (!prj_trans.forward(layer_ext))
+                std::clog << "WARNING: layer " << lay.name()
+                    << " extent " << layer_ext << " in map projection "
+                    << " did not reproject properly back to layer projection\n";
+        }
+        else
+        {
+            // if no intersection then nothing to do for layer
+            #if defined(RENDERING_STATS)
+            layer_timer.discard();
+            #endif
+            return;
+        }
     }
     else
     {
-        // if no intersection then nothing to do for layer
-        #if defined(RENDERING_STATS)
-        layer_timer.discard();
-        #endif
-        return;
+        if (prj_trans.forward(map_ext, PROJ_ENVELOPE_POINTS))
+        {
+            layer_ext = map_ext;    
+        }
+        else
+        {
+            // nothing to do
+            #if defined(RENDERING_STATS)
+            layer_timer.discard();
+            #endif
+            return;
+        }
     }
     
     box2d<double> query_ext = m_.get_current_extent();

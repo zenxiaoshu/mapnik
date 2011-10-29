@@ -73,6 +73,38 @@ private:
     std::vector<feature_ptr>::const_iterator pos_;
     std::vector<feature_ptr>::const_iterator end_; 
 };
+
+
+class memory_featureset2 : public Featureset, private boost::noncopyable
+{
+public:
+    memory_featureset2(memory_datasource const& ds)
+        : pos_(ds.features_.begin()),
+          end_(ds.features_.end())
+    {}
+
+    memory_featureset2(std::vector<feature_ptr> const& features)
+        : pos_(features.begin()),
+          end_(features.end())
+    {}
+
+    virtual ~memory_featureset2() {}
+        
+    feature_ptr next()
+    {
+        while (pos_ != end_)
+        {
+            return *pos_++;
+        }
+           
+        return feature_ptr();
+    }
+
+private:
+    std::vector<feature_ptr>::const_iterator pos_;
+    std::vector<feature_ptr>::const_iterator end_; 
+};
+
 }
 
 #endif // MAPNIK_MEMORY_FEATURESET_HPP

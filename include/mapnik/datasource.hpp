@@ -33,11 +33,13 @@
 
 // boost
 #include <boost/utility.hpp>
+#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
 // stl
 #include <map>
 #include <string>
+#include <set>
 
 namespace mapnik {
    
@@ -101,10 +103,11 @@ public:
      * @brief Connect to the datasource
      */
     virtual void bind() const {};
-    
+
     virtual featureset_ptr features(const query& q) const=0;
+    virtual featureset_ptr features(const std::set<std::string>& names) const=0;
     virtual featureset_ptr features_at_point(coord2d const& pt) const=0;
-    virtual box2d<double> envelope() const=0;
+    virtual boost::optional<box2d<double> > envelope() const=0;
     virtual layer_descriptor get_descriptor() const=0;
     virtual ~datasource() {};
 protected:

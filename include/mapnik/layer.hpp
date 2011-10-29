@@ -195,7 +195,7 @@ public:
     /*!
      * @return the geographic envelope/bounding box of the data in the layer.
      */
-    box2d<double> envelope() const;
+    boost::optional<box2d<double> > envelope() const;
         
     ~layer();
 private:

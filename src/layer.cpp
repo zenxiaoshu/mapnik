@@ -202,10 +202,10 @@ void layer::set_datasource(datasource_ptr const& ds)
     ds_ = ds;
 }
     
-box2d<double> layer::envelope() const
+boost::optional<box2d<double> > layer::envelope() const
 {
     if (ds_) return ds_->envelope();
-    return box2d<double>();
+    return boost::optional<box2d<double> >();
 }
     
 void layer::set_clear_label_cache(bool clear)

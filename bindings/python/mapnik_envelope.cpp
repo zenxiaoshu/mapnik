@@ -28,6 +28,8 @@
 #include <mapnik/box2d.hpp>
 #include <mapnik/value_error.hpp>
 
+#include "python_optional.hpp"
+
 using mapnik::coord;
 using mapnik::box2d;
 
@@ -90,6 +92,7 @@ void (box2d<double>::*clip)(box2d<double> const&) = &box2d<double>::clip;
 void export_envelope()
 {
     using namespace boost::python;
+    python_optional<mapnik::box2d<double> > ();
     class_<box2d<double> >("Box2d",
                            // class docstring is in mapnik/__init__.py, class _Coord
                            init<double,double,double,double>(

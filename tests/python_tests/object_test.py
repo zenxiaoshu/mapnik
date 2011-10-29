@@ -312,7 +312,7 @@ def test_textsymbolizer_pickle():
 def test_layer_init():
     l = mapnik2.Layer('test')
     eq_(l.name,'test')
-    eq_(l.envelope(),mapnik2.Box2d())
+    eq_(l.envelope(),None)
     eq_(l.clear_label_cache,False)
     eq_(l.cache_features,False)
     eq_(l.visible(1),True)

@@ -36,6 +36,7 @@
 #include <stdexcept>
 
 #include "shape_datasource.hpp"
+#include "shape_attributes.hpp"
 #include "shape_featureset.hpp"
 #include "shape_index_featureset.hpp"
 
@@ -186,7 +187,9 @@ void  shape_datasource::init(shape_io& shape) const
     if (shape_type == shape_io::shape_multipatch)
         throw datasource_exception("Shape Plugin: shapefile multipatch type is not supported");
    
-    shape.shp().read_envelope(extent_);
+    box2d<double> ext;
+    shape.shp().read_envelope(ext);
+    extent_ = ext;
    
 #ifdef MAPNIK_DEBUG
     double zmin = shape.shp().read_double();
@@ -238,6 +241,19 @@ layer_descriptor shape_datasource::get_descriptor() const
 {
     if (!is_bound_) bind();
     return desc_;
+}
+
+// TODO - option to get geometries, just extents, or nothing spatial
+// TODO - if names is empty then spit back everything
+featureset_ptr shape_datasource::features(const std::set<std::string>& names) const
+{
+    if (!is_bound_) bind();
+
+    return boost::make_shared<shape_attributes>(shape_name_,
+                                                 names,
+                                                 desc_.get_encoding(),
+                                                 file_length_,
+                                                 row_limit_);
 }
 
 featureset_ptr shape_datasource::features(const query& q) const
@@ -308,9 +324,7 @@ featureset_ptr shape_datasource::features_at_point(coord2d const& pt) const
     }
 }
 
-box2d<double> shape_datasource::envelope() const
+boost::optional<box2d<double> > shape_datasource::envelope() const
 {
-    if (!is_bound_) bind();
-    
     return extent_;
 }

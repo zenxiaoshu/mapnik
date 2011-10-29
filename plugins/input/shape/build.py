@@ -31,6 +31,7 @@ shape_src = Split(
         dbfile.cpp
         shape_datasource.cpp
         shape_featureset.cpp
+        shape_attributes.cpp
         shape_index_featureset.cpp
         shape_io.cpp
   """
