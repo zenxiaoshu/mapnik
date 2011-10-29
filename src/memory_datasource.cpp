@@ -25,6 +25,10 @@
 #include <mapnik/memory_datasource.hpp>
 #include <mapnik/memory_featureset.hpp>
 #include <mapnik/feature_factory.hpp>
+
+// boost
+#include <boost/make_shared.hpp>
+
 // stl
 #include <algorithm>
 
@@ -64,19 +68,36 @@ memory_datasource::~memory_datasource() {}
     
 void memory_datasource::push(feature_ptr feature)
 {
-    // TODO - collect attribute descriptors?
+    // TODO collect geometry extent and attribute descriptors?
     //desc_.add_descriptor(attribute_descriptor(fld_name,mapnik::Integer));
     features_.push_back(feature);
+}
+
+void memory_datasource::calculate_extent()
+{
+    if (features_.size() > 0)
+    {
+        box2d<double> ext;
+        accumulate_extent func(ext);
+        std::for_each(features_.begin(),features_.end(),func);
+        extent_ = ext;
+    }
 }
     
 int memory_datasource::type() const
 {
     return datasource::Vector;
 }
-    
+
 featureset_ptr memory_datasource::features(const query& q) const
 {
-    return featureset_ptr(new memory_featureset(q.get_bbox(),*this));
+    return featureset_ptr(boost::make_shared<memory_featureset>(q.get_bbox(),*this));
+}
+
+featureset_ptr memory_datasource::features(const std::set<std::string>& names) const
+{
+    // TODO
+    return featureset_ptr(boost::make_shared<memory_featureset2>(*this));
 }
 
 
@@ -86,15 +107,12 @@ featureset_ptr memory_datasource::features_at_point(coord2d const& pt) const
 #ifdef MAPNIK_DEBUG
     std::clog << "box=" << box << ", pt x=" << pt.x << ", y=" << pt.y << "\n";
 #endif
-    return featureset_ptr(new memory_featureset(box,*this));
+    return featureset_ptr(boost::make_shared<memory_featureset>(box,*this));
 }
     
-box2d<double> memory_datasource::envelope() const
+boost::optional<box2d<double> > memory_datasource::envelope() const
 {
-    box2d<double> ext;
-    accumulate_extent func(ext);
-    std::for_each(features_.begin(),features_.end(),func);
-    return ext;      
+    return extent_;
 }
     
 layer_descriptor memory_datasource::get_descriptor() const
@@ -111,14 +129,14 @@ size_t memory_datasource::size() const
 
 void point_datasource::add_point(double x, double y, const char* key, const char* value)
 {
-        feature_ptr feature(feature_factory::create(feature_id_));
-        ++feature_id_;
-        geometry_type * pt = new geometry_type(Point);
-        pt->move_to(x,y);
-        feature->add_geometry(pt);
-        transcoder tr("utf-8");
-        (*feature)[key] = tr.transcode(value);
-        this->push(feature);
+    feature_ptr feature(feature_factory::create(feature_id_));
+    ++feature_id_;
+    geometry_type * pt = new geometry_type(Point);
+    pt->move_to(x,y);
+    feature->add_geometry(pt);
+    transcoder tr("utf-8");
+    (*feature)[key] = tr.transcode(value);
+    this->push(feature);
 }
 
 }
