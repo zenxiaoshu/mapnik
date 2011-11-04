@@ -450,6 +450,7 @@ pickle_store = [# Scons internal variables
         'CAIROMM_LIBPATHS',
         'CAIROMM_LINKFLAGS',
         'CAIROMM_CPPPATHS',
+        'SVG_RENDERER',
         ]
 
 # Add all other user configurable options to pickle pickle_store
@@ -1069,15 +1070,17 @@ if not preconfigured:
         env.AppendUnique(CPPPATH = os.path.realpath(inc_path))
         env.AppendUnique(LIBPATH = os.path.realpath(lib_path))
 
-    conf.parse_config('FREETYPE_CONFIG')
-
-    # check if freetype links to bz2
-    if env['RUNTIME_LINK'] == 'static':
-        temp_env = env.Clone()
-        temp_env['LIBS'] = []
-        temp_env.ParseConfig('%s --libs' % env['FREETYPE_CONFIG'])
-        if 'bz2' in temp_env['LIBS']:
-            env['EXTRA_FREETYPE_LIBS'].append('bz2')
+    if conf.parse_config('FREETYPE_CONFIG'):
+        # check if freetype links to bz2
+        if env['RUNTIME_LINK'] == 'static':
+            temp_env = env.Clone()
+            temp_env['LIBS'] = []
+            try:
+                temp_env.ParseConfig('%s --libs' % env['FREETYPE_CONFIG'])
+                if 'bz2' in temp_env['LIBS']:
+                    env['EXTRA_FREETYPE_LIBS'].append('bz2')
+            except OSError,e:
+                pass
 
     # libxml2 should be optional but is currently not
     # https://github.com/mapnik/mapnik/issues/913
