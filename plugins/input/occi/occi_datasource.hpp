@@ -1,5 +1,5 @@
 /*****************************************************************************
- * 
+ *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
  * Copyright (C) 2011 Artem Pavlenko
@@ -35,7 +35,7 @@
 // oci
 #include "occi_types.hpp"
 
-class occi_datasource : public mapnik::datasource 
+class occi_datasource : public mapnik::datasource
 {
 public:
     occi_datasource(mapnik::parameters const& params, bool bind = true);
@@ -51,6 +51,7 @@ public:
 private:
     int type_;
     mutable std::string table_;
+    mutable std::string table_name_;
     mutable std::string fields_;
     mutable std::string geometry_field_;
     mutable int srid_;

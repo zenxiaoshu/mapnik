@@ -105,7 +105,7 @@ text_symbolizer::text_symbolizer(expression_ptr name, std::string const& face_na
       max_char_angle_delta_(22.5 * M_PI/180.0),
       fill_(fill),
       halo_fill_(color(255,255,255)),
-      halo_radius_(0),
+      halo_radius_(0.0),
       label_p_(POINT_PLACEMENT),
       anchor_(0.0,0.5),
       avoid_edges_(false),
@@ -138,7 +138,7 @@ text_symbolizer::text_symbolizer(expression_ptr name, float size, color const& f
       max_char_angle_delta_(22.5 * M_PI/180.0),
       fill_(fill),
       halo_fill_(color(255,255,255)),
-      halo_radius_(0),
+      halo_radius_(0.0),
       label_p_(POINT_PLACEMENT),
       anchor_(0.0,0.5),
       avoid_edges_(false),
@@ -438,9 +438,14 @@ position const& text_symbolizer::get_anchor() const
     return anchor_;
 }
 
-void  text_symbolizer::set_displacement(double x, double y)
+void text_symbolizer::set_displacement(double x, double y)
 {
     placement_options_->set_default_displacement(boost::make_tuple(x,y));
+}
+
+void text_symbolizer::set_displacement(position const& p)
+{
+    placement_options_->set_default_displacement(p);
 }
 
 position const& text_symbolizer::get_displacement() const

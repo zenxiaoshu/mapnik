@@ -231,7 +231,7 @@ def sort_paths(items,priority):
             else:
                 path_types['user'].append(i)
         # key system libs (likely others will fall into 'other')
-        elif '/usr/' in i or '/System' in i or '/lib' in i:
+        elif '/usr/' in i or '/System' in i or i.startswith('/lib'):
             path_types['system'].append(i)
         # anything not yet matched...
         # likely a combo of rare system lib paths and
@@ -302,6 +302,7 @@ opts.AddVariables(
     EnumVariable('OPTIMIZATION','Set g++ optimization level','3', ['0','1','2','3','4','s']),
     # Note: setting DEBUG=True will override any custom OPTIMIZATION level
     BoolVariable('DEBUG', 'Compile a debug version of Mapnik', 'False'),
+    BoolVariable('DEBUG_UNDEFINED', 'Compile a version of Mapnik using clang/llvm undefined behavior asserts', 'False'),
     ListVariable('INPUT_PLUGINS','Input drivers to include',DEFAULT_PLUGINS,PLUGINS.keys()),
     ('WARNING_CXXFLAGS', 'Compiler flags you can set to reduce warning levels which are placed after -Wall.', ''),
     
@@ -319,7 +320,8 @@ opts.AddVariables(
     ('PYTHON_PREFIX','Custom install path "prefix" for python bindings (default of no prefix)',''),
     ('DESTDIR', 'The root directory to install into. Useful mainly for binary package building', '/'),
     ('PATH', 'A custom path (or multiple paths divided by ":") to append to the $PATH env to prioritize usage of command line programs (if multiple are present on the system)', ''),
-    ('PATH_REMOVE', 'A path prefix to exclude from all know command and compile paths', ''),
+    ('PATH_REMOVE', 'A path prefix to exclude from all known command and compile paths', ''),
+    ('PATH_REPLACE', 'Two path prefixes (divided with a :) to search/replace from all known command and compile paths', ''),
     
     # Boost variables
     # default is '/usr/include', see FindBoost method below
@@ -435,6 +437,7 @@ pickle_store = [# Scons internal variables
         'PKG_CONFIG_PATH',
         'PATH',
         'PATH_REMOVE',
+        'PATH_REPLACE',
         'MAPNIK_LIB_DIR',
         'MAPNIK_LIB_DIR_DEST',
         'INSTALL_PREFIX',
@@ -451,6 +454,7 @@ pickle_store = [# Scons internal variables
         'CAIROMM_LINKFLAGS',
         'CAIROMM_CPPPATHS',
         'SVG_RENDERER',
+        'SQLITE_LINKFLAGS'
         ]
 
 # Add all other user configurable options to pickle pickle_store
@@ -874,18 +878,34 @@ def sqlite_has_rtree(context):
      
     ret = context.TryRun("""
 
-extern "C" {
-  #include <sqlite3.h>
-}
+#include <sqlite3.h>
+#include <stdio.h>
 
 int main() 
 {
-    sqlite3_rtree_geometry *p;
-    //sqlite3_compileoption_used("ENABLE_RTREE");
-    return 0;
+    sqlite3* db;
+    int rc;
+    rc = sqlite3_open(":memory:", &db);
+    if (rc != SQLITE_OK)
+    {
+        printf("error 1: %s\\n", sqlite3_errmsg(db));
+    }
+    const char * sql = "create virtual table foo using rtree(pkid, xmin, xmax, ymin, ymax)";
+    rc = sqlite3_exec(db, sql, 0, 0, 0);
+    if (rc != SQLITE_OK)
+    {
+        printf("error 2: %s\\n", sqlite3_errmsg(db));
+    }
+    else
+    {
+        printf("yes, has rtree!\\n");
+        return 0;
+    }
+    
+    return -1;
 }
 
-""", '.cpp')
+""", '.c')
     context.Message('Checking if SQLite supports RTREE... ')
     context.Result(ret[0])
     if ret[0]:
@@ -970,7 +990,7 @@ if not preconfigured:
     env['LIBDIR_SCHEMA'] = LIBDIR_SCHEMA
     env['PLUGINS'] = PLUGINS
     env['EXTRA_FREETYPE_LIBS'] = []
-
+    env['SQLITE_LINKFLAGS'] = []
     # previously a leading / was expected for LIB_DIR_NAME
     # now strip it to ensure expected behavior
     if env['LIB_DIR_NAME'].startswith(os.path.sep):
@@ -1218,12 +1238,30 @@ if not preconfigured:
                 if not conf.CheckLibWithHeader(details['lib'], details['inc'], details['lang']):
                     env.Replace(**backup)
                     env['SKIPPED_DEPS'].append(details['lib'])
-                #if plugin == 'sqlite':
-                #    if not conf.sqlite_has_rtree():
-                #        env.Replace(**backup)
-                #        if details['lib'] in env['LIBS']:
-                #            env['LIBS'].remove(details['lib'])
-                #        env['SKIPPED_DEPS'].append('sqlite_rtree')
+                if plugin == 'sqlite':
+                    sqlite_backup = env.Clone().Dictionary()
+
+                    # if statically linking, on linux we likely
+                    # need to link sqlite to pthreads and dl
+                    if env['RUNTIME_LINK'] == 'static':
+                        if conf.CheckPKGConfig('0.15.0') and conf.CheckPKG('sqlite3'):
+                            sqlite_env = env.Clone()
+                            try:
+                                sqlite_env.ParseConfig('pkg-config --static --libs sqlite3')
+                                for lib in sqlite_env['LIBS']:
+                                    if not lib in env['LIBS']:
+                                        env["SQLITE_LINKFLAGS"].append(lib)
+                                        env.Append(LIBS=lib)
+                            except OSError,e:
+                                pass
+
+                    if not conf.sqlite_has_rtree():
+                        env.Replace(**sqlite_backup)
+                        if details['lib'] in env['LIBS']:
+                            env['LIBS'].remove(details['lib'])
+                        env['SKIPPED_DEPS'].append('sqlite_rtree')
+                    else:
+                        env.Replace(**sqlite_backup)
 
             elif details['lib'] and details['inc']:
                 if not conf.CheckLibWithHeader(details['lib'], details['inc'], details['lang']):
@@ -1235,10 +1273,10 @@ if not preconfigured:
         env.PrependUnique(CPPPATH = '#', delete_existing=True)
         env.PrependUnique(LIBPATH = '#src', delete_existing=True)
 
-    #if env['PGSQL2SQLITE']:
-    #    if not conf.sqlite_has_rtree():
-    #        env['SKIPPED_DEPS'].append('pgsql2sqlite_rtree')
-    #        env['PGSQL2SQLITE'] = False
+    if env['PGSQL2SQLITE']:
+        if not conf.sqlite_has_rtree():
+            env['SKIPPED_DEPS'].append('pgsql2sqlite_rtree')
+            env['PGSQL2SQLITE'] = False
 
     # Decide which libagg to use
     # if we are using internal agg, then prepend to make sure
@@ -1418,6 +1456,7 @@ if not preconfigured:
         debug_flags  = '-g -DDEBUG -DMAPNIK_DEBUG'
         ndebug_flags = '-DNDEBUG'
        
+        
         # Customizing the C++ compiler flags depending on: 
         #  (1) the C++ compiler used; and
         #  (2) whether debug binaries are requested.
@@ -1433,6 +1472,8 @@ if not preconfigured:
                 env.Append(CXXFLAGS = gcc_cxx_flags + '-O0 -fno-inline %s' % debug_flags)
             else: 
                 env.Append(CXXFLAGS = gcc_cxx_flags + '-O%s -finline-functions -Wno-inline -Wno-parentheses -Wno-char-subscripts %s' % (env['OPTIMIZATION'],ndebug_flags))
+            if env['DEBUG_UNDEFINED']:
+                env.Append(CXXFLAGS = '-fcatch-undefined-behavior') #-ftrapv -fwrapv 
 
         if 'python' in env['BINDINGS']:
             if not os.access(env['PYTHON'], os.X_OK):
@@ -1588,15 +1629,44 @@ if not HELP_REQUESTED:
                     env[set].remove(i)
         rm_path('LIBPATH')
         rm_path('CPPPATH')
+        rm_path('CXXFLAGS')
+        rm_path('CAIROMM_LIBPATHS')
+        rm_path('CAIROMM_CPPPATHS')
 
+    if env['PATH_REPLACE']:
+        searches,replace = env['PATH_REPLACE'].split(':')
+        for search in searches.split(','):
+            if search in env['ENV']['PATH']:
+                env['ENV']['PATH'] = os.path.abspath(env['ENV']['PATH'].replace(search,replace))
+            def replace_path(set,s,r):
+                idx = 0
+                for i in env[set]:
+                    if s in i:
+                        env[set][idx] = os.path.abspath(env[set][idx].replace(s,r))
+                    idx +=1
+            replace_path('LIBPATH',search,replace)
+            replace_path('CPPPATH',search,replace)
+            replace_path('CXXFLAGS',search,replace)
+            replace_path('CAIROMM_LIBPATHS',search,replace)
+            replace_path('CAIROMM_CPPPATHS',search,replace)
+        
     # export env so it is available in build.py files
     Export('env')
+    
+    plugin_base = env.Clone()
+    # for this to work you need:
+    # if __GNUC__ >= 4
+    # define MAPNIK_EXP __attribute__ ((visibility ("default")))
+    #plugin_base.Append(CXXFLAGS='-fvisibility=hidden')
+    #plugin_base.Append(CXXFLAGS='-fvisibility-inlines-hidden')
 
+    Export('plugin_base')
 
     # clear the '_CPPDEFFLAGS' variable
     # for unknown reasons this variable puts -DNone
     # in the g++ args prompting unnecessary recompiles
     env['_CPPDEFFLAGS'] = None
+    plugin_base['_CPPDEFFLAGS'] = None
 
     
     if env['FAST']:

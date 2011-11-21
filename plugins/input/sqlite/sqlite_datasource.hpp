@@ -1,5 +1,5 @@
 /*****************************************************************************
- * 
+ *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
  * Copyright (C) 2011 Artem Pavlenko
@@ -20,24 +20,24 @@
  *
  *****************************************************************************/
 
-#ifndef SQLITE_DATASOURCE_HPP
-#define SQLITE_DATASOURCE_HPP
+#ifndef MAPNIK_SQLITE_DATASOURCE_HPP
+#define MAPNIK_SQLITE_DATASOURCE_HPP
 
 // mapnik
 #include <mapnik/datasource.hpp>
 #include <mapnik/feature.hpp>
 #include <mapnik/feature_layer_desc.hpp>
-#include <mapnik/wkb.hpp> 
+#include <mapnik/wkb.hpp>
 
 // boost
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
 // sqlite
-#include "sqlite_types.hpp"
+#include "sqlite_connection.hpp"
 
 
-class sqlite_datasource : public mapnik::datasource 
+class sqlite_datasource : public mapnik::datasource
 {
 public:
     sqlite_datasource(mapnik::parameters const& params, bool bind = true);
@@ -55,8 +55,8 @@ private:
     mutable bool extent_initialized_;
     int type_;
     mutable std::string dataset_name_;
-    mutable sqlite_connection* dataset_;
-    std::string table_;
+    mutable boost::shared_ptr<sqlite_connection> dataset_;
+    mutable std::string table_;
     std::string fields_;
     std::string metadata_;
     mutable std::string geometry_table_;
@@ -78,4 +78,4 @@ private:
     void parse_attachdb(std::string const& attachdb) const;
 };
 
-#endif // SQLITE_DATASOURCE_HPP
+#endif // MAPNIK_SQLITE_DATASOURCE_HPP

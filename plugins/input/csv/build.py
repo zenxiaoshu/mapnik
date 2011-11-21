@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import os
+Import ('plugin_base')
 Import ('env')
 
 PLUGIN_NAME = 'csv'
 
 install_dest = env['MAPNIK_INPUT_PLUGINS_DEST']
-plugin_env = env.Clone()
+plugin_env = plugin_base.Clone()
 
 plugin_sources = Split(
   """
@@ -26,6 +27,9 @@ TARGET = plugin_env.SharedLibrary(
               LIBS=libraries,
               LINKFLAGS=env.get('CUSTOM_LDFLAGS')
               )
+
+# if the plugin links to libmapnik2 ensure it is built first
+Depends(TARGET, env.subst('../../../src/%s' % env['MAPNIK_LIB_NAME']))
 
 if 'uninstall' not in COMMAND_LINE_TARGETS:
     env.Install(install_dest, TARGET)
