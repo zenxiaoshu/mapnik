@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2010 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ void agg_renderer<T>::process(polygon_symbolizer const& sym,
     renderer ren(renb);
 
     ras_ptr->reset();
-    ras_ptr->gamma(agg::gamma_linear(0.0, sym.get_gamma()));
+    ras_ptr->gamma(agg::gamma_power(sym.get_gamma()));
     metawriter_with_properties writer = sym.get_metawriter();
     for (unsigned i=0;i<feature.num_geometries();++i)
     {

@@ -2,8 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
- * Copyright (C) 2006 10East Corp.
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +27,7 @@
 #include <mapnik/geometry.hpp>
 #include <mapnik/text_path.hpp>
 #include <mapnik/label_collision_detector.hpp>
+#include <mapnik/fastmath.hpp>
 
 // agg
 #include "agg_path_length.h"
@@ -38,6 +38,7 @@
 #include <boost/utility.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
 
 //stl
 #include <string>
@@ -177,9 +178,6 @@ void placement_finder<DetectorT>::find_point_placements(T & shape_path)
     }
 
 }
-
-
-
 
 template <typename DetectorT>
 void placement_finder<DetectorT>::init_string_size()
@@ -458,6 +456,23 @@ void placement_finder<DetectorT>::find_point_placement(double label_x, double la
         x += cwidth;  // move position to next character
     }
 
+    // check the placement of any additional envelopes
+    if (!p.allow_overlap && !p.additional_boxes.empty())
+    {
+        BOOST_FOREACH(box2d<double> box, p.additional_boxes) 
+        {
+            box2d<double> pt(box.minx() + current_placement->starting_x,
+                             box.miny() + current_placement->starting_y,
+                             box.maxx() + current_placement->starting_x,
+                             box.maxy() + current_placement->starting_y);
+
+            // abort the whole placement if the additional envelopes can't be placed.
+            if (!detector_.has_point_placement(pt, p.minimum_distance)) return;
+
+            c_envelopes.push(pt);
+        }
+    }
+
     // since there was no early exit, add the character envelopes to the placements' envelopes
     while( !c_envelopes.empty() )
     {
@@ -510,6 +525,10 @@ void placement_finder<DetectorT>::find_line_placements(PathT & shape_path)
     }
     //Now path_positions is full and total_distance is correct
     //shape_path shouldn't be used from here
+
+    // Ensure lines have a minimum length.
+    if (total_distance < p.minimum_path_length)
+        return;
 
     double distance = 0.0;
 
@@ -715,9 +734,8 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         }
         else
         {
-//            std::clog << (char )ci.c <<  " New segment!\n";
             //If there isn't enough distance left on this segment
-            // then we need to search untill we find the line segment that ends further than ci.width away
+            // then we need to search until we find the line segment that ends further than ci.width away
             do
             {
                 old_x = new_x;
@@ -725,7 +743,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
                 index++;
                 if (index >= path_positions.size()) //Bail out if we run off the end of the shape
                 {
-//                    std::clog << "FAIL: Out of space" << std::endl;
+                    //std::clog << "FAIL: Out of space" << std::endl;
                     return std::auto_ptr<placement_element>(NULL);
                 }
                 new_x = path_positions[index].x;
@@ -748,8 +766,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         }
 
         //Calculate angle from the start of the character to the end based on start_/end_ position
-        angle = atan2(start_y-end_y, end_x-start_x);
-//        std::clog << (char)ci.c << " angle:" << angle << "\n";
+        angle = fast_atan2(start_y-end_y, end_x-start_x);
 
         //Test last_character_angle vs angle
         // since our rendering angle has changed then check against our
@@ -763,11 +780,13 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         if (p.max_char_angle_delta > 0 &&
             fabs(angle_delta) > p.max_char_angle_delta)
         {
-//            std::clog << "FAIL: Too Bendy!" << std::endl;
+            //std::clog << "FAIL: Too Bendy!" << std::endl;
             return std::auto_ptr<placement_element>(NULL);
         }
 
         double render_angle = angle;
+        double cosa = fast_cos(angle);
+        double sina = fast_sin(angle);
 
         double render_x = start_x;
         double render_y = start_y;
@@ -810,7 +829,7 @@ std::auto_ptr<placement_element> placement_finder<DetectorT>::get_placement_offs
         else
         {
             //Otherwise we have failed to find a placement
-//            std::clog << "FAIL: Double upside-down!" << std::endl;
+            //std::clog << "FAIL: Double upside-down!" << std::endl;
             return std::auto_ptr<placement_element>(NULL);
         }
     }

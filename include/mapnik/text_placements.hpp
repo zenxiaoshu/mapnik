@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2011 Hermann Kraus
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,23 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
-#ifndef TEXT_PLACEMENTS_HPP
-#define TEXT_PLACEMENTS_HPP
 
-//mapnik
-#include <mapnik/color.hpp>
-#include <mapnik/font_set.hpp>
-#include <mapnik/text_path.hpp>
-#include <mapnik/box2d.hpp>
-#include <mapnik/text_processing.hpp>
+#ifndef MAPNIK_TEXT_PLACEMENTS_HPP
+#define MAPNIK_TEXT_PLACEMENTS_HPP
 
-//stl
+// mapnik
+#include <mapnik/config.hpp>
+#include <mapnik/enumeration.hpp>
+
+// stl
 #include <vector>
 #include <string>
 #include <queue>
 #include <set>
 
-//boost
+// boost
 #include <boost/tuple/tuple.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
@@ -170,14 +168,14 @@ typedef boost::shared_ptr<text_placements> text_placements_ptr;
 
 class text_placements_info_dummy;
 
-class text_placements_dummy: public text_placements
+class MAPNIK_DECL text_placements_dummy: public text_placements
 {
 public:
     text_placement_info_ptr get_placement_info() const;
     friend class text_placement_info_dummy;
 };
 
-class text_placement_info_dummy : public text_placement_info
+class MAPNIK_DECL text_placement_info_dummy : public text_placement_info
 {
 public:
     text_placement_info_dummy(text_placements_dummy const* parent) : text_placement_info(parent),
@@ -192,4 +190,4 @@ private:
 
 } //namespace
 
-#endif // TEXT_PLACEMENTS_HPP
+#endif // MAPNIK_TEXT_PLACEMENTS_HPP

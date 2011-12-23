@@ -106,7 +106,11 @@ public:
                  proj_transform const& prj_trans);
     void process(markers_symbolizer const& sym,
                  Feature const& feature,
-                 proj_transform const& prj_trans); 
+                 proj_transform const& prj_trans);
+    void painted(bool painted)
+    {
+        pixmap_.painted(painted);
+    }
 
 private:
     T & pixmap_;

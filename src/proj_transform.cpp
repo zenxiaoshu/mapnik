@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 //$Id$
 
 // mapnik
+#include <mapnik/global.hpp>
 #include <mapnik/proj_transform.hpp>
 #include <mapnik/coord.hpp> 
 #include <mapnik/utils.hpp>
@@ -33,16 +34,31 @@
 // stl
 #include <vector>
 
+static const float MAXEXTENT = 20037508.34;
+static const float M_PI_by2 = M_PI / 2;
+static const float D2R = M_PI / 180;
+static const float R2D = 180 / M_PI;
+static const float M_PIby360 = M_PI / 360;
+static const float MAXEXTENTby180 = MAXEXTENT/180;
+
 namespace mapnik {
     
 proj_transform::proj_transform(projection const& source, 
                                projection const& dest)
     : source_(source),
-      dest_(dest) 
+      dest_(dest)
 {
     is_source_longlat_ = source_.is_geographic();
     is_dest_longlat_ = dest_.is_geographic();
     is_source_equal_dest_ = (source_ == dest_);
+    if (source.params() == "+init=epsg:3857" && dest.params() == "+init=epsg:4326")
+    {
+        wgs84_to_merc_ = true;
+    }
+    else
+    {
+        wgs84_to_merc_ = false;
+    }
 }
 
 bool proj_transform::equal() const
@@ -50,65 +66,121 @@ bool proj_transform::equal() const
     return is_source_equal_dest_;
 }
 
+
 bool proj_transform::forward (double & x, double & y , double & z) const
 {
-    if (is_source_equal_dest_)
-        return true;
+    return forward(&x, &y, &z, 1);
+}
 
-    if (is_source_longlat_)
-    {
-        x *= DEG_TO_RAD;
-        y *= DEG_TO_RAD;
-    }
-
-#if defined(MAPNIK_THREADSAFE) && PJ_VERSION < 480
-    mutex::scoped_lock lock(projection::mutex_);
-#endif
-
-    if (pj_transform( source_.proj_, dest_.proj_, 1, 
-                      0, &x,&y,&z) != 0)
-    {
-        return false;
-    }
-
-    if (is_dest_longlat_)
-    {
-        x *= RAD_TO_DEG;
-        y *= RAD_TO_DEG;
-    }
-
-    return true;
-} 
-        
-bool proj_transform::backward (double & x, double & y , double & z) const
+bool proj_transform::forward (double * x, double * y , double * z, int point_count) const
 {
+
     if (is_source_equal_dest_)
         return true;
 
+    if (wgs84_to_merc_) {
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] = (x[i] / MAXEXTENT) * 180;
+            y[i] = (y[i] / MAXEXTENT) * 180;
+            y[i] = R2D * (2 * atan(exp(y[i] * D2R)) - M_PI_by2);
+            if (x[i] > 180) x[i] = 180;
+            if (x[i] < -180) x[i] = -180;
+            if (y[i] > 85.0511) y[i] = 85.0511;
+            if (y[i] < -85.0511) y[i] = -85.0511;
+        }
+        return true;
+    }
+    
+        if (is_source_longlat_)
+    {
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] *= DEG_TO_RAD;
+            y[i] *= DEG_TO_RAD;
+        }
+    }
+
+    do {
+#if defined(MAPNIK_THREADSAFE) && PJ_VERSION < 480
+        mutex::scoped_lock lock(projection::mutex_);
+#endif
+        if (pj_transform( source_.proj_, dest_.proj_, point_count, 
+                          0, x,y,z) != 0)
+        {
+            return false;
+        }
+    } while(false);
+
     if (is_dest_longlat_)
     {
-        x *= DEG_TO_RAD;
-        y *= DEG_TO_RAD;
-    }
-
-#if defined(MAPNIK_THREADSAFE) && PJ_VERSION < 480
-    mutex::scoped_lock lock(projection::mutex_);
-#endif
-
-    if (pj_transform( dest_.proj_, source_.proj_, 1, 
-                      0, &x,&y,&z) != 0)
-    {
-        return false;
-    }
-
-    if (is_source_longlat_)
-    {
-        x *= RAD_TO_DEG;
-        y *= RAD_TO_DEG;
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] *= RAD_TO_DEG;
+            y[i] *= RAD_TO_DEG;
+        }
     }
 
     return true;
 }
+
+bool proj_transform::backward (double * x, double * y , double * z, int point_count) const
+{
+    if (is_source_equal_dest_)
+        return true;
+
+    if (wgs84_to_merc_) {
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] = x[i] * MAXEXTENTby180;
+            y[i] = log(tan((90 + y[i]) * M_PIby360)) / D2R;
+            y[i] = y[i] * MAXEXTENTby180;
+            if (x[i] > MAXEXTENT) x[i] = MAXEXTENT;
+            if (x[i] < -MAXEXTENT) x[i] = -MAXEXTENT;
+            if (y[i] > MAXEXTENT) y[i] = MAXEXTENT;
+            if (y[i] < -MAXEXTENT) y[i] = -MAXEXTENT;
+        }
+        return true;
+    }
+
+    if (is_dest_longlat_)
+    {
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] *= DEG_TO_RAD;
+            y[i] *= DEG_TO_RAD;
+        }
+    }
+
+    do {
+#if defined(MAPNIK_THREADSAFE) && PJ_VERSION < 480
+        mutex::scoped_lock lock(projection::mutex_);
+#endif
+
+        if (pj_transform( dest_.proj_, source_.proj_, point_count, 
+                          0, x,y,z) != 0)
+        {
+            return false;
+        }
+    } while(false);
+
+    if (is_source_longlat_)
+    {
+        int i;
+        for(i=0; i<point_count; i++) {
+            x[i] *= RAD_TO_DEG;
+            y[i] *= RAD_TO_DEG;
+        }
+    }
+
+    return true;
+}
+
+bool proj_transform::backward (double & x, double & y , double & z) const
+{
+    return backward(&x, &y, &z, 1);
+}
+
 
 bool proj_transform::forward (box2d<double> & box) const
 {

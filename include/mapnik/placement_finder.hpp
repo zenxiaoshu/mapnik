@@ -2,8 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
- * Copyright (C) 2006 10East Corp.
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,10 +20,8 @@
  *
  *****************************************************************************/
 
-//$Id$
-
-#ifndef __PLACEMENT_FINDER__
-#define __PLACEMENT_FINDER__
+#ifndef MAPNIK_PLACEMENT_FINDER_HPP
+#define MAPNIK_PLACEMENT_FINDER_HPP
 
 #include <mapnik/geometry.hpp>
 #include <mapnik/text_placements.hpp>
@@ -108,5 +105,5 @@ private:
 };
 }
 
-#endif
 
+#endif // MAPNIK_PLACEMENT_FINDER_HPP

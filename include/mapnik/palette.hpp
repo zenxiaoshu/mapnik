@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,13 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
-//$Id$
 
-#ifndef _PALETTE_HPP_
-#define _PALETTE_HPP_
-
+#ifndef MAPNIK_PALETTE_HPP
+#define MAPNIK_PALETTE_HPP
 
 // mapnik
+#include <mapnik/config.hpp>
 #include <mapnik/global.hpp>
 #include <mapnik/config_error.hpp>
 
@@ -124,20 +123,20 @@ struct rgba
 typedef boost::unordered_map<unsigned, unsigned> rgba_hash_table;
 
 
-class rgba_palette : private boost::noncopyable {
+class MAPNIK_DECL rgba_palette : private boost::noncopyable {
 public:
     enum palette_type { PALETTE_RGBA = 0, PALETTE_RGB = 1, PALETTE_ACT = 2 };
 
     explicit rgba_palette(std::string const& pal, palette_type type = PALETTE_RGBA);
-    explicit rgba_palette();
-
+    rgba_palette();
+    
     const std::vector<rgb>& palette() const;
     const std::vector<unsigned>& alphaTable() const;
 
-    unsigned quantize(rgba const& c);
-    inline unsigned quantize(unsigned const& c)
+    unsigned quantize(rgba const& c) const;
+    inline unsigned quantize(unsigned const& c) const
     {
-        rgba_hash_table::iterator it = color_hashmap_.find(c);
+        rgba_hash_table::const_iterator it = color_hashmap_.find(c);
         if (it != color_hashmap_.end())
         {
             return it->second;
@@ -147,23 +146,21 @@ public:
         }
     }
 
-    bool valid();
+    bool valid() const;
 
 private:
     void parse(std::string const& pal, palette_type type);
 
 private:
     std::vector<rgba> sorted_pal_;
-    rgba_hash_table color_hashmap_;
+    mutable rgba_hash_table color_hashmap_;
 
     unsigned colors_;
     std::vector<rgb> rgb_pal_;
     std::vector<unsigned> alpha_pal_;
 };
 
-static rgba_palette _rgba_palette;
-
 } // namespace mapnik
 
-#endif // _PALETTE_HPP_
+#endif // MAPNIK_PALETTE_HPP
 

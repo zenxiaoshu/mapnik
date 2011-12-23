@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,12 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
+
+// icu
+#include <unicode/ubidi.h>
+#include <unicode/ushape.h>
+#include <unicode/schriter.h>
+#include <unicode/uversion.h> 
 
 namespace mapnik
 {
@@ -106,10 +112,10 @@ bool freetype_engine::register_fonts(std::string const& dir, bool recurse)
     boost::filesystem::path path(dir);
     
     if (!boost::filesystem::exists(path))
-      return false;
+        return false;
 
     if (!boost::filesystem::is_directory(path))
-      return mapnik::freetype_engine::register_font(dir); 
+        return mapnik::freetype_engine::register_font(dir); 
     
     boost::filesystem::directory_iterator end_itr;
     for (boost::filesystem::directory_iterator itr(dir); itr != end_itr; ++itr)
@@ -117,9 +123,9 @@ bool freetype_engine::register_fonts(std::string const& dir, bool recurse)
         if (boost::filesystem::is_directory(*itr) && recurse)
         {
 #if (BOOST_FILESYSTEM_VERSION == 3) 
-          if (!register_fonts(itr->path().string(), true)) return false;
+            if (!register_fonts(itr->path().string(), true)) return false;
 #else // v2
-          if (!register_fonts(itr->string(), true)) return false;
+            if (!register_fonts(itr->string(), true)) return false;
 #endif
         }
         else 
@@ -228,83 +234,51 @@ char_info font_face_set::character_dimensions(const unsigned c)
 }
 
 
-void font_face_set::get_string_info(string_info& info, UnicodeString const& ustr, char_properties *format)
+void font_face_set::get_string_info(string_info & info, UnicodeString const& ustr, char_properties *format)
 {
     double avg_height = character_dimensions('X').height();
     UErrorCode err = U_ZERO_ERROR;
-    const UChar * text = ustr.getBuffer();
-    UBiDi * bidi = ubidi_openSized(ustr.length(), 0, &err);
+    UnicodeString reordered;
+    UnicodeString shaped;
 
-    if (U_SUCCESS(err))
-    {
-        ubidi_setPara(bidi,text,ustr.length(), UBIDI_DEFAULT_LTR,0,&err);
+    int32_t length = ustr.length();
 
-        if (U_SUCCESS(err))
-        {
-            int32_t count = ubidi_countRuns(bidi,&err);
-            int32_t logicalStart;
-            int32_t length;
+    UBiDi *bidi = ubidi_openSized(length, 0, &err);
+    ubidi_setPara(bidi, ustr.getBuffer(), length, UBIDI_DEFAULT_LTR, 0, &err);
 
-            for (int32_t i=0; i< count;++i)
-            {
-                if (UBIDI_LTR == ubidi_getVisualRun(bidi,i,&logicalStart,&length))
-                {
-                    do {
-                        UChar ch = text[logicalStart++];
-                        char_info char_dim = character_dimensions(ch);
-                        char_dim.format = format;
-                        char_dim.avg_height = avg_height;
-                        info.add_info(char_dim);
-                    } while (--length > 0);
-                }
-                else
-                {
-                    logicalStart += length;
+    ubidi_writeReordered(bidi, reordered.getBuffer(length), 
+                         length, UBIDI_DO_MIRRORING, &err);
 
-                    int32_t j=0,i=length;
-                    UnicodeString arabic;
-                    UChar * buf = arabic.getBuffer(length);
-                    do {
-                        UChar ch = text[--logicalStart];
-                        buf[j++] = ch;
-                    } while (--i > 0);
+    reordered.releaseBuffer(length);
 
-                    arabic.releaseBuffer(length);
-                    if ( *arabic.getBuffer() >= 0x0600 && *arabic.getBuffer() <= 0x06ff)
-                    {
-                        UnicodeString shaped;
-                        u_shapeArabic(arabic.getBuffer(),arabic.length(),shaped.getBuffer(arabic.length()),arabic.length(),
-                                      U_SHAPE_LETTERS_SHAPE|U_SHAPE_LENGTH_FIXED_SPACES_NEAR|
-                                      U_SHAPE_TEXT_DIRECTION_VISUAL_LTR
-                                      ,&err);
+    u_shapeArabic(reordered.getBuffer(), length,
+                  shaped.getBuffer(length), length,
+                  U_SHAPE_LETTERS_SHAPE | U_SHAPE_LENGTH_FIXED_SPACES_NEAR | 
+                  U_SHAPE_TEXT_DIRECTION_VISUAL_LTR, &err);
 
-                        shaped.releaseBuffer(arabic.length());
+    shaped.releaseBuffer(length);
 
-                        if (U_SUCCESS(err))
-                        {
-                            for (int j=0;j<shaped.length();++j)
-                            {
-                                char_info char_dim = character_dimensions(shaped[j]);
-                                char_dim.format = format;
-                                char_dim.avg_height = avg_height;
-                                info.add_info(char_dim);
-                            }
-                        }
-                    } else {
-                        // Non-Arabic RTL
-                        for (int j=0;j<arabic.length();++j)
-                        {
-                            char_info char_dim = character_dimensions(arabic[j]);
-                            char_dim.format = format;
-                            char_dim.avg_height = avg_height;
-                            info.add_info(char_dim);
-                        }
-                    }
-                }
-            }
+    if (U_SUCCESS(err)) {
+        StringCharacterIterator iter(shaped);
+        for (iter.setToStart(); iter.hasNext();) {
+            UChar ch = iter.nextPostInc();
+            char_info char_dim = character_dimensions(ch);
+            char_dim.format = format;
+            char_dim.avg_height = avg_height;
+            info.add_info(char_dim);
         }
-        ubidi_close(bidi);
     }
+
+
+#if (U_ICU_VERSION_MAJOR_NUM*100 + U_ICU_VERSION_MINOR_NUM >= 406)
+    if (ubidi_getBaseDirection(ustr.getBuffer(), length) == UBIDI_RTL)
+    {
+        info.set_rtl(true);
+    }
+#endif
+
+    ubidi_close(bidi);
+    info.set_dimensions(width, height);
 }
 
 template <typename T>

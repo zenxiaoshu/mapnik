@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2010 Hermann Kraus
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -96,7 +96,8 @@ metawriter_json_stream::~metawriter_json_stream()
 
 metawriter_json_stream::metawriter_json_stream(metawriter_properties dflt_properties)
     : metawriter(dflt_properties), count_(-1), output_empty_(true),
-      trans_(0), output_srs_("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"), pixel_coordinates_(false), f_(0)
+      trans_(0), output_srs_("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"),
+      pixel_coordinates_(false), f_(0)
 {
 }
 

@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,14 +20,15 @@
  *
  *****************************************************************************/
 
-//$Id: wkb.hpp 39 2005-04-10 20:39:53Z pavlenko $
+#ifndef MAPNIK_WKB_HPP
+#define MAPNIK_WKB_HPP
 
-#ifndef WKB_HPP
-#define WKB_HPP
-
+// mapnik
 #include <mapnik/geometry.hpp>
 #include <mapnik/ctrans.hpp>
 #include <mapnik/feature.hpp>
+// boost
+#include <boost/utility.hpp>
 
 namespace mapnik
 {
@@ -45,24 +46,20 @@ namespace mapnik
  */
 enum wkbFormat
 {
-    wkbGeneric=1,
-    wkbSpatiaLite=2
+    wkbAuto=1,
+    wkbGeneric=2,
+    wkbSpatiaLite=3
 };
 
-class MAPNIK_DECL geometry_utils 
+class MAPNIK_DECL geometry_utils : private boost::noncopyable
 {
 public:
 
-    static void from_wkb (Feature & feature,
+    static void from_wkb (boost::ptr_vector<geometry_type>& paths,
                           const char* wkb,
                           unsigned size,
-                          bool multiple_geometries = false,
                           wkbFormat format = wkbGeneric);
-private:
-    geometry_utils();
-    geometry_utils(geometry_utils const&);
-    geometry_utils& operator=(const geometry_utils&);
 };
 }
 
-#endif //WKB_HPP
+#endif // MAPNIK_WKB_HPP

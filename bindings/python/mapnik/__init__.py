@@ -1,6 +1,6 @@
 #
 # This file is part of Mapnik (C++/Python mapping toolkit)
-# Copyright (C) 2009 Artem Pavlenko, Dane Springmeyer
+# Copyright (C) 2009 Artem Pavlenko
 #
 # Mapnik is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,7 +43,7 @@ import os
 import sys
 import warnings
 
-from _mapnik2 import *
+from _mapnik import *
 from paths import inputpluginspath, fontscollectionpath
 
 import printing
@@ -281,20 +281,16 @@ class _Feature(Feature, _injector):
         #    maybe deprecate?
         return dict(self)
     
-    @property
-    def geometries(self):
-        return [self.get_geometry(i) for i in xrange(self.num_geometries())]
-
-    def __init__(self, id, geometry=None, **properties):
+    def __init__(self, id, wkt=None, **properties):
         Feature._c___init__(self, id)
-        if geometry is not None:
-            self.add_geometry(geometry)
+        if wkt is not None:
+            self.add_geometries_from_wkt(wkt)
         for k, v in properties.iteritems():
             self[k] = v
     
-    class _Color(Color,_injector):
-        def __repr__(self):
-            return "Color(R=%d,G=%d,B=%d,A=%d)" % (self.r,self.g,self.b,self.a)
+class _Color(Color,_injector):
+    def __repr__(self):
+        return "Color(R=%d,G=%d,B=%d,A=%d)" % (self.r,self.g,self.b,self.a)
 
 class _Symbolizers(Symbolizers,_injector):
 
@@ -385,7 +381,6 @@ def PostGIS(**keywords):
       srid -- specify srid to use (default: auto-detected from geometry_field)
       row_limit -- integer limit of rows to return (default: 0)
       cursor_size -- integer size of binary cursor to use (default: 0, no binary cursor is used)
-      multiple_geometries -- boolean, direct the Mapnik wkb reader to interpret as multigeometries (default False)
 
     >>> from mapnik import PostGIS, Layer
     >>> params = dict(dbname='mapnik',table='osm',user='postgres',password='gis')
@@ -414,6 +409,13 @@ def Raster(**keywords):
 
     Optional keyword arguments:
       base -- path prefix (default None)
+      multi -- whether the image is in tiles on disk (default False)
+
+    Multi-tiled keyword arguments:
+      x_width -- virtual image number of tiles in X direction (required)
+      y_width -- virtual image number of tiles in Y direction (required)
+      tile_size -- if an image is in tiles, how large are the tiles (default 256)
+      tile_stride -- if an image is in tiles, what's the increment between rows/cols (default 1)
 
     >>> from mapnik import Raster, Layer
     >>> raster = Raster(base='/home/mapnik/data',file='elevation.tif',lox=-122.8,loy=48.5,hix=-122.7,hiy=48.6) 
@@ -464,7 +466,6 @@ def Occi(**keywords):
       encoding -- file encoding (default 'utf-8')
       geometry_field -- specify geometry field (default 'GEOLOC')
       use_spatial_index -- boolean, force the use of the spatial index (default True)
-      multiple_geometries -- boolean, direct the Mapnik wkb reader to interpret as multigeometries (default False)
 
     >>> from mapnik import Occi, Layer
     >>> params = dict(host='myoracle',user='scott',password='tiger',table='test')
@@ -482,13 +483,13 @@ def Ogr(**keywords):
 
     Required keyword arguments:
       file -- path to OGR supported dataset
-      layer -- name of layer to use within datasource (optional if layer_by_index is used)
+      layer -- name of layer to use within datasource (optional if layer_by_index or layer_by_sql is used)
 
     Optional keyword arguments:
-      layer_by_index -- choose layer by index number instead of by layer name.
+      layer_by_index -- choose layer by index number instead of by layer name or sql.
+      layer_by_sql -- choose layer by sql query number instead of by layer name or index.
       base -- path prefix (default None)
       encoding -- file encoding (default 'utf-8')
-      multiple_geometries -- boolean, direct the Mapnik wkb reader to interpret as multigeometries (default False)
 
     >>> from mapnik import Ogr, Layer
     >>> datasource = Ogr(base='/home/mapnik/data',file='rivers.geojson',layer='OGRGeoJSON') 
@@ -516,7 +517,6 @@ def SQLite(**keywords):
       row_offset -- specify a custom integer row offset (default 0)
       row_limit -- specify a custom integer row limit (default 0)
       wkb_format -- specify a wkb type of 'spatialite' (default None)
-      multiple_geometries -- boolean, direct the Mapnik wkb reader to interpret as multigeometries (default False)
       use_spatial_index -- boolean, instruct sqlite plugin to use Rtree spatial index (default True)
 
     >>> from mapnik import SQLite, Layer
@@ -597,7 +597,6 @@ def Geos(**keywords):
       wkt -- inline WKT text of the geometry
 
     Optional keyword arguments:
-      multiple_geometries -- boolean, direct the GEOS wkt reader to interpret as multigeometries (default False)
       extent -- manually specified data extent (comma delimited string, default None)
 
     >>> from mapnik import Geos, Layer
@@ -629,7 +628,7 @@ def register_fonts(path=fontscollectionpath,valid_extensions=['.ttf','.otf','.tt
     """Recursively register fonts using path argument as base directory"""
     for dirpath, _, filenames in os.walk(path):
         for filename in filenames:
-            if os.path.splitext(filename)[1] in valid_extensions:
+            if os.path.splitext(filename.lower())[1] in valid_extensions:
                 FontEngine.instance().register_font(os.path.join(dirpath, filename))
 
 # auto-register known plugins and fonts
@@ -651,6 +650,7 @@ __all__ = [
     'Feature',
     'Featureset',
     'FontEngine',
+    'FontSet',
     'Geometry2d',
     'GlyphSymbolizer',
     'Image',
@@ -664,6 +664,7 @@ __all__ = [
     'Map',
     'MarkersSymbolizer',
     'Names',
+    'Path',
     'Parameter',
     'Parameters',
     'PointDatasource',
@@ -713,7 +714,6 @@ __all__ = [
     #   version and environment
     'mapnik_version_string',
     'mapnik_version',
-    'mapnik_svn_revision',
     'has_cairo',
     'has_pycairo',
     #   factory methods

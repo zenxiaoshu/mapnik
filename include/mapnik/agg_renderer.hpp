@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,10 +20,8 @@
  *
  *****************************************************************************/
 
-//$Id$
-
-#ifndef AGG_RENDERER_HPP
-#define AGG_RENDERER_HPP
+#ifndef MAPNIK_AGG_RENDERER_HPP
+#define MAPNIK_AGG_RENDERER_HPP
 
 // mapnik
 #include <mapnik/config.hpp>
@@ -67,7 +65,11 @@ class MAPNIK_DECL agg_renderer : public feature_style_processor<agg_renderer<T> 
 {
      
 public:
+    // create with default, empty placement detector
     agg_renderer(Map const& m, T & pixmap, double scale_factor=1.0, unsigned offset_x=0, unsigned offset_y=0);
+    // create with external placement detector, possibly non-empty
+    agg_renderer(Map const &m, T & pixmap, boost::shared_ptr<label_collision_detector4> detector,
+                 double scale_factor=1.0, unsigned offset_x=0, unsigned offset_y=0);
     ~agg_renderer();
     void start_map_processing(Map const& map);
     void end_map_processing(Map const& map);
@@ -105,6 +107,10 @@ public:
     void process(markers_symbolizer const& sym,
                  Feature const& feature,
                  proj_transform const& prj_trans);
+    void painted(bool painted)
+    {
+        pixmap_.painted(painted);
+    }
 
 private:
     T & pixmap_;
@@ -114,9 +120,11 @@ private:
     CoordTransform t_;
     freetype_engine font_engine_;
     face_manager<freetype_engine> font_manager_;
-    label_collision_detector4 detector_;
+    boost::shared_ptr<label_collision_detector4> detector_;
     boost::scoped_ptr<rasterizer> ras_ptr;
+
+    void setup(Map const &m);
 };
 }
 
-#endif //AGG_RENDERER_HPP
+#endif // MAPNIK_AGG_RENDERER_HPP

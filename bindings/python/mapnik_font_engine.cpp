@@ -1,5 +1,5 @@
 /*****************************************************************************
- * 
+ *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
  * Copyright (C) 2006 Artem Pavlenko, Jean-Francois Doyon
@@ -39,6 +39,7 @@ void export_font_engine()
     class_<freetype_engine,bases<singleton<freetype_engine,CreateStatic> >,
         boost::noncopyable>("FontEngine",no_init)
         .def("register_font",&freetype_engine::register_font)
+        .def("register_fonts",&freetype_engine::register_fonts)
         .def("face_names",&freetype_engine::face_names)
         .staticmethod("register_font")
         .staticmethod("face_names")

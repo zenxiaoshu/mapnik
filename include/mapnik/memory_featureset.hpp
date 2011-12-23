@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,13 @@
  *
  *****************************************************************************/
 
-//$Id$
-#ifndef MEMORY_FEATURESET_HPP
-#define MEMORY_FEATURESET_HPP
+#ifndef MAPNIK_MEMORY_FEATURESET_HPP
+#define MAPNIK_MEMORY_FEATURESET_HPP
 
+// mapnik
 #include <mapnik/memory_datasource.hpp>
+
+// boost
 #include <boost/utility.hpp>
 
 namespace mapnik {
@@ -37,6 +39,13 @@ public:
           pos_(ds.features_.begin()),
           end_(ds.features_.end())
     {}
+
+    memory_featureset(box2d<double> const& bbox, std::vector<feature_ptr> const& features)
+        : bbox_(bbox),
+          pos_(features.begin()),
+          end_(features.end())
+    {}
+
     virtual ~memory_featureset() {}
         
     feature_ptr next()
@@ -66,4 +75,4 @@ private:
 };
 }
 
-#endif // MEMORY_FEATURESET_HPP
+#endif // MAPNIK_MEMORY_FEATURESET_HPP

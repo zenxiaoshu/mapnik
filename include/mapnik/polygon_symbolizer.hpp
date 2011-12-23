@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,14 +20,13 @@
  *
  *****************************************************************************/
 
-//$Id: polygon_symbolizer.hpp 39 2005-04-10 20:39:53Z pavlenko $
-
-#ifndef POLYGON_SYMBOLIZER_HPP
-#define POLYGON_SYMBOLIZER_HPP
+#ifndef MAPNIK_POLYGON_SYMBOLIZER_HPP
+#define MAPNIK_POLYGON_SYMBOLIZER_HPP
 
 // mapnik
 #include <mapnik/color.hpp>
 #include <mapnik/symbolizer.hpp>
+#include <mapnik/filter_factory.hpp>
 
 namespace mapnik 
 {
@@ -81,11 +80,10 @@ struct MAPNIK_DECL building_symbolizer : public symbolizer_base
     explicit building_symbolizer() 
         : symbolizer_base(),
         fill_(color(128,128,128)),
-        height_(0.0),
         opacity_(1.0)
         {}
        
-    building_symbolizer(color const& fill,double height)
+    building_symbolizer(color const& fill, expression_ptr height)
         : symbolizer_base(),
         fill_(fill),
         height_(height),
@@ -99,11 +97,11 @@ struct MAPNIK_DECL building_symbolizer : public symbolizer_base
     {
         fill_ = fill;
     }
-    double height() const
+    expression_ptr height() const
     {
         return height_;
     }
-    void set_height(double height) 
+    void set_height(expression_ptr height)
     {
         height_=height;
     }
@@ -117,9 +115,9 @@ struct MAPNIK_DECL building_symbolizer : public symbolizer_base
     }
 private:
     color fill_;
-    double height_;
+    expression_ptr height_;
     double opacity_;
 };  
 }
 
-#endif // POLYGON_SYMBOLIZER_HPP
+#endif // MAPNIK_POLYGON_SYMBOLIZER_HPP

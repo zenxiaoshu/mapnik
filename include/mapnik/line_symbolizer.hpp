@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,40 +19,67 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
-//$Id: line_symbolizer.hpp 39 2005-04-10 20:39:53Z pavlenko $
 
-#ifndef LINE_SYMBOLIZER_HPP
-#define LINE_SYMBOLIZER_HPP
+#ifndef MAPNIK_LINE_SYMBOLIZER_HPP
+#define MAPNIK_LINE_SYMBOLIZER_HPP
 
+// mapnik
 #include <mapnik/stroke.hpp>
 #include <mapnik/symbolizer.hpp>
+#include <mapnik/enumeration.hpp>
 
 namespace mapnik 
 {
+
+enum line_rasterizer_enum {
+    RASTERIZER_FULL,           // agg::renderer_scanline_aa_solid
+    RASTERIZER_FAST,           // agg::rasterizer_outline_aa, twice as fast but only good for thin lines
+    line_rasterizer_enum_MAX
+};
+
+DEFINE_ENUM( line_rasterizer_e, line_rasterizer_enum );
+
 struct MAPNIK_DECL line_symbolizer : public symbolizer_base
 {
     explicit line_symbolizer()
-        : symbolizer_base(), stroke_() {}
+        : symbolizer_base(),
+          stroke_(),
+          rasterizer_p_(RASTERIZER_FULL) {}
         
     line_symbolizer(stroke const& stroke)
-        : symbolizer_base(), stroke_(stroke) {}
+        : symbolizer_base(),
+          stroke_(stroke),
+          rasterizer_p_(RASTERIZER_FULL) {}
         
     line_symbolizer(color const& pen,float width=1.0)
-        : symbolizer_base(), stroke_(pen,width) {}
+        : symbolizer_base(),
+          stroke_(pen,width),
+          rasterizer_p_(RASTERIZER_FULL) {}
         
     stroke const& get_stroke() const
     {
         return stroke_;
     }
-        
-    void set_stroke(stroke const& stroke)
+
+    void set_stroke(stroke const& stk)
     {
-        stroke_ = stroke;
+        stroke_ = stk;
+    }
+        
+    void set_rasterizer(line_rasterizer_e rasterizer_p)
+    {
+        rasterizer_p_ = rasterizer_p;
+    }
+    
+    line_rasterizer_e get_rasterizer() const
+    {
+        return rasterizer_p_;
     }
 
 private:
     stroke stroke_;
+    line_rasterizer_e rasterizer_p_;
 };
 }
 
-#endif //LINE_SYMBOLIZER_HPP
+#endif // MAPNIK_LINE_SYMBOLIZER_HPP

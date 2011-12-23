@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2010 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
  *****************************************************************************/
 // mapnik
 #include <mapnik/load_map.hpp>
-#include <mapnik/map.hpp>
 
 #include <mapnik/version.hpp>
 #include <mapnik/image_reader.hpp>
@@ -226,7 +225,7 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                     std::string base = xml_path.branch_path().string();
                 #endif
 
-                map.set_base_path( base );
+                map.set_base_path( base ); 
             }
 
             optional<color> bgcolor = get_opt_attr<color>(map_node, "background-color");
@@ -259,10 +258,10 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                 }
                 else
                 {
-                    std::ostringstream s;
+                    std::ostringstream s_err;
                     s << "failed to parse 'maximum-extent'";
                     if ( strict_ )
-                        throw config_error(s.str());
+                        throw config_error(s_err.str());
                     else
                         std::clog << "### WARNING: " << s.str() << std::endl;
                 }
@@ -315,6 +314,7 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
                 }
                 
             }
+
             map.set_extra_attributes(extra_attr);
         }
         catch (const config_error & ex)
@@ -322,6 +322,7 @@ void map_parser::parse_map( Map & map, ptree const & pt, std::string const& base
             ex.append_context("(in node Map)");
             throw;
         }
+        
         parse_map_include( map, map_node );
     }
     catch (const boost::property_tree::ptree_bad_path &)
@@ -391,6 +392,53 @@ void map_parser::parse_map_include( Map & map, ptree const & include )
                 }
             }
             datasource_templates_[name] = params;
+        }
+        else if (v.first == "Parameters")
+        {
+            std::string name = get_attr(v.second, "name", std::string("Unnamed"));
+            parameters & params = map.get_extra_parameters();
+            ptree::const_iterator paramIter = v.second.begin();
+            ptree::const_iterator endParam = v.second.end();
+            for (; paramIter != endParam; ++paramIter)
+            {
+                ptree const& param = paramIter->second;
+
+                if (paramIter->first == "Parameter")
+                {
+                    std::string name = get_attr<std::string>(param, "name");
+                    bool is_string = true;
+                    boost::optional<std::string> type = get_opt_attr<std::string>(param, "type");
+                    if (type)
+                    {
+                        if (*type == "int")
+                        {
+                            is_string = false;
+                            int value = get_value<int>( param,"parameter");
+                            params[name] = value;
+                        }
+                        else if (*type == "float")
+                        {
+                            is_string = false;
+                            double value = get_value<double>( param,"parameter");
+                            params[name] = value;
+                        }
+                    }
+                    
+                    if (is_string)
+                    {
+                        std::string value = get_value<std::string>( param,
+                                                               "parameter");
+                        params[name] = value;
+                    }
+                }
+                else if( paramIter->first != "<xmlattr>" &&
+                         paramIter->first != "<xmlcomment>" )
+                {
+                    throw config_error(std::string("Unknown child node in ") +
+                                       "'Parameters'. Expected 'Parameter' but got '" +
+                                       paramIter->first + "'");
+                }
+            }
         }
         else if (v.first != "<xmlcomment>" &&
                  v.first != "<xmlattr>")
@@ -515,14 +563,19 @@ void map_parser::parse_font(font_set & fset, ptree const & f)
 {
     ensure_attrs(f, "Font", "face-name");
 
-    std::string face_name = get_attr(f, "face-name", std::string());
-
-    if ( strict_ )
+    optional<std::string> face_name = get_opt_attr<std::string>(f, "face-name");
+    if (face_name)
     {
-        ensure_font_face( face_name );
+        if ( strict_ )
+        {
+            ensure_font_face(*face_name);
+        }
+        fset.add_face_name(*face_name);
     }
-
-    fset.add_face_name(face_name);
+    else
+    {
+        throw config_error(std::string("Must have 'face-name' set"));
+    }
 }
 
 void map_parser::parse_layer( Map & map, ptree const & lay )
@@ -532,13 +585,12 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
     s << "name,"
       << "srs,"
       << "status,"
-      << "title,"
-      << "abstract,"
       << "minzoom,"
       << "maxzoom,"
       << "queryable,"
       << "clear-label-cache,"
-      << "cache-features";
+      << "cache-features,"
+      << "group-by";
     ensure_attrs(lay, "Layer", s.str());
     try
     {
@@ -554,19 +606,7 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
         {
             lyr.setActive( * status );
         }
-
-        optional<std::string> title =  get_opt_attr<std::string>(lay, "title");
-        if (title)
-        {
-            lyr.set_title( * title );
-        }
-
-        optional<std::string> abstract =  get_opt_attr<std::string>(lay, "abstract");
-        if (abstract)
-        {
-            lyr.set_abstract( * abstract );
-        }
-
+        
         optional<double> minZoom = get_opt_attr<double>(lay, "minzoom");
         if (minZoom)
         {
@@ -599,6 +639,12 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
             lyr.set_cache_features( * cache_features );
         }
 
+        optional<std::string> group_by =
+            get_opt_attr<std::string>(lay, "group-by");
+        if (group_by)
+        {
+            lyr.set_group_by( * group_by );
+        }
 
         ptree::const_iterator itr2 = lay.begin();
         ptree::const_iterator end2 = lay.end();
@@ -610,7 +656,7 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
             if (child.first == "StyleName")
             {
                 ensure_attrs(child.second, "StyleName", "none");
-                std::string style_name = get_value<std::string>(child.second, "style name");
+                std::string style_name = child.second.data();
                 if (style_name.empty())
                 {
                     std::ostringstream ss;
@@ -713,28 +759,19 @@ void map_parser::parse_layer( Map & map, ptree const & lay )
 
 void map_parser::parse_rule( feature_type_style & style, ptree const & r )
 {
-    ensure_attrs(r, "Rule", "name,title");
+    ensure_attrs(r, "Rule", "name");
     std::string name;
     try
     {
         name = get_attr( r, "name", std::string());
-        std::string title = get_attr( r, "title", std::string());
-
-        rule rule(name,title);
+        rule rule(name);
 
         optional<std::string> filter_expr =
             get_opt_child<std::string>( r, "Filter");
         if (filter_expr)
         {
             // TODO - can we use encoding defined for XML document for filter expressions?
-            try {
-                rule.set_filter(parse_expression(*filter_expr,"utf8"));
-            }
-            catch (const config_error & ex)
-            {
-                ex.append_context(std::string("in Filter"));
-                throw;
-            }
+            rule.set_filter(parse_expression(*filter_expr,"utf8"));
         }
 
         optional<std::string> else_filter =
@@ -902,7 +939,7 @@ void map_parser::parse_point_symbolizer( rule & rule, ptree const & sym )
                 if (transform_wkt)
                 {
                     agg::trans_affine tr;
-                    if (!mapnik::svg::parse_transform(*transform_wkt,tr))
+                    if (!mapnik::svg::parse_transform((*transform_wkt).c_str(),tr))
                     {
                         std::stringstream ss;
                         ss << "Could not parse transform from '" << transform_wkt 
@@ -983,7 +1020,7 @@ void map_parser::parse_markers_symbolizer( rule & rule, ptree const & sym )
           << "spacing,max-error,allow-overlap,"
           << "width,height,placement,marker-type,"
           << "stroke,stroke-width,stroke-opacity,stroke-linejoin,"
-          << "stroke-linecap,stroke-dash-offset,stroke-dasharray,"
+          << "stroke-linecap,stroke-dashoffset,stroke-dasharray,"
           // note: stroke-gamma intentionally left off here as markers do not support them
           << "meta-writer,meta-output";
         ensure_attrs(sym, "MarkersSymbolizer", s.str());
@@ -1031,7 +1068,7 @@ void map_parser::parse_markers_symbolizer( rule & rule, ptree const & sym )
         if (transform_wkt)
         {
             agg::trans_affine tr;
-            if (!mapnik::svg::parse_transform(*transform_wkt,tr))
+            if (!mapnik::svg::parse_transform((*transform_wkt).c_str(),tr))
             {
                 std::stringstream ss;
                 ss << "Could not parse transform from '" << transform_wkt
@@ -1210,7 +1247,7 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
       << "halo-radius,text-ratio,wrap-width,wrap-before,"
       << "wrap-character,text-transform,line-spacing,"
       << "label-position-tolerance,character-spacing,"
-      << "spacing,minimum-distance,minimum-padding,"
+      << "spacing,minimum-distance,minimum-padding,minimum-path-length,"
       << "avoid-edges,allow-overlap,opacity,max-char-angle-delta,"
       << "horizontal-alignment,justify-alignment";
 
@@ -1258,6 +1295,12 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
                 p.set_values_from_xml(symIter->second, fontsets_);
                 if (strict_) ensure_font_face(p.processor.defaults.face_name);
             }
+        }
+        // minimum path length
+        optional<unsigned> min_path_length = get_opt_attr<unsigned>(sym, "minimum-path-length");
+        if (min_path_length)
+        {
+            text_symbol.set_minimum_path_length(*min_path_length);
         }
         parse_metawriter_in_symbolizer(text_symbol, sym);
         rule.append(text_symbol);
@@ -1414,8 +1457,8 @@ void map_parser::parse_stroke(stroke & strk, ptree const & sym)
     optional<double> gamma = get_opt_attr<double>(sym, "stroke-gamma");
     if (gamma) strk.set_gamma(*gamma);
 
-    // stroke-dash-offset
-    optional<double> dash_offset = get_opt_attr<double>(sym, "stroke-dash-offset");
+    // stroke-dashoffset
+    optional<double> dash_offset = get_opt_attr<double>(sym, "stroke-dashoffset");
     if (dash_offset) strk.set_dash_offset(*dash_offset);
 
     // stroke-dasharray
@@ -1464,6 +1507,7 @@ void map_parser::parse_line_symbolizer( rule & rule, ptree const & sym )
     std::stringstream s;
     s << "stroke,stroke-width,stroke-opacity,stroke-linejoin,"
       << "stroke-linecap,stroke-gamma,stroke-dash-offset,stroke-dasharray,"
+      << "rasterizer,"
       << "meta-writer,meta-output";
 
     ensure_attrs(sym, "LineSymbolizer", s.str());
@@ -1472,6 +1516,11 @@ void map_parser::parse_line_symbolizer( rule & rule, ptree const & sym )
         stroke strk;
         parse_stroke(strk,sym);
         line_symbolizer symbol = line_symbolizer(strk);
+
+        // rasterizer method
+        line_rasterizer_e rasterizer = get_attr<line_rasterizer_e>(sym, "rasterizer", RASTERIZER_FULL);
+        //optional<line_rasterizer_e> rasterizer_method = get_opt_attr<line_rasterizer_e>(sym, "full");
+        symbol.set_rasterizer(rasterizer);
 
         parse_metawriter_in_symbolizer(symbol, sym);
         rule.append(symbol);
@@ -1525,9 +1574,8 @@ void map_parser::parse_building_symbolizer( rule & rule, ptree const & sym )
         optional<double> opacity = get_opt_attr<double>(sym, "fill-opacity");
         if (opacity) building_sym.set_opacity(*opacity);
         // height
-        // TODO - expression
-        optional<double> height = get_opt_attr<double>(sym, "height");
-        if (height) building_sym.set_height(*height);
+        optional<std::string> height = get_opt_attr<std::string>(sym, "height");
+        if (height) building_sym.set_height(parse_expression(*height, "utf8"));
 
         parse_metawriter_in_symbolizer(building_sym, sym);
         rule.append(building_sym);
@@ -1542,7 +1590,7 @@ void map_parser::parse_building_symbolizer( rule & rule, ptree const & sym )
 void map_parser::parse_raster_symbolizer( rule & rule, ptree const & sym )
 {
     // no support for meta-writer,meta-output
-    ensure_attrs(sym, "RasterSymbolizer", "mode,scaling,opacity,filter-factor");
+    ensure_attrs(sym, "RasterSymbolizer", "mode,scaling,opacity,filter-factor,mesh-size");
     try
     {
         raster_symbolizer raster_sym;
@@ -1562,6 +1610,11 @@ void map_parser::parse_raster_symbolizer( rule & rule, ptree const & sym )
         // filter factor
         optional<double> filter_factor = get_opt_attr<double>(sym, "filter-factor");
         if (filter_factor) raster_sym.set_filter_factor(*filter_factor);
+
+        // mesh-size
+        optional<unsigned> mesh_size = get_opt_attr<unsigned>(sym, "mesh-size");
+        if (mesh_size) raster_sym.set_mesh_size(*mesh_size);
+
 
         ptree::const_iterator cssIter = sym.begin();
         ptree::const_iterator endCss = sym.end();
@@ -1638,7 +1691,7 @@ void map_parser::parse_raster_colorizer(raster_colorizer_ptr const& rc,
 
             if (stop_tag.first == "stop")
             {
-                ensure_attrs(stop_tag.second, "stop", "color,mode,value");
+                ensure_attrs(stop_tag.second, "stop", "color,mode,value,label");
                 // colour is optional.
                 optional<color> stopcolor = get_opt_attr<color>(stop, "color");
                 if (!stopcolor) {
@@ -1662,12 +1715,16 @@ void map_parser::parse_raster_colorizer(raster_colorizer_ptr const& rc,
                 }
                 maximumValue = *value;
 
+                optional<std::string> label =
+                    get_opt_attr<std::string>(stop, "label");
 
                 //append the stop
                 colorizer_stop tmpStop;
                 tmpStop.set_color(*stopcolor);
                 tmpStop.set_mode(mode);
                 tmpStop.set_value(*value);
+                if (label)
+                    tmpStop.set_label(*label);
                 
                 rc->add_stop(tmpStop);
             }
@@ -1723,43 +1780,42 @@ std::string map_parser::ensure_relative_to_xml( boost::optional<std::string> opt
 
 void map_parser::ensure_attrs(ptree const& sym, std::string name, std::string attrs)
 {
-
     typedef ptree::key_type::value_type Ch;
-    //typedef boost::property_tree::xml_parser::xmlattr<Ch> x_att;
-    
-    std::set<std::string> attr_set;
-    boost::split(attr_set, attrs, boost::is_any_of(","));
-    for (ptree::const_iterator itr = sym.begin(); itr != sym.end(); ++itr)
+    optional<const ptree &> attribs = sym.get_child_optional( boost::property_tree::xml_parser::xmlattr<Ch>() );
+    if (attribs)
     {
-       //ptree::value_type const& v = *itr;
-       if (itr->first == boost::property_tree::xml_parser::xmlattr<Ch>())
-       {
-           optional<const ptree &> attribs = sym.get_child_optional( boost::property_tree::xml_parser::xmlattr<Ch>() );
-           if (attribs)
-           {
-               std::ostringstream s("");
-               s << "### " << name << " properties warning: ";
-               int missing = 0;
-               for (ptree::const_iterator it = attribs.get().begin(); it != attribs.get().end(); ++it)
-               {
-                   std::string name = it->first;
-                   bool found = (attr_set.find(name) != attr_set.end());
-                   if (!found)
-                   {
-                       if (missing) s << ",";
-                       s << "'" << name << "'";
-                       ++missing;
-                   }
-               }
-               if (missing) {
-                   if (missing > 1) s << " are";
-                   else s << " is";
-                   s << " invalid, acceptable values are:\n'" << attrs << "'\n";
-                   std::clog << s.str();
-               }
-           }
-       }
-   }
+        std::set<std::string> attr_set;
+        boost::split(attr_set, attrs, boost::is_any_of(","));
+        std::ostringstream s("");
+        s << "### " << name << " properties warning: ";
+        int missing = 0;
+        for (ptree::const_iterator it = attribs.get().begin(); it != attribs.get().end(); ++it)
+        {
+            std::string name = it->first;
+            bool found = (attr_set.find(name) != attr_set.end());
+            if (!found)
+            {
+                if (missing)
+                {
+                    s << ",";
+                }
+                s << "'" << name << "'";
+                ++missing;
+            }
+        }
+        if (missing) {
+            if (missing > 1)
+            {
+                s << " are";
+            }
+            else
+            {
+                s << " is";
+            }
+            s << " invalid, acceptable values are:\n'" << attrs << "'\n";
+            std::clog << s.str();
+        }
+    }
 }
 
 } // end of namespace mapnik

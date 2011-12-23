@@ -42,6 +42,7 @@ def indent(elem, level=0):
             elem.tail = i
             
 def name2expr(sym):
+    if 'name' not in sym.attrib: return
     name = sym.attrib['name']
     if re.match('^\[.*\]',name) is None \
         and '[' not in name \
@@ -50,8 +51,9 @@ def name2expr(sym):
         and not name.endswith("'") \
         and re.match("^\'.*\'",name) is None:
             print>>sys.stderr,"Fixing %s" % name
-            expression = '[%s]' % name
-            sym.attrib['name'] = expression    
+            name = '[%s]' % name
+    sym.attrib.pop('name')
+    sym.text = name
 
 def handle_attr_changes(sym):
     # http://www.w3schools.com/css/pr_text_text-transform.asp
@@ -69,6 +71,11 @@ def handle_attr_changes(sym):
             sym.attrib.pop('text_convert')
         if sym.attrib.get('text_transform'):
             sym.attrib.pop('text_transform')
+    
+    # http://trac.mapnik.org/ticket/807
+    justify_alignment = sym.attrib.get('justify_alignment',sym.attrib.get('justify-alignment'))
+    if justify_alignment and justify_alignment == "middle":
+        sym.attrib['justify-alignment'] = 'center'    
     
     minimum_distance = sym.attrib.get('min_distance')
     if minimum_distance:
@@ -259,7 +266,7 @@ if __name__ == "__main__":
         upgrade(input_xml,output_xml=output_xml,indent_xml=options.indent_xml)
     
     elif len(args) == 1:
-        print 'Upgrading "%s" to "%s"...' % (input_xml,output_xml)
+        print 'Upgrading "%s"...' % (input_xml)
         upgrade(input_xml,output_xml=output_xml,indent_xml=options.indent_xml)
 
     elif len(args) > 1: # assume a list of inputs

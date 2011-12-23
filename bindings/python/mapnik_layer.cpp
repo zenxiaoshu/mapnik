@@ -1,8 +1,8 @@
 /*****************************************************************************
- * 
+ *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko, Jean-Francois Doyon, Dane Springmeyer
+ * Copyright (C) 2006 Artem Pavlenko, Jean-Francois Doyon
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -53,8 +53,8 @@ struct layer_pickle_suite : boost::python::pickle_suite
         for (unsigned i = 0; i < style_names.size(); ++i)
         {
             s.append(style_names[i]);
-        }      
-        return boost::python::make_tuple(l.abstract(),l.title(),l.clear_label_cache(),l.getMinZoom(),l.getMaxZoom(),l.isQueryable(),l.datasource()->params(),l.cache_features(),s);
+        }
+        return boost::python::make_tuple(l.clear_label_cache(),l.getMinZoom(),l.getMaxZoom(),l.isQueryable(),l.datasource()->params(),l.cache_features(),s);
     }
 
     static void
@@ -70,28 +70,24 @@ struct layer_pickle_suite : boost::python::pickle_suite
             throw_error_already_set();
         }
 
-        l.set_abstract(extract<std::string>(state[0]));
+        l.set_clear_label_cache(extract<bool>(state[0]));
 
-        l.set_title(extract<std::string>(state[1]));
+        l.setMinZoom(extract<double>(state[1]));
 
-        l.set_clear_label_cache(extract<bool>(state[2]));
+        l.setMaxZoom(extract<double>(state[2]));
 
-        l.setMinZoom(extract<double>(state[3]));
+        l.setQueryable(extract<bool>(state[3]));
 
-        l.setMaxZoom(extract<double>(state[4]));
-
-        l.setQueryable(extract<bool>(state[5]));
-
-        mapnik::parameters params = extract<parameters>(state[6]);
+        mapnik::parameters params = extract<parameters>(state[4]);
         l.set_datasource(datasource_cache::instance()->create(params));
-        
-        boost::python::list s = extract<boost::python::list>(state[7]);
+
+        boost::python::list s = extract<boost::python::list>(state[5]);
         for (int i=0;i<len(s);++i)
         {
             l.add_style(extract<std::string>(s[i]));
         }
 
-        l.set_cache_features(extract<bool>(state[8]));
+        l.set_cache_features(extract<bool>(state[6]));
     }
 };
 
@@ -103,7 +99,7 @@ void export_layer()
     class_<std::vector<std::string> >("Names")
         .def(vector_indexing_suite<std::vector<std::string>,true >())
         ;
-    
+
     class_<layer>("Layer", "A Mapnik map layer.", init<std::string const&,optional<std::string const&> >(
                       "Create a Layer with a named string and, optionally, an srs string.\n"
                       "\n"
@@ -119,8 +115,8 @@ void export_layer()
                       ))
 
         .def_pickle(layer_pickle_suite())
-         
-        .def("envelope",&layer::envelope, 
+
+        .def("envelope",&layer::envelope,
              "Return the geographic envelope/bounding box."
              "\n"
              "Determined based on the layer datasource.\n"
@@ -131,7 +127,7 @@ void export_layer()
              ">>> lyr.envelope()\n"
              "box2d(-1.0,-1.0,0.0,0.0) # default until a datasource is loaded\n"
             )
-        
+
         .def("visible", &layer::isVisible,
              "Return True if this layer's data is active and visible at a given scale.\n"
              "\n"
@@ -151,21 +147,6 @@ void export_layer()
              ">>> lyr.visible(1.0/1000000)\n"
              "False\n"
             )
-                
-        .add_property("abstract", 
-                      make_function(&layer::abstract,return_value_policy<copy_const_reference>()),
-                      &layer::set_abstract,
-                      "Get/Set the abstract of the layer.\n"
-                      "\n"
-                      "Usage:\n"
-                      ">>> from mapnik import Layer\n"
-                      ">>> lyr = Layer('My Layer','+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')\n"
-                      ">>> lyr.abstract\n"
-                      "'' # default is en empty string\n"
-                      ">>> lyr.abstract = 'My Shapefile rendered with Mapnik'\n"
-                      ">>> lyr.abstract\n"
-                      "'My Shapefile rendered with Mapnik'\n"
-            )
 
         .add_property("active",
                       &layer::isActive,
@@ -181,7 +162,7 @@ void export_layer()
                       ">>> lyr.active\n"
                       "False\n"
             )
-                
+
         .add_property("clear_label_cache",
                       &layer::clear_label_cache,
                       &layer::set_clear_label_cache,
@@ -190,7 +171,7 @@ void export_layer()
                       "Usage:\n"
                       ">>> lyr.clear_label_cache\n"
                       "False # False by default, meaning label positions from other layers will impact placement \n"
-                      ">>> lyr.clear_label_cache = True # set to True to clear the label collision detector cache\n" 
+                      ">>> lyr.clear_label_cache = True # set to True to clear the label collision detector cache\n"
             )
 
         .add_property("cache_features",
@@ -201,9 +182,9 @@ void export_layer()
                       "Usage:\n"
                       ">>> lyr.cache_features\n"
                       "False # False by default\n"
-                      ">>> lyr.cache_features = True # set to True to enable feature caching\n" 
+                      ">>> lyr.cache_features = True # set to True to enable feature caching\n"
             )
-        
+
         .add_property("datasource",
                       &layer::datasource,
                       &layer::set_datasource,
@@ -231,7 +212,7 @@ void export_layer()
                       ">>> lyr.maxzoom\n"
                       "9.9999999999999995e-07\n"
             )
-        
+
         .add_property("minzoom",
                       &layer::getMinZoom,
                       &layer::setMinZoom,
@@ -245,9 +226,9 @@ void export_layer()
                       ">>> lyr.minzoom = 1.0/1000000\n"
                       ">>> lyr.minzoom\n"
                       "9.9999999999999995e-07\n"
-            )     
+            )
 
-        .add_property("name", 
+        .add_property("name",
                       make_function(&layer::name, return_value_policy<copy_const_reference>()),
                       &layer::set_name,
                       "Get/Set the name of the layer.\n"
@@ -277,7 +258,7 @@ void export_layer()
                       "True\n"
             )
 
-        .add_property("srs", 
+        .add_property("srs",
                       make_function(&layer::srs,return_value_policy<copy_const_reference>()),
                       &layer::set_srs,
                       "Get/Set the SRS of the layer.\n"
@@ -309,21 +290,6 @@ void export_layer()
                       ">>> lyr.styles[0]\n"
                       "'My Style'\n"
             )
-                                                            
-        .add_property("title",
-                      make_function(&layer::title, return_value_policy<copy_const_reference>()),
-                      &layer::set_title,
-                      "Get/Set the title of the layer.\n"
-                      "\n"
-                      "Usage:\n"
-                      ">>> from mapnik import layer\n"
-                      ">>> lyr = layer('My layer','+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')\n"
-                      ">>> lyr.title\n"
-                      "''\n"
-                      ">>> lyr.title = 'My first layer'\n"
-                      ">>> lyr.title\n"
-                      "'My first layer'\n"
-            )
- 
+
         ;
 }

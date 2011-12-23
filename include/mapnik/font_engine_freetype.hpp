@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,15 +20,16 @@
  *
  *****************************************************************************/
 
-#ifndef FONT_ENGINE_FREETYPE_HPP
-#define FONT_ENGINE_FREETYPE_HPP
+#ifndef MAPNIK_FONT_ENGINE_FREETYPE_HPP
+#define MAPNIK_FONT_ENGINE_FREETYPE_HPP
+
 // mapnik
 #include <mapnik/color.hpp>
 #include <mapnik/utils.hpp>
 #include <mapnik/ctrans.hpp>
 #include <mapnik/geometry.hpp>
+#include <mapnik/text_path.hpp>
 #include <mapnik/font_set.hpp>
-#include <mapnik/char_info.hpp>
 
 // freetype2
 extern "C"
@@ -47,7 +48,6 @@ extern "C"
 #ifdef MAPNIK_THREADSAFE
 #include <boost/thread/mutex.hpp>
 #endif
-
 
 // stl
 #include <string>
@@ -126,7 +126,13 @@ public:
     {
         if (! FT_Set_Pixel_Sizes( face_, 0, size ))
             return true;
+        return false;
+    }
 
+    bool set_character_sizes(float size)
+    {
+        if ( !FT_Set_Char_Size(face_,0,(FT_F26Dot6)(size * (1<<6)),0,0))
+            return true;
         return false;
     }
 
@@ -184,6 +190,14 @@ public:
             (*face)->set_pixel_sizes(size);
         }
     }
+    
+    void set_character_sizes(float size)
+    {
+        for (std::vector<face_ptr>::iterator face = faces_.begin(); face != faces_.end(); ++face)
+        {
+            (*face)->set_character_sizes(size);
+        }
+    }
 private:
     std::vector<face_ptr> faces_;
     std::map<unsigned, char_info> dimension_cache_;
@@ -198,7 +212,7 @@ public:
     
     void init(double radius)
     {
-        FT_Stroker_Set(s_,radius * (1<<6), 
+        FT_Stroker_Set(s_, (FT_Fixed) (radius * (1<<6)), 
                        FT_STROKER_LINECAP_ROUND, 
                        FT_STROKER_LINEJOIN_ROUND, 
                        0);    
@@ -392,4 +406,4 @@ private:
 typedef face_manager<freetype_engine> face_manager_freetype;
 }
 
-#endif // FONT_ENGINE_FREETYPE_HPP
+#endif // MAPNIK_FONT_ENGINE_FREETYPE_HPP

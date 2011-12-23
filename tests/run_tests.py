@@ -12,7 +12,7 @@ def usage():
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hvqp:", ["help", "prefix="])
-    except getopt.GetoptError as err:
+    except getopt.GetoptError,err:
         print(str(err))
         usage()
         sys.exit(2)
@@ -42,17 +42,17 @@ def main():
         # Allow python to find libraries for testing on the buildbot
         sys.path.insert(0, os.path.join(prefix, "lib/python%s/site-packages" % sys.version[:3]))
 
-    import mapnik2
+    import mapnik
 
     if not quiet:
-        print("- mapnik2 path: %s" % mapnik2.__file__)
-        if hasattr(mapnik2,'_mapnik2'):
-           print("- _mapnik2.so path: %s" % mapnik2._mapnik2.__file__)
-        print("- Input plugins path: %s" % mapnik2.inputpluginspath)
-        print("- Font path: %s" % mapnik2.fontscollectionpath)
-        print()
+        print("- mapnik path: %s" % mapnik.__file__)
+        if hasattr(mapnik,'_mapnik'):
+           print("- _mapnik.so path: %s" % mapnik._mapnik.__file__)
+        print("- Input plugins path: %s" % mapnik.inputpluginspath)
+        print("- Font path: %s" % mapnik.fontscollectionpath)
+        print('')
         print("- Running nosetests:")
-        print()
+        print('')
 
     argv = [__file__, '--exe', '--with-todo', '--with-doctest', '--doctest-tests']
 
@@ -63,6 +63,8 @@ def main():
         # 3 * '-v' gets us debugging information from nose
         argv.append('-v')
         argv.append('-v')
+    
+    argv.extend(['-w','./tests/python_tests'])
 
     if not nose.run(argv=argv, plugins=[TodoPlugin(), Doctest()]):
         sys.exit(1)

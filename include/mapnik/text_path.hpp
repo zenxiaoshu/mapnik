@@ -2,8 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
- * Copyright (C) 2006 10East Corp.
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,17 +20,16 @@
  *
  *****************************************************************************/
 
-//$Id$
+#ifndef MAPNIK_TEXT_PATH_HPP
+#define MAPNIK_TEXT_PATH_HPP
 
-#ifndef __TEXT_PATH_H__
-#define __TEXT_PATH_H__
-
-#include <mapnik/char_info.hpp>
-
+// boost
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 
+
+// uci
 #include <unicode/unistr.h>
 
 namespace mapnik
@@ -44,15 +42,23 @@ protected:
     typedef std::vector<char_info> characters_t;
     characters_t characters_;
     UnicodeString text_;
+    bool is_rtl;
 public:
     string_info(UnicodeString const& text)
         : characters_(),
-          text_(text)
-    {}
+          text_(text),
+          is_rtl(false)
+    {
+        
+    }
+    
     string_info()
         : characters_(),
-          text_()
-    {}
+          text_(),
+          is_rtl(false)
+    {
+        
+    }
 
     void add_info(char_info const& info)
     {
@@ -67,6 +73,16 @@ public:
     unsigned num_characters() const
     {
         return characters_.size();
+    }
+    
+    void set_rtl(bool value) 
+    {
+        is_rtl = value;
+    }
+    
+    bool get_rtl() const 
+    {
+        return is_rtl;
     }
       
     char_info const& at(unsigned i) const
@@ -164,6 +180,4 @@ struct text_path : boost::noncopyable
 typedef boost::shared_ptr<text_path> text_path_ptr;
 }
 
-#endif
-
-
+#endif // MAPNIK_TEXT_PATH_HPP

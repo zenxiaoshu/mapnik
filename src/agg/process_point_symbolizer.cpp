@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2010 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,6 @@
 #include <mapnik/image_util.hpp>
 #include <mapnik/metawriter.hpp>
 #include <mapnik/marker_cache.hpp>
-#include <mapnik/point_symbolizer.hpp>
 #include <mapnik/expression_evaluator.hpp>
 
 #include "agg_basics.h"
@@ -63,6 +62,27 @@ void agg_renderer<T>::process(point_symbolizer const& sym,
 
     if (marker)
     {
+        int w = (*marker)->width();
+        int h = (*marker)->height();    
+        agg::trans_affine tr;
+        boost::array<double,6> const& m = sym.get_transform();
+        tr.load_from(&m[0]);
+        double px0 = - 0.5 * w;
+        double py0 = - 0.5 * h;
+        double px1 = 0.5 * w;
+        double py1 = 0.5 * h;
+        double px2 = px1;
+        double py2 = py0;
+        double px3 = px0;
+        double py3 = py1;
+        tr.transform(&px0,&py0);
+        tr.transform(&px1,&py1);
+        tr.transform(&px2,&py2);
+        tr.transform(&px3,&py3);
+        box2d<double> label_ext (px0, py0, px1, py1);
+        label_ext.expand_to_include(px2, py2);
+        label_ext.expand_to_include(px3, py3);
+        
         for (unsigned i=0; i<feature.num_geometries(); ++i)
         {
             geometry_type const& geom = feature.get_geometry(i);
@@ -76,24 +96,16 @@ void agg_renderer<T>::process(point_symbolizer const& sym,
 
             prj_trans.backward(x,y,z);
             t_.forward(&x,&y);
-
-            int w = (*marker)->width();
-            int h = (*marker)->height();
-
-            int px = int(floor(x - 0.5 * w));
-            int py = int(floor(y - 0.5 * h));
-            box2d<double> label_ext (px, py, px + w, py + h);
+            label_ext.re_center(x,y);
+            
             if (sym.get_allow_overlap() ||
-                detector_.has_placement(label_ext))
+                detector_->has_placement(label_ext))
             {
-                agg::trans_affine tr;
-                boost::array<double,6> const& m = sym.get_transform();
-                tr.load_from(&m[0]);
-
-                render_marker(px,py,**marker,tr, sym.get_opacity());
+                
+                render_marker(floor(x - 0.5 * w),floor(y - 0.5 * h) ,**marker,tr, sym.get_opacity());
 
                 if (!sym.get_ignore_placement())
-                    detector_.insert(label_ext);
+                    detector_->insert(label_ext);
                 metawriter_with_properties writer = sym.get_metawriter();
                 if (writer.first) writer.first->add_box(label_ext, feature, t_, writer.second);
             }

@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,17 +20,15 @@
  *
  *****************************************************************************/
 
-//$Id: pool.hpp 39 2005-04-10 20:39:53Z pavlenko $
-
-#ifndef POOL_HPP
-#define POOL_HPP
+#ifndef MAPNIK_POOL_HPP
+#define MAPNIK_POOL_HPP
 
 // mapnik
 #include <mapnik/utils.hpp>
+
 // boost
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
-
 #ifdef MAPNIK_THREADSAFE
 #include <boost/thread/mutex.hpp>
 #endif
@@ -100,7 +98,7 @@ public:
         mutex::scoped_lock lock(mutex_);
 #endif
         typename ContType::iterator itr=unusedPool_.begin();
-        if (itr!=unusedPool_.end())
+        while ( itr!=unusedPool_.end())
         { 
 #ifdef MAPNIK_DEBUG
             std::clog<<"borrow "<<(*itr).get()<<"\n";
@@ -116,10 +114,10 @@ public:
 #ifdef MAPNIK_DEBUG
                 std::clog<<"bad connection (erase)" << (*itr).get()<<"\n";
 #endif 
-                unusedPool_.erase(itr);
+                itr=unusedPool_.erase(itr);
             }
         }
-        if (unusedPool_.size() < maxSize_)
+        if (usedPool_.size() < maxSize_)
         {
             HolderType conn(creator_());
             if (conn->isOK())
@@ -164,5 +162,7 @@ public:
         return size;
     }
 };
+
 }
-#endif //POOL_HPP
+
+#endif // MAPNIK_POOL_HPP

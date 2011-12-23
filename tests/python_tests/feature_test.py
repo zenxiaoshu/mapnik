@@ -1,26 +1,24 @@
 #encoding: utf8
 import itertools
 import unittest
+from nose.tools import *
 
-from utilities import Todo
+import mapnik
+from binascii import unhexlify
 
 class FeatureTest(unittest.TestCase):
     def makeOne(self, *args, **kw):
-        from mapnik2 import Feature
-        return Feature(*args, **kw)
-
+        return mapnik.Feature(*args, **kw)
+    
     def test_default_constructor(self):
         f = self.makeOne(1)
         self.failUnless(f is not None)
 
     def test_python_extended_constructor(self):
-        from mapnik2 import Geometry2d
-        f = self.makeOne(1, Geometry2d.from_wkt('Point(3 6)'), foo="bar")
+        f = self.makeOne(1, 'POLYGON ((35 10, 10 20, 15 40, 45 45, 35 10),(20 30, 35 35, 30 20, 20 30))', foo="bar")
         self.failUnlessEqual(f['foo'], 'bar')
-        env = f.get_geometry(0).envelope()
-        self.failUnlessEqual(env.minx, 3)
-        self.failUnlessEqual(env.miny, 6)
-
+        self.failUnlessEqual(f.envelope(),mapnik.Box2d(10.0,10.0,45.0,45.0))
+    
     def test_set_get_properties(self):
         f = self.makeOne(1)
         counter = itertools.count(0)
@@ -34,22 +32,74 @@ class FeatureTest(unittest.TestCase):
         for v in (1, True, 1.4, "foo", u"avión"):
             test_val(v)
 
-
-    def test_add_wkb_geometry(self):
-        from mapnik2 import Geometry2d
-
-        def add_it(geometry):
+    def test_add_wkt_geometry(self):
+        def add_geom_wkt(wkt):
             f = self.makeOne(1)
-            self.failUnlessEqual(len(f.geometries), 0)
-            f.add_geometry(geometry)
-            self.failUnlessEqual(len(f.geometries), 1)
-            env = f.get_geometry(0).envelope()
-            self.failUnlessEqual(env.minx, 3)
-            self.failUnlessEqual(env.minx, env.maxx)
-            self.failUnlessEqual(env.miny, 6)
-            self.failUnlessEqual(env.miny, env.maxy)
-        
-        add_it(Geometry2d.from_wkt('Point(3 6)'))
+            self.failUnlessEqual(len(f.geometries()), 0)
+            f.add_geometries_from_wkt(wkt)
+            self.failUnlessEqual(len(f.geometries()), 3)
+            e = mapnik.Box2d()
+            self.failUnlessEqual(e.valid(), False)
+            for g in f.geometries():
+                if not e.valid():
+                    e = g.envelope()
+                else:
+                    e +=g.envelope()
+                    
+            self.failUnlessEqual(e, f.envelope())
+
+        def add_geom_wkb(wkb):
+            f = self.makeOne(1)
+            self.failUnlessEqual(len(f.geometries()), 0)
+            f.add_geometries_from_wkb(unhexlify(wkb))
+            self.failUnlessEqual(len(f.geometries()), 1)
+            e = mapnik.Box2d()
+            self.failUnlessEqual(e.valid(), False)
+            for g in f.geometries():
+                if not e.valid():
+                    e = g.envelope()
+                else:
+                    e +=g.envelope()
+                    
+            self.failUnlessEqual(e, f.envelope())
+
+        def run() :
+            add_geom_wkt('GEOMETRYCOLLECTION(POINT(4 6),LINESTRING(4 6,7 10),POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10)))')
+            add_geom_wkb('010300000001000000050000000000000000003e4000000000000024400000000000002440000000000000344000000000000034400000000000004440000000000000444000000000000044400000000000003e400000000000002440') # POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))
+        run()
+
+
+def test_feature_expression_evaluation():
+    f = mapnik.Feature(1)
+    f['name'] = 'a'
+    eq_(f['name'],u'a')
+    expr = mapnik.Expression("[name]='a'")
+    evaluated = expr.evaluate(f)
+    eq_(evaluated,True)
+    num_attributes = len(f)
+    eq_(num_attributes,1)
+    eq_(f.id(),1)
+
+# https://github.com/mapnik/mapnik/issues/933
+def test_feature_expression_evaluation_missing_attr():
+    f = mapnik.Feature(1)
+    f['name'] = u'a'
+    eq_(f['name'],u'a')
+    expr = mapnik.Expression("[fielddoesnotexist]='a'")
+    evaluated = expr.evaluate(f)
+    eq_(evaluated,False)
+    num_attributes = len(f)
+    eq_(num_attributes,1)
+    eq_(f.id(),1)
+
+# https://github.com/mapnik/mapnik/issues/934
+def test_feature_expression_evaluation_attr_with_spaces():
+    f = mapnik.Feature(1)
+    f['name with space'] = u'a'
+    eq_(f['name with space'],u'a')
+    expr = mapnik.Expression("[name with space]='a'")
+    eq_(str(expr),"([name with space]='a')")
+    eq_(expr.evaluate(f),True)
 
 if __name__ == "__main__":
     [eval(run)() for run in dir() if 'test_' in run]

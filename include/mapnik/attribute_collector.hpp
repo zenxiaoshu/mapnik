@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,10 +20,8 @@
  *
  *****************************************************************************/
 
-//$Id$
-
-#ifndef ATTRIBUTE_COLLECTOR_HPP
-#define ATTRIBUTE_COLLECTOR_HPP
+#ifndef MAPNIK_ATTRIBUTE_COLLECTOR_HPP
+#define MAPNIK_ATTRIBUTE_COLLECTOR_HPP
 
 // mapnik
 #include <mapnik/rule.hpp>
@@ -166,6 +164,12 @@ struct symbolizer_attributes : public boost::static_visitor<>
 
     void operator () (building_symbolizer const& sym)
     {
+        expression_ptr const& height_expr = sym.height();
+        if (height_expr)
+        {
+            expression_attributes f_attr(names_);
+            boost::apply_visitor(f_attr,*height_expr);
+        }
         collect_metawriter(sym);
     }
     // TODO - support remaining syms
@@ -224,4 +228,4 @@ private:
 
 } // namespace mapnik
 
-#endif //ATTRIBUTE_COLLECTOR_HPP
+#endif // MAPNIK_ATTRIBUTE_COLLECTOR_HPP

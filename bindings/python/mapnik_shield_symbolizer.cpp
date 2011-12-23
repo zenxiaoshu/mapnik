@@ -1,5 +1,5 @@
 /*****************************************************************************
- * 
+ *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
  * Copyright (C) 2006 Artem Pavlenko, Jean-Francois Doyon
@@ -63,16 +63,27 @@ void set_text_displacement(shield_symbolizer & t, boost::python::tuple arg)
 {
     t.set_displacement(extract<double>(arg[0]),extract<double>(arg[1]));
 }
-  
-const std::string get_filename(shield_symbolizer const& t) 
-{ 
-    return path_processor_type::to_string(*t.get_filename()); 
+
+tuple get_anchor(const shield_symbolizer& t)
+{
+    boost::tuple<double,double> pos = t.get_anchor();
+    return boost::python::make_tuple(boost::get<0>(pos),boost::get<1>(pos));
 }
 
-void set_filename(shield_symbolizer & t, std::string const& file_expr) 
-{ 
-    t.set_filename(parse_path(file_expr)); 
-} 
+void set_anchor(shield_symbolizer & t, boost::python::tuple arg)
+{
+    t.set_anchor(extract<double>(arg[0]),extract<double>(arg[1]));
+}
+
+const std::string get_filename(shield_symbolizer const& t)
+{
+    return path_processor_type::to_string(*t.get_filename());
+}
+
+void set_filename(shield_symbolizer & t, std::string const& file_expr)
+{
+    t.set_filename(parse_path(file_expr));
+}
 
 }
 
@@ -85,7 +96,7 @@ struct shield_symbolizer_pickle_suite : boost::python::pickle_suite
         //(name, font name, font size, font color, image file, image type, width, height)
         return boost::python::make_tuple( "TODO",//s.get_name(),
                                           s.get_face_name(),s.get_text_size(),s.get_fill(),filename,guess_type(filename));
-      
+
     }
 
     static  boost::python::tuple
@@ -107,10 +118,10 @@ struct shield_symbolizer_pickle_suite : boost::python::pickle_suite
           );
           throw_error_already_set();
           }*/
-                
+
         s.set_halo_fill(extract<color>(state[0]));
         s.set_halo_radius(extract<float>(state[1]));
-        
+
     }
 
 };
@@ -120,12 +131,15 @@ void export_shield_symbolizer()
 {
     using namespace boost::python;
     class_< shield_symbolizer, bases<text_symbolizer> >("ShieldSymbolizer",
-            init<expression_ptr,
-                std::string const&,
-                unsigned, mapnik::color const&,
-                path_expression_ptr>("TODO")
+                                                        init<expression_ptr,
+                                                        std::string const&,
+                                                        unsigned, mapnik::color const&,
+                                                        path_expression_ptr>("TODO")
         )
         //.def_pickle(shield_symbolizer_pickle_suite())
+        .add_property("anchor",
+                      &get_anchor,
+                      &set_anchor)
         .add_property("allow_overlap",
                       &shield_symbolizer::get_allow_overlap,
                       &shield_symbolizer::set_allow_overlap,
@@ -145,7 +159,7 @@ void export_shield_symbolizer()
                       make_function(&shield_symbolizer::get_face_name,return_value_policy<copy_const_reference>()),
                       &shield_symbolizer::set_face_name,
                       "Set/get the face_name property of the label")
-        .add_property("fill",              
+        .add_property("fill",
                       make_function(&shield_symbolizer::get_fill,return_value_policy<copy_const_reference>()),
                       &shield_symbolizer::set_fill)
         .add_property("fontset",
@@ -158,7 +172,7 @@ void export_shield_symbolizer()
                       make_function(&shield_symbolizer::get_halo_fill,return_value_policy<copy_const_reference>()),
                       &shield_symbolizer::set_halo_fill)
         .add_property("halo_radius",
-                      &shield_symbolizer::get_halo_radius, 
+                      &shield_symbolizer::get_halo_radius,
                       &shield_symbolizer::set_halo_radius)
         .add_property("horizontal_alignment",
                       &shield_symbolizer::get_horizontal_alignment,

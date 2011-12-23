@@ -31,6 +31,9 @@
 #include <mapnik/value.hpp>
 #include <mapnik/feature.hpp>
 
+// boost
+#include <boost/cstdint.hpp>
+
 // stl
 #include <map>
 #include <set>
@@ -65,6 +68,7 @@ private:
     data_type data_;
     std::set<std::string> names_;
     unsigned int resolution_;
+    bool painted_;
     
 public:
 
@@ -94,7 +98,17 @@ public:
     
     ~hit_grid() {}
 
-    void add_feature(mapnik::Feature const& feature)
+    inline void painted(bool painted)
+    {
+        painted_ = painted;
+    }
+
+    inline bool painted() const
+    {
+        return painted_;
+    }
+
+    inline void add_feature(mapnik::Feature const& feature)
     {
 
         // copies feature props
@@ -141,12 +155,12 @@ public:
         }
     } 
     
-    void add_property_name(std::string const& name)
+    inline void add_property_name(std::string const& name)
     {
         names_.insert(name);
     } 
 
-    std::set<std::string> property_names() const
+    inline std::set<std::string> const& property_names() const
     {
         return names_;
     }
@@ -264,7 +278,7 @@ public:
 
     inline void blendPixel(value_type feature_id,int x,int y,unsigned int rgba1,int t)
     {
-        blendPixel2(x,y,rgba1,t,1.0);  // do not change opacity
+        blendPixel2(feature_id ,x,y,rgba1,t,1.0);  // do not change opacity
     }
 
     inline void blendPixel2(value_type feature_id,int x,int y,unsigned int rgba1,int t,double opacity)
@@ -273,7 +287,7 @@ public:
         {
 
 #ifdef MAPNIK_BIG_ENDIAN
-            unsigned a1 = (int)((rgba1 & 0xff) * opacity) & 0xff; // adjust for desired opacity
+            unsigned a = (int)((rgba1 & 0xff) * opacity) & 0xff; // adjust for desired opacity
 #else
             unsigned a = (int)(((rgba1 >> 24) & 0xff) * opacity) & 0xff; // adjust for desired opacity
 #endif                    
@@ -320,7 +334,7 @@ public:
 
 };
 
-typedef hit_grid<uint16_t> grid;
+typedef MAPNIK_DECL hit_grid<boost::uint16_t> grid;
 
 }
 #endif //MAPNIK_GRID_HPP

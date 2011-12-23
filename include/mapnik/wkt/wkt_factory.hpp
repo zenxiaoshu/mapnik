@@ -23,12 +23,16 @@
 #ifndef MAPNIK_WKT_FACTORY_HPP
 #define MAPNIK_WKT_FACTORY_HPP
 
-#include <string>
+// mapnik
+#include <mapnik/config.hpp>
 #include <mapnik/geometry.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
+// stl
+#include <string>
 
 namespace mapnik { 
 
-std::pair<bool,geometry_type*> from_wkt(std::string const& wkt);
+MAPNIK_DECL bool from_wkt(std::string const& wkt, boost::ptr_vector<geometry_type> & paths);
 
 }
 

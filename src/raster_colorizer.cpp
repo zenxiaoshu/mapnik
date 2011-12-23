@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,10 +40,11 @@ static const char *colorizer_mode_strings[] = {
 IMPLEMENT_ENUM( colorizer_mode, colorizer_mode_strings )
 
 
-colorizer_stop::colorizer_stop(const float value/* = 0*/, const colorizer_mode mode/* = COLORIZER_INHERIT*/, const color& _color/* = color(0,0,0,0)*/ )
+colorizer_stop::colorizer_stop(const float value/* = 0*/, const colorizer_mode mode/* = COLORIZER_INHERIT*/, const color& _color/* = color(0,0,0,0)*/, const std::string& label/* ) ""*/)
     : value_(value)
     , mode_(mode)
     , color_(_color)
+    , label_(label)
 {
     
 }
@@ -52,6 +53,7 @@ colorizer_stop::colorizer_stop(const colorizer_stop& stop)
     : value_(stop.value_)
     , mode_(stop.mode_)
     , color_(stop.color_)
+    , label_(stop.label_)
 {
 }
 
@@ -66,7 +68,8 @@ bool colorizer_stop::operator==(colorizer_stop const& other) const
 {
     return  (value_ == other.value_) && 
             (color_ == other.color_) &&
-            (mode_ == other.mode_);
+            (mode_ == other.mode_) &&
+            (label_ == other.label_);
 }
 
 
@@ -115,12 +118,13 @@ void raster_colorizer::colorize(raster_ptr const& raster,const std::map<std::str
     bool hasNoData = false;
     float noDataValue = 0;
 
-    if (Props.count("NODATA")>0)
+    const std::map<std::string,value>::const_iterator fi = Props.find("NODATA");
+    if (fi != Props.end())
     {
         hasNoData = true;
-        noDataValue = Props.at("NODATA").to_double();
+	noDataValue = static_cast<float>(fi->second.to_double());
     }
-
+    
     for (int i=0; i<len; ++i)
     {
         // the GDAL plugin reads single bands as floats
@@ -132,9 +136,9 @@ void raster_colorizer::colorize(raster_ptr const& raster,const std::map<std::str
     }
 }
 
-inline float interpolate(float start,float end, float fraction)
+inline unsigned interpolate(unsigned start, unsigned end, float fraction)
 {
-    return fraction * (end - start) + start;
+    return static_cast<unsigned>(fraction * ((float)end - (float)start) + start);
 }
 
 color raster_colorizer::get_color(float value) const {
@@ -207,10 +211,10 @@ color raster_colorizer::get_color(float value) const {
             else {
                 float fraction = (value - stopValue) / (nextStopValue - stopValue);
                 
-                float r = interpolate(stopColor.red(), nextStopColor.red(),fraction);
-                float g = interpolate(stopColor.green(), nextStopColor.green(),fraction);
-                float b = interpolate(stopColor.blue(), nextStopColor.blue(),fraction);
-                float a = interpolate(stopColor.alpha(), nextStopColor.alpha(),fraction);
+                unsigned r = interpolate(stopColor.red(), nextStopColor.red(),fraction);
+                unsigned g = interpolate(stopColor.green(), nextStopColor.green(),fraction);
+                unsigned b = interpolate(stopColor.blue(), nextStopColor.blue(),fraction);
+                unsigned a = interpolate(stopColor.alpha(), nextStopColor.alpha(),fraction);
                 
                 outputColor.set_red(r);
                 outputColor.set_green(g);

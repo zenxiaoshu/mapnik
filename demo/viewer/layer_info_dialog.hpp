@@ -1,5 +1,6 @@
 /* This file is part of Mapnik (c++ mapping toolkit)
- * Copyright (C) 2007 Artem Pavlenko
+ *
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * Mapnik is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +28,7 @@
 
 namespace mapnik
 {
-struct layer;
+class layer;
 }
 
 class layer_info_dialog : public QDialog

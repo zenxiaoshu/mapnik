@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/agg_rasterizer.hpp>
 #include <mapnik/segment.hpp>
-#include <mapnik/polygon_symbolizer.hpp>
+#include <mapnik/expression_evaluator.hpp>
 
 // boost
 #include <boost/scoped_ptr.hpp>
@@ -38,9 +38,6 @@
 #include "agg_scanline_u.h"
 #include "agg_renderer_scanline.h"
 #include "agg_conv_stroke.h"
-
-// stl
-#include <deque>
 
 namespace mapnik 
 {
@@ -70,7 +67,13 @@ void agg_renderer<T>::process(building_symbolizer const& sym,
     ras_ptr->reset();
     ras_ptr->gamma(agg::gamma_linear());
     
-    double height = sym.height() * scale_factor_;
+    double height = 0.0;
+    expression_ptr height_expr = sym.height();
+    if (height_expr)
+    {
+        value_type result = boost::apply_visitor(evaluate<Feature,value_type>(feature), *height_expr);
+        height = result.to_double() * scale_factor_;
+    }
     
     for (unsigned i=0;i<feature.num_geometries();++i)
     {

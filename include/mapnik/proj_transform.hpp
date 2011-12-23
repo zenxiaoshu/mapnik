@@ -2,7 +2,7 @@
  * 
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2006 Artem Pavlenko
+ * Copyright (C) 2011 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,10 +20,8 @@
  *
  *****************************************************************************/
 
-//$Id$
-
-#ifndef PROJ_TRANSFORM_HPP
-#define PROJ_TRANSFORM_HPP
+#ifndef MAPNIK_PROJ_TRANSFORM_HPP
+#define MAPNIK_PROJ_TRANSFORM_HPP
 
 // mapnik
 #include <mapnik/projection.hpp>
@@ -43,6 +41,8 @@ public:
     bool equal() const;
     bool forward (double& x, double& y , double& z) const;
     bool backward (double& x, double& y , double& z) const;
+    bool forward (double *x, double *y , double *z, int point_count) const;
+    bool backward (double *x, double *y , double *z, int point_count) const;
     bool forward (box2d<double> & box) const;
     bool backward (box2d<double> & box) const;
     bool forward (box2d<double> & box, int points) const;
@@ -56,7 +56,8 @@ private:
     bool is_source_longlat_;
     bool is_dest_longlat_;
     bool is_source_equal_dest_;
+    bool wgs84_to_merc_;
 };
 }
 
-#endif // PROJ_TRANSFORM_HPP
+#endif // MAPNIK_PROJ_TRANSFORM_HPP
