@@ -34,7 +34,7 @@ void agg_renderer<T>::process(text_symbolizer const& sym,
                               proj_transform const& prj_trans)
 {
     text_symbolizer_helper helper; //Must live during all rendering calls as formating information is stored in here!
-    text_placement_info_ptr placement = helper.get_placement(sym, feature, font_manager_, detector_, prj_trans, t_, width_, height_, scale_factor_);
+    text_placement_info_ptr placement = helper.get_placement(sym, feature, font_manager_, *detector_, prj_trans, t_, width_, height_, scale_factor_);
 
     text_renderer<T> ren(pixmap_, font_manager_, *(font_manager_.get_stroker()));
     for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)

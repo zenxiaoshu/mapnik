@@ -23,6 +23,9 @@
 #ifndef MAPNIK_TEXT_PATH_HPP
 #define MAPNIK_TEXT_PATH_HPP
 
+// mapnik
+#include <mapnik/char_info.hpp>
+
 // boost
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>

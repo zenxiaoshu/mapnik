@@ -72,7 +72,7 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
         dummy.format = &(processor.defaults);
         if (!info.num_characters()) info.add_info(dummy); //Initialize dummy string info
 
-        placement_finder<label_collision_detector4> finder(*placement, info, detector_, dims);
+        placement_finder<label_collision_detector4> finder(*placement, info, *detector_, dims);
 
         agg::trans_affine tr;
         boost::array<double,6> const& m = sym.get_transform(); /* TODO: placements */
@@ -150,9 +150,9 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
                         label_ext.init( floor(label_x - 0.5 * w), floor(label_y - 0.5 * h), ceil (label_x + 0.5 * w), ceil (label_y + 0.5 * h));
                     }
 
-                    if (p.allow_overlap || detector_.has_placement(label_ext) )
+                    if (p.allow_overlap || detector_->has_placement(label_ext) )
                     {
-                        detector_.insert(label_ext);
+                        detector_->insert(label_ext);
                         finder.update_detector();
                         if (writer.first) {
                             writer.first->add_box(box2d<double>(px,py,px+w,py+h), feature, t_, writer.second);

@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
-//$Id$
 
 // mapnik
 #include <mapnik/font_engine_freetype.hpp>
@@ -278,7 +277,6 @@ void font_face_set::get_string_info(string_info & info, UnicodeString const& ust
 #endif
 
     ubidi_close(bidi);
-    info.set_dimensions(width, height);
 }
 
 template <typename T>

@@ -81,6 +81,8 @@ void text_symbolizer_properties::set_values_from_xml(boost::property_tree::ptree
     if (minimum_distance_) minimum_distance = *minimum_distance_;
     optional<unsigned> min_padding_ = get_opt_attr<unsigned>(sym, "minimum-padding");
     if (min_padding_) minimum_padding = *min_padding_;
+    optional<unsigned> min_path_length_ = get_opt_attr<unsigned>(sym, "minimum-path-length");
+    if (min_path_length_) minimum_path_length = *min_path_length_;
     optional<boolean> avoid_edges_ = get_opt_attr<boolean>(sym, "avoid-edges");
     if (avoid_edges_) avoid_edges = *avoid_edges_;
     optional<boolean> allow_overlap_ = get_opt_attr<boolean>(sym, "allow-overlap");
@@ -155,6 +157,10 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
     if (minimum_padding != dfl.minimum_padding || explicit_defaults)
     {
         set_attr(node, "minimum-padding", minimum_padding);
+    }
+    if (minimum_path_length != dfl.minimum_path_length || explicit_defaults)
+    {
+        set_attr(node, "minimum-path-length", minimum_path_length);
     }
     if (allow_overlap != dfl.allow_overlap || explicit_defaults)
     {

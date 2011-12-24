@@ -24,8 +24,11 @@
 #define MAPNIK_TEXT_PLACEMENTS_HPP
 
 // mapnik
-#include <mapnik/config.hpp>
-#include <mapnik/enumeration.hpp>
+#include <mapnik/color.hpp>
+#include <mapnik/font_set.hpp>
+#include <mapnik/text_path.hpp>
+#include <mapnik/box2d.hpp>
+#include <mapnik/text_processing.hpp>
 
 // stl
 #include <vector>
@@ -107,6 +110,7 @@ struct text_symbolizer_properties
     bool avoid_edges;
     double minimum_distance;
     double minimum_padding;
+    double minimum_path_length;
     double max_char_angle_delta;
     bool force_odd_labels; //Always try render an odd amount of labels
     bool allow_overlap;

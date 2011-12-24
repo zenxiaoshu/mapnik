@@ -107,7 +107,8 @@ text_symbolizer::text_symbolizer(expression_ptr name, std::string const& face_na
 
 text_symbolizer::text_symbolizer(expression_ptr name, unsigned size, color const& fill,
                                  text_placements_ptr placements)
-    : symbolizer_base(), placement_options_(placements)
+    : symbolizer_base(),
+      placement_options_(placements)
 {
     set_name(name);
     set_text_size(size);
@@ -116,7 +117,9 @@ text_symbolizer::text_symbolizer(expression_ptr name, unsigned size, color const
 
 text_symbolizer::text_symbolizer(text_symbolizer const& rhs)
     : symbolizer_base(rhs),
-      placement_options_(rhs.placement_options_) /*TODO: Copy options! */ {}
+      placement_options_(rhs.placement_options_) /*TODO: Copy options! */
+{
+}
 
 text_symbolizer& text_symbolizer::operator=(text_symbolizer const& other)
 {
@@ -375,6 +378,16 @@ double text_symbolizer::get_minimum_padding() const
 void text_symbolizer::set_minimum_padding(double distance)
 {
     placement_options_->properties.minimum_padding = distance;
+}
+
+double text_symbolizer::get_minimum_path_length() const
+{
+    return placement_options_->properties.minimum_path_length;
+}
+
+void text_symbolizer::set_minimum_path_length(double size)
+{
+    placement_options_->properties.minimum_path_length = size;
 }
  
 void text_symbolizer::set_allow_overlap(bool overlap)

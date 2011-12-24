@@ -456,6 +456,8 @@ void placement_finder<DetectorT>::find_point_placement(double label_x, double la
         x += cwidth;  // move position to next character
     }
 
+#if 0
+    //TODO
     // check the placement of any additional envelopes
     if (!p.allow_overlap && !p.additional_boxes.empty())
     {
@@ -472,6 +474,7 @@ void placement_finder<DetectorT>::find_point_placement(double label_x, double la
             c_envelopes.push(pt);
         }
     }
+#endif
 
     // since there was no early exit, add the character envelopes to the placements' envelopes
     while( !c_envelopes.empty() )

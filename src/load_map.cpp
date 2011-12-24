@@ -1296,12 +1296,6 @@ void map_parser::parse_text_symbolizer( rule & rule, ptree const & sym )
                 if (strict_) ensure_font_face(p.processor.defaults.face_name);
             }
         }
-        // minimum path length
-        optional<unsigned> min_path_length = get_opt_attr<unsigned>(sym, "minimum-path-length");
-        if (min_path_length)
-        {
-            text_symbol.set_minimum_path_length(*min_path_length);
-        }
         parse_metawriter_in_symbolizer(text_symbol, sym);
         rule.append(text_symbol);
     }
@@ -1338,7 +1332,7 @@ void map_parser::parse_shield_symbolizer( rule & rule, ptree const & sym )
         if (transform_wkt)
         {
             agg::trans_affine tr;
-            if (!mapnik::svg::parse_transform(*transform_wkt,tr))
+            if (!mapnik::svg::parse_transform((*transform_wkt).c_str(),tr))
             {
                 std::stringstream ss;
                 ss << "Could not parse transform from '" << transform_wkt << "', expected string like: 'matrix(1, 0, 0, 1, 0, 0)'";
