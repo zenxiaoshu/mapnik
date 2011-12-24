@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import mapnik2
+import mapnik
 import cairo
 import sys
 import os.path
@@ -13,9 +13,9 @@ filenames = ["list", "simple"]
 for filename in filenames:
     for width in widths:
         print "Rendering style \"%s\" with width %d" % (filename, width)
-        n = mapnik2.Map(width, 100)
-        mapnik2.load_map(n, os.path.join(dirname, "%s.xml" % filename), False)
-        bbox = mapnik2.Box2d(-0.05, -0.01, 0.95, 0.01)
+        n = mapnik.Map(width, 100)
+        mapnik.load_map(n, os.path.join(dirname, "%s.xml" % filename), False)
+        bbox = mapnik.Box2d(-0.05, -0.01, 0.95, 0.01)
         n.zoom_to_box(bbox)
-        mapnik2.render_to_file(n, '%s-%d.png' % (filename, width))
-    mapnik2.save_map(n, "%s-out.xml" % filename)
+        mapnik.render_to_file(n, '%s-%d.png' % (filename, width))
+    mapnik.save_map(n, "%s-out.xml" % filename)
