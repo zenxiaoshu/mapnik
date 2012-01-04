@@ -31,29 +31,32 @@
 // boost
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 104000
-#include <boost/property_map/property_map.hpp>
+//#include <boost/property_map/property_map.hpp>
 #else
-#include <boost/property_map.hpp>
+//#include <boost/property_map.hpp>
 #endif
 #include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
-
+//#include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 // stl
 #include <map>
 
 namespace mapnik {
-typedef boost::shared_ptr<raster> raster_ptr;    
-typedef boost::associative_property_map<
-std::map<std::string,value
-         > > properties;
+
+typedef boost::scoped_ptr<raster> raster_ptr;    
+
+//typedef boost::associative_property_map<
+//std::map<std::string,value
+//         > > properties;
    
 template <typename T1,typename T2>
-struct feature : public properties,
+struct feature : //public properties,
                  private boost::noncopyable
 {
 public:
     typedef T1 geometry_type;
     typedef T2 raster_type;
+    typedef std::map<std::string,value>::key_type key_type;
     typedef std::map<std::string,value>::value_type value_type;
     typedef std::map<std::string,value>::size_type size_type;
     typedef std::map<std::string,value>::difference_type difference_type;
@@ -61,17 +64,17 @@ public:
 private:
     int id_;
     boost::ptr_vector<geometry_type> geom_cont_;
-    raster_type   raster_;
+    raster_type raster_;
     std::map<std::string,value> props_;
 public:
     typedef std::map<std::string,value>::iterator iterator;
     typedef std::map<std::string,value>::const_iterator const_iterator;
     explicit feature(int id)
-        : properties(props_),
+        : //properties(props_),
           id_(id),
           geom_cont_(),
           raster_() {}
-       
+    
     int id() const 
     {
         return id_;
@@ -134,9 +137,9 @@ public:
        
     void set_raster(raster_type const& raster)
     {
-        raster_=raster;
+        raster_.swap(raster);
     }
-       
+    
     std::map<std::string,value> const& props() const 
     {
         return props_;
@@ -172,6 +175,16 @@ public:
         return props_.find(key);
     }
     
+    value & operator[] (std::string const& key) 
+    {
+        return props_[key];
+    }
+
+    value const& operator[] (std::string const& key) const
+    {
+        return props_[key];
+    }
+
     std::string to_string() const
     {
         std::stringstream ss;
