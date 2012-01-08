@@ -405,14 +405,17 @@ bool text_placement_info_simple::next_position_only()
         displacement = boost::make_tuple(
                      abs(pdisp.get<0>()),
                     -abs(pdisp.get<1>()));
+        break;
     case SOUTHEAST:
         displacement = boost::make_tuple(
                      abs(pdisp.get<0>()),
                      abs(pdisp.get<1>()));
+        break;
     case NORTHWEST:
         displacement = boost::make_tuple(
                     -abs(pdisp.get<0>()),
                     -abs(pdisp.get<1>()));
+        break;
     case SOUTHWEST:
         displacement = boost::make_tuple(
                     -abs(pdisp.get<0>()),
