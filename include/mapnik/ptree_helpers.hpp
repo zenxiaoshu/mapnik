@@ -349,9 +349,17 @@ T get_value(const boost::property_tree::ptree & node, const std::string & name)
     try
     {
         /* NOTE: get_child works as long as there is only one child with that name.
-           If this function is used this used this condition should always be satisfied.
+           If this function is used this used this condition must always be satisfied.
          */
         return node.get_child("<xmltext>").get_value<T>();
+    }
+    catch (boost::property_tree::ptree_bad_path)
+    {
+        /* If the XML parser did not find any non-empty data element the is no
+           <xmltext> node. But we don't want to fail here but simply return a
+           default constructed value of the requested type.
+        */
+        return T();
     }
     catch (...)
     {
