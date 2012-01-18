@@ -120,6 +120,10 @@ public:
         {
             set_attr( sym_node, "gamma", sym.get_gamma() );
         }
+        if ( sym.get_gamma_method() != dfl.get_gamma_method() || explicit_defaults_ )
+        {
+            set_attr( sym_node, "gamma-method", sym.get_gamma_method() );
+        }
         add_metawriter_attributes(sym_node, sym);
     }
 
@@ -134,12 +138,14 @@ public:
         {
             set_attr( sym_node, "alignment", sym.get_alignment() );
         }
-
         if ( sym.get_gamma() != dfl.get_gamma() || explicit_defaults_ )
         {
             set_attr( sym_node, "gamma", sym.get_gamma() );
         }
-
+        if ( sym.get_gamma_method() != dfl.get_gamma_method() || explicit_defaults_ )
+        {
+            set_attr( sym_node, "gamma-method", sym.get_gamma_method() );
+        }
         add_image_attributes( sym_node, sym );
         add_metawriter_attributes(sym_node, sym);
     }
@@ -407,6 +413,10 @@ private:
         if ( strk.get_gamma() != dfl.get_gamma() || explicit_defaults_ )
         {
             set_attr( node, "stroke-gamma", strk.get_gamma());
+        }
+        if ( strk.get_gamma_method() != dfl.get_gamma_method() || explicit_defaults_ )
+        {
+            set_attr( node, "stroke-gamma-method", strk.get_gamma_method() );
         }
         if ( strk.dash_offset() != dfl.dash_offset() || explicit_defaults_ )
         {
