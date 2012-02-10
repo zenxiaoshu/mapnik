@@ -45,7 +45,7 @@ void node::to_xml(boost::property_tree::ptree &xml) const
 {
     //TODO: Should this throw a config_error?
 #ifdef MAPNIK_DEBUG
-        std::cerr << "Error: Trying to write unsupported node type to XML.\n";
+    std::cerr << "Error: Trying to write unsupported node type to XML.\n";
 #endif
 }
 
@@ -75,7 +75,7 @@ node_ptr node::from_xml(boost::property_tree::ptree const& xml)
     }
 }
 
-void node::add_expressions(std::set<expression_ptr> &expressions) const
+void node::add_expressions(expression_set &output) const
 {
     //Do nothing by default
 }
@@ -104,13 +104,13 @@ void list_node::apply(char_properties const& p, Feature const& feature, processe
 }
 
 
-void list_node::add_expressions(std::set<expression_ptr> &expressions) const
+void list_node::add_expressions(expression_set &output) const
 {
     std::vector<node_ptr>::const_iterator itr = children_.begin();
     std::vector<node_ptr>::const_iterator end = children_.end();
     for (;itr != end; itr++)
     {
-        (*itr)->add_expressions(expressions);
+        (*itr)->add_expressions(output);
     }
 }
 
@@ -141,7 +141,7 @@ std::vector<node_ptr> const& list_node::get_children() const
 void text_node::to_xml(ptree &xml) const
 {
     ptree &new_node = xml.push_back(ptree::value_type(
-                             "<xmltext>", ptree()))->second;
+                                        "<xmltext>", ptree()))->second;
     new_node.put_value(to_expression_string(*text_));
 }
 
@@ -170,7 +170,7 @@ void text_node::apply(char_properties const& p, Feature const& feature, processe
         text_str = text_str.toTitle(NULL);
     }
     if (text_str.length() > 0) {
-        output.push_back(processed_text::processed_expression(p, text_str));
+        output.push_back(p, text_str);
     } else {
 #ifdef MAPNIK_DEBUG
         std::cerr << "Warning: Empty expression.\n";
@@ -179,9 +179,9 @@ void text_node::apply(char_properties const& p, Feature const& feature, processe
 }
 
 
-void text_node::add_expressions(std::set<expression_ptr> &expressions) const
+void text_node::add_expressions(expression_set &output) const
 {
-    if (text_) expressions.insert(text_);
+    if (text_) output.insert(text_);
 }
 
 
@@ -198,28 +198,20 @@ expression_ptr text_node::get_text() const
 
 /************************************************************/
 
-format_node::format_node():
-    node(),
-    fill_(),
-    child_()
-{
-
-}
-
 void format_node::to_xml(ptree &xml) const
 {
     ptree &new_node = xml.push_back(ptree::value_type("Format", ptree()))->second;
-    if (face_name_) set_attr(new_node, "face-name", *face_name_);
-    if (text_size_) set_attr(new_node, "size", *text_size_);
-    if (character_spacing_) set_attr(new_node, "character-spacing", *character_spacing_);
-    if (line_spacing_) set_attr(new_node, "line-spacing", *line_spacing_);
-    if (text_opacity_) set_attr(new_node, "opacity", *text_opacity_);
-    if (wrap_before_) set_attr(new_node, "wrap-before", *wrap_before_);
-    if (wrap_char_) set_attr(new_node, "wrap-character", *wrap_char_);
-    if (text_transform_) set_attr(new_node, "text-transform", *text_transform_);
-    if (fill_) set_attr(new_node, "fill", *fill_);
-    if (halo_fill_) set_attr(new_node, "halo-fill", *halo_fill_);
-    if (halo_radius_) set_attr(new_node, "halo-radius", *halo_radius_);
+    if (face_name) set_attr(new_node, "face-name", *face_name);
+    if (text_size) set_attr(new_node, "size", *text_size);
+    if (character_spacing) set_attr(new_node, "character-spacing", *character_spacing);
+    if (line_spacing) set_attr(new_node, "line-spacing", *line_spacing);
+    if (text_opacity) set_attr(new_node, "opacity", *text_opacity);
+    if (wrap_before) set_attr(new_node, "wrap-before", *wrap_before);
+    if (wrap_char) set_attr(new_node, "wrap-character", *wrap_char);
+    if (text_transform) set_attr(new_node, "text-transform", *text_transform);
+    if (fill) set_attr(new_node, "fill", *fill);
+    if (halo_fill) set_attr(new_node, "halo-fill", *halo_fill);
+    if (halo_radius) set_attr(new_node, "halo-radius", *halo_radius);
     if (child_) child_->to_xml(new_node);
 }
 
@@ -232,21 +224,19 @@ node_ptr format_node::from_xml(ptree const& xml)
     node_ptr child = node::from_xml(xml);
     n->set_child(child);
 
-    n->set_face_name(get_opt_attr<std::string>(xml, "face-name"));
+    n->face_name = get_opt_attr<std::string>(xml, "face-name");
     /*TODO: Fontset is problematic. We don't have the fontsets pointer here... */
-    n->set_text_size(get_opt_attr<unsigned>(xml, "size"));
-    n->set_character_spacing(get_opt_attr<unsigned>(xml, "character-spacing"));
-    n->set_line_spacing(get_opt_attr<unsigned>(xml, "line-spacing"));
-    n->set_text_opacity(get_opt_attr<double>(xml, "opactity"));
+    n->text_size = get_opt_attr<unsigned>(xml, "size");
+    n->character_spacing = get_opt_attr<unsigned>(xml, "character-spacing");
+    n->line_spacing = get_opt_attr<unsigned>(xml, "line-spacing");
+    n->text_opacity = get_opt_attr<double>(xml, "opactity");
     boost::optional<boolean> wrap = get_opt_attr<boolean>(xml, "wrap-before");
-    boost::optional<bool> wrap_before;
-    if (wrap) wrap_before = *wrap;
-    n->set_wrap_before(wrap_before);
-    n->set_wrap_char(get_opt_attr<unsigned>(xml, "wrap-character"));
-    n->set_text_transform(get_opt_attr<text_transform_e>(xml, "text-transform"));
-    n->set_fill(get_opt_attr<color>(xml, "fill"));
-    n->set_halo_fill(get_opt_attr<color>(xml, "halo-fill"));
-    n->set_halo_radius(get_opt_attr<double>(xml, "halo-radius"));
+    if (wrap) n->wrap_before = *wrap;
+    n->wrap_char = get_opt_attr<unsigned>(xml, "wrap-character");
+    n->text_transform = get_opt_attr<text_transform_e>(xml, "text-transform");
+    n->fill = get_opt_attr<color>(xml, "fill");
+    n->halo_fill = get_opt_attr<color>(xml, "halo-fill");
+    n->halo_radius = get_opt_attr<double>(xml, "halo-radius");
     return np;
 }
 
@@ -254,17 +244,17 @@ node_ptr format_node::from_xml(ptree const& xml)
 void format_node::apply(char_properties const& p, const Feature &feature, processed_text &output) const
 {
     char_properties new_properties = p;
-    if (face_name_) new_properties.face_name = *face_name_;
-    if (text_size_) new_properties.text_size = *text_size_;
-    if (character_spacing_) new_properties.character_spacing = *character_spacing_;
-    if (line_spacing_) new_properties.line_spacing = *line_spacing_;
-    if (text_opacity_) new_properties.text_opacity = *text_opacity_;
-    if (wrap_before_) new_properties.wrap_before = *wrap_before_;
-    if (wrap_char_) new_properties.wrap_char = *wrap_char_;
-    if (text_transform_) new_properties.text_transform = *text_transform_;
-    if (fill_) new_properties.fill = *fill_;
-    if (halo_fill_) new_properties.halo_fill = *halo_fill_;
-    if (halo_radius_) new_properties.halo_radius = *halo_radius_;
+    if (face_name) new_properties.face_name = *face_name;
+    if (text_size) new_properties.text_size = *text_size;
+    if (character_spacing) new_properties.character_spacing = *character_spacing;
+    if (line_spacing) new_properties.line_spacing = *line_spacing;
+    if (text_opacity) new_properties.text_opacity = *text_opacity;
+    if (wrap_before) new_properties.wrap_before = *wrap_before;
+    if (wrap_char) new_properties.wrap_char = *wrap_char;
+    if (text_transform) new_properties.text_transform = *text_transform;
+    if (fill) new_properties.fill = *fill;
+    if (halo_fill) new_properties.halo_fill = *halo_fill;
+    if (halo_radius) new_properties.halo_radius = *halo_radius;
 
     if (child_) {
         child_->apply(new_properties, feature, output);
@@ -287,68 +277,13 @@ node_ptr format_node::get_child() const
     return child_;
 }
 
-
-void format_node::set_face_name(optional<std::string> face_name)
-{
-    face_name_ = face_name;
-}
-
-void format_node::set_text_size(optional<unsigned> text_size)
-{
-    text_size_ = text_size;
-}
-
-void format_node::set_character_spacing(optional<unsigned> character_spacing)
-{
-    character_spacing_ = character_spacing;
-}
-
-void format_node::set_line_spacing(optional<unsigned> line_spacing)
-{
-    line_spacing_ = line_spacing;
-}
-
-void format_node::set_text_opacity(optional<double> text_opacity)
-{
-    text_opacity_ = text_opacity;
-}
-
-void format_node::set_wrap_before(optional<bool> wrap_before)
-{
-    wrap_before_ = wrap_before;
-}
-
-void format_node::set_wrap_char(optional<unsigned> wrap_char)
-{
-    wrap_char_ = wrap_char;
-}
-
-void format_node::set_text_transform(optional<text_transform_e> text_transform)
-{
-    text_transform_ = text_transform;
-}
-
-void format_node::set_fill(optional<color> c)
-{
-    fill_ = c;
-}
-
-void format_node::set_halo_fill(optional<color> c)
-{
-    halo_fill_ = c;
-}
-
-void format_node::set_halo_radius(optional<double> radius)
-{
-    halo_radius_ = radius;
-}
 } //namespace formating
 
 /************************************************************/
 
-void processed_text::push_back(processed_expression const& exp)
+void processed_text::push_back(char_properties const& properties, UnicodeString const& text)
 {
-    expr_list_.push_back(exp);
+    expr_list_.push_back(processed_expression(properties, text));
 }
 
 processed_text::expression_list::const_iterator processed_text::begin() const

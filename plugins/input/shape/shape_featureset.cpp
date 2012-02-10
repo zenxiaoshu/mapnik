@@ -32,7 +32,7 @@
 using mapnik::geometry_type;
 using mapnik::feature_factory;
 using mapnik::context_ptr;
-                      
+
 template <typename filterT>
 shape_featureset<filterT>::shape_featureset(filterT const& filter,
                                             std::string const& shape_name,
@@ -46,9 +46,9 @@ shape_featureset<filterT>::shape_featureset(filterT const& filter,
       tr_(new transcoder(encoding)),
       file_length_(file_length),
       row_limit_(row_limit),
-      count_(0)
+      count_(0),
+      ctx_(boost::make_shared<mapnik::context_type>())
 {
-    ctx_ = boost::make_shared<mapnik::context_type>();
     shape_.shp().skip(100);
     setup_attributes(ctx_, attribute_names, shape_name, shape_,attr_ids_);
 }
@@ -216,11 +216,11 @@ feature_ptr shape_featureset<filterT>::next()
             case shape_io::shape_polylinem:
             case shape_io::shape_polylinez:
             {
-                shape_.read_polyline(feature->paths());                
+                shape_.read_polyline(feature->paths());
                 ++count_;
                 break;
             }
-            
+
             case shape_io::shape_polygon:
             case shape_io::shape_polygonm:
             case shape_io::shape_polygonz:

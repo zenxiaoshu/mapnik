@@ -217,11 +217,10 @@ void text_symbolizer_properties::to_xml(boost::property_tree::ptree &node, bool 
 }
 
 
-std::set<expression_ptr> text_symbolizer_properties::get_all_expressions() const
+void text_symbolizer_properties::add_expressions(expression_set &output) const
 {
-    std::set<expression_ptr> result;
-    if (tree_) tree_->add_expressions(result);
-    return result;
+    output.insert(orientation);
+    if (tree_) tree_->add_expressions(output);
 }
 
 void text_symbolizer_properties::set_old_style_expression(expression_ptr expr)
@@ -356,20 +355,16 @@ text_placements::text_placements() : properties()
 {
 }
 
-std::set<expression_ptr> text_placements::get_all_expressions()
+void text_placements::add_expressions(expression_set &output)
 {
-    std::set<expression_ptr> result, tmp;
-    tmp = properties.get_all_expressions();
-    result.insert(tmp.begin(), tmp.end());
-    result.insert(properties.orientation);
-    return result;
+    properties.add_expressions(output);
 }
 
 
 /************************************************************************/
 
 text_placement_info::text_placement_info(text_placements const* parent,
-    double scale_factor_, dimension_type dim, bool has_dimensions_)
+                                         double scale_factor_, dimension_type dim, bool has_dimensions_)
     : properties(parent->properties),
       scale_factor(scale_factor_),
       has_dimensions(has_dimensions_),
@@ -390,7 +385,7 @@ text_placement_info_ptr text_placements_dummy::get_placement_info(
     double scale_factor, dimension_type dim, bool has_dimensions) const
 {
     return text_placement_info_ptr(new text_placement_info_dummy(
-        this, scale_factor, dim, has_dimensions));
+                                       this, scale_factor, dim, has_dimensions));
 }
 
 /************************************************************************/
@@ -458,20 +453,20 @@ text_placement_info_ptr text_placements_simple::get_placement_info(
     double scale_factor, dimension_type dim, bool has_dimensions) const
 {
     return text_placement_info_ptr(new text_placement_info_simple(this,
-        scale_factor, dim, has_dimensions));
+                                                                  scale_factor, dim, has_dimensions));
 }
 
 /** Position string: [POS][SIZE]
-  * [POS] is any combination of
-  * N, E, S, W, NE, SE, NW, SW, X (exact position) (separated by commas)
-  * [SIZE] is a list of font sizes, separated by commas. The first font size
-  * is always the one given in the TextSymbolizer's parameters.
-  * First all directions are tried, then font size is reduced
-  * and all directions are tried again. The process ends when a placement is
-  * found or the last fontsize is tried without success.
-  * Example: N,S,15,10,8 (tries placement above, then below and if
-  *    that fails it tries the additional font sizes 15, 10 and 8.
-  */
+ * [POS] is any combination of
+ * N, E, S, W, NE, SE, NW, SW, X (exact position) (separated by commas)
+ * [SIZE] is a list of font sizes, separated by commas. The first font size
+ * is always the one given in the TextSymbolizer's parameters.
+ * First all directions are tried, then font size is reduced
+ * and all directions are tried again. The process ends when a placement is
+ * found or the last fontsize is tried without success.
+ * Example: N,S,15,10,8 (tries placement above, then below and if
+ *    that fails it tries the additional font sizes 15, 10 and 8.
+ */
 void text_placements_simple::set_positions(std::string positions)
 {
     positions_ = positions;
@@ -489,16 +484,16 @@ void text_placements_simple::set_positions(std::string positions)
                 ("NW", NORTHWEST)
                 ("SW", SOUTHWEST)
                 ("X" , EXACT_POSITION)
-            ;
+                ;
         }
 
     } direction_name;
 
     std::string::iterator first = positions.begin(),  last = positions.end();
     qi::phrase_parse(first, last,
-		     (direction_name[push_back(phoenix::ref(direction_), _1)] % ',') >> *(',' >> qi::float_[push_back(phoenix::ref(text_sizes_), _1)]),
-		     space
-    );
+                     (direction_name[push_back(phoenix::ref(direction_), _1)] % ',') >> *(',' >> qi::float_[push_back(phoenix::ref(text_sizes_), _1)]),
+                     space
+        );
     if (first != last) {
         std::cerr << "WARNING: Could not parse text_placement_simple placement string ('" << positions << "').\n";
     }
@@ -558,7 +553,7 @@ text_placement_info_ptr text_placements_list::get_placement_info(
     double scale_factor, dimension_type dim, bool has_dimensions) const
 {
     return text_placement_info_ptr(new text_placement_info_list(this,
-        scale_factor, dim, has_dimensions));
+                                                                scale_factor, dim, has_dimensions));
 }
 
 text_placements_list::text_placements_list() : text_placements(), list_(0)
@@ -566,21 +561,15 @@ text_placements_list::text_placements_list() : text_placements(), list_(0)
 
 }
 
-std::set<expression_ptr> text_placements_list::get_all_expressions()
+void text_placements_list::add_expressions(expression_set &output)
 {
-    std::set<expression_ptr> result, tmp;
-    tmp = properties.get_all_expressions();
-    result.insert(tmp.begin(), tmp.end());
-    result.insert(properties.orientation);
+    properties.add_expressions(output);
 
     std::vector<text_symbolizer_properties>::const_iterator it;
     for (it=list_.begin(); it != list_.end(); it++)
     {
-        tmp = it->get_all_expressions();
-        result.insert(tmp.begin(), tmp.end());
-        result.insert(it->orientation);
+        it->add_expressions(output);
     }
-    return result;
 }
 
 unsigned text_placements_list::size() const

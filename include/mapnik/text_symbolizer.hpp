@@ -36,8 +36,7 @@
 // stl
 #include <string>
 
-// Warning disabled for the moment
-#if (0 && __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#if (1 && __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 #define func_deprecated __attribute__ ((deprecated))
 #else
 #define func_deprecated
@@ -54,10 +53,10 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base
     text_symbolizer(expression_ptr name, std::string const& face_name,
                     float size, color const& fill,
                     text_placements_ptr placements = text_placements_ptr(new text_placements_dummy)
-                    );
+        );
     text_symbolizer(expression_ptr name, float size, color const& fill,
                     text_placements_ptr placements = text_placements_ptr(new text_placements_dummy)
-                    );
+        );
     text_symbolizer(text_symbolizer const& rhs);
     text_symbolizer& operator=(text_symbolizer const& rhs);
     expression_ptr get_name() const func_deprecated;
@@ -65,7 +64,7 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base
 
     expression_ptr get_orientation() const func_deprecated; // orienation (rotation angle atm)
     void set_orientation(expression_ptr expr);
-         
+
     unsigned get_text_ratio() const func_deprecated; // target ratio for text bounding box in pixels
     void set_text_ratio(unsigned ratio);
     unsigned get_wrap_width() const func_deprecated; // width to wrap text at, or trigger ratio
@@ -114,7 +113,7 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base
     void set_minimum_padding(double distance);
     double get_minimum_padding() const func_deprecated;
     void set_minimum_path_length(double size);
-    double get_minimum_path_length() const func_deprecated;
+    double get_minimum_path_length() const;
     void set_allow_overlap(bool overlap);
     bool get_allow_overlap() const func_deprecated;
     void set_text_opacity(double opacity);

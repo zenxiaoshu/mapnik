@@ -42,6 +42,8 @@ namespace mapnik
 class processed_text;
 struct char_properties;
 
+typedef std::set<expression_ptr> expression_set;
+
 enum label_placement_enum {
     POINT_PLACEMENT,
     LINE_PLACEMENT,
@@ -104,7 +106,7 @@ public:
     virtual void to_xml(boost::property_tree::ptree &xml) const;
     static node_ptr from_xml(boost::property_tree::ptree const& xml);
     virtual void apply(char_properties const& p, Feature const& feature, processed_text &output) const = 0;
-    virtual void add_expressions(std::set<expression_ptr> &expressions) const;
+    virtual void add_expressions(expression_set &output) const;
 };
 
 class list_node: public node {
@@ -112,7 +114,7 @@ public:
     list_node() : node(), children_() {}
     virtual void to_xml(boost::property_tree::ptree &xml) const;
     virtual void apply(char_properties const& p, Feature const& feature, processed_text &output) const;
-    virtual void add_expressions(std::set<expression_ptr> &expressions) const;
+    virtual void add_expressions(expression_set &output) const;
 
     void push_back(node_ptr n);
     void set_children(std::vector<node_ptr> const& children);
@@ -128,7 +130,7 @@ public:
     void to_xml(boost::property_tree::ptree &xml) const;
     static node_ptr from_xml(boost::property_tree::ptree const& xml);
     virtual void apply(char_properties const& p, Feature const& feature, processed_text &output) const;
-    virtual void add_expressions(std::set<expression_ptr> &expressions) const;
+    virtual void add_expressions(expression_set &output) const;
 
     void set_text(expression_ptr text);
     expression_ptr get_text() const;
@@ -138,7 +140,6 @@ private:
 
 class format_node: public node {
 public:
-    format_node();
     void to_xml(boost::property_tree::ptree &xml) const;
     static node_ptr from_xml(boost::property_tree::ptree const& xml);
     virtual void apply(char_properties const& p, Feature const& feature, processed_text &output) const;
@@ -146,29 +147,19 @@ public:
     void set_child(node_ptr child);
     node_ptr get_child() const;
 
-    void set_face_name(boost::optional<std::string> face_name);
-    void set_text_size(boost::optional<unsigned> text_size);
-    void set_character_spacing(boost::optional<unsigned> character_spacing);
-    void set_line_spacing(boost::optional<unsigned> line_spacing);
-    void set_text_opacity(boost::optional<double> opacity);
-    void set_wrap_before(boost::optional<bool> wrap_before);
-    void set_wrap_char(boost::optional<unsigned> wrap_char);
-    void set_text_transform(boost::optional<text_transform_e> text_trans);
-    void set_fill(boost::optional<color> fill);
-    void set_halo_fill(boost::optional<color> halo_fill);
-    void set_halo_radius(boost::optional<double> radius);
+    boost::optional<std::string> face_name;
+    boost::optional<unsigned> text_size;
+    boost::optional<unsigned> character_spacing;
+    boost::optional<unsigned> line_spacing;
+    boost::optional<double> text_opacity;
+    boost::optional<bool> wrap_before;
+    boost::optional<unsigned> wrap_char;
+    boost::optional<text_transform_e> text_transform;
+    boost::optional<color> fill;
+    boost::optional<color> halo_fill;
+    boost::optional<double> halo_radius;
+
 private:
-    boost::optional<std::string> face_name_;
-    boost::optional<unsigned> text_size_;
-    boost::optional<unsigned> character_spacing_;
-    boost::optional<unsigned> line_spacing_;
-    boost::optional<double> text_opacity_;
-    boost::optional<bool> wrap_before_;
-    boost::optional<unsigned> wrap_char_;
-    boost::optional<text_transform_e> text_transform_;
-    boost::optional<color> fill_;
-    boost::optional<color> halo_fill_;
-    boost::optional<double> halo_radius_;
     node_ptr child_;
 };
 
