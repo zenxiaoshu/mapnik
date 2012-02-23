@@ -2,7 +2,7 @@
  *
  * This file is part of Mapnik (c++ mapping toolkit)
  *
- * Copyright (C) 2011 Artem Pavlenko
+ * Copyright (C) 2012 Artem Pavlenko
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,33 +19,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
+#ifndef FORMATTING_LIST_HPP
+#define FORMATTING_LIST_HPP
 
-#ifndef MAPNIK_GAMMA_HPP
-#define MAPNIK_GAMMA_HPP
+#include <mapnik/formatting/base.hpp>
 
-#include <cmath>
+namespace mapnik {
+namespace formatting {
+class list_node: public node {
+public:
+    list_node() : node(), children_() {}
+    virtual void to_xml(boost::property_tree::ptree &xml) const;
+    virtual void apply(char_properties const& p, Feature const& feature, processed_text &output) const;
+    virtual void add_expressions(expression_set &output) const;
 
-namespace mapnik
-{
-struct MAPNIK_DECL gamma
-{
-    unsigned char g2l[256];
-    unsigned char l2g[256];
-    gamma(double gamma=2.0)
-    {
-        int result;
-        for (int i=0;i< 256;i++)
-        {
-            result=(int)(std::pow(i/255.0,gamma) * 255.0 + 0.5);
-            g2l[i]=(unsigned char)result;
-        }
-        for (int i = 0; i < 256; i++)
-        {
-            result = (int)(std::pow(i/255.0, 1/gamma) * 255.0 + 0.5);
-            l2g[i] = (unsigned char)result;
-        }
-    }
+    void push_back(node_ptr n);
+    void set_children(std::vector<node_ptr> const& children);
+    std::vector<node_ptr> const& get_children() const;
+    void clear();
+protected:
+    std::vector<node_ptr> children_;
 };
-}
+} //ns formatting
+} //ns mapnik
 
-#endif // MAPNIK_GAMMA_HPP
+#endif // FORMATTING_LIST_HPP
+

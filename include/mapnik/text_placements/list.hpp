@@ -21,7 +21,7 @@
  *****************************************************************************/
 #ifndef TEXT_PLACEMENTS_LIST_HPP
 #define TEXT_PLACEMENTS_LIST_HPP
-#include <mapnik/text_placements.hpp>
+#include <mapnik/text_placements/base.hpp>
 
 namespace mapnik {
 
@@ -39,6 +39,7 @@ public:
     text_symbolizer_properties & add();
     text_symbolizer_properties & get(unsigned i);
     unsigned size() const;
+    static text_placements_ptr from_xml(boost::property_tree::ptree const &xml, fontset_map const & fontsets);
 private:
     std::vector<text_symbolizer_properties> list_;
     friend class text_placement_info_list;

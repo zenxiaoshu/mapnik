@@ -60,16 +60,14 @@ void  grid_renderer<T>::process(shield_symbolizer const& sym,
         placement_found = true;
         for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
         {
-            std::pair<int, int> marker_pos = helper.get_marker_position(placement->placements[ii]);
+            pixel_position marker_pos = helper.get_marker_position(placement->placements[ii]);
             render_marker(feature, pixmap_.get_resolution(),
-                          marker_pos.first, marker_pos.second,
+                          marker_pos,
                           helper.get_marker(), helper.get_transform(),
                           sym.get_opacity());
 
-            double x = floor(placement->placements[ii].starting_x);
-            double y = floor(placement->placements[ii].starting_y);
             ren.prepare_glyphs(&(placement->placements[ii]));
-            ren.render_id(feature->id(), x, y, 2);
+            ren.render_id(feature->id(),placement->placements[ii].center, 2);
         }
     }
     if (placement_found)

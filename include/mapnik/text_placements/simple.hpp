@@ -24,7 +24,7 @@
 #define MAPNIK_TEXT_PLACEMENTS_SIMPLE_HPP
 
 // mapnik
-#include <mapnik/text_placements.hpp>
+#include <mapnik/text_placements/base.hpp>
 
 namespace mapnik {
 
@@ -53,6 +53,7 @@ public:
         double scale_factor, dimension_type dim, bool has_dimensions) const;
     void set_positions(std::string positions);
     std::string get_positions();
+    static text_placements_ptr from_xml(boost::property_tree::ptree const &xml, fontset_map const & fontsets);
 private:
     std::string positions_;
     std::vector<directions_t> direction_;

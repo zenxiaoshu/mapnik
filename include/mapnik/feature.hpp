@@ -128,7 +128,9 @@ public:
             data_[itr->second] = val;
         }
         else
-            throw std::out_of_range("Key doesn't exist");
+        {
+            throw std::out_of_range(std::string("Key does not exist: '") + key + "'");
+        }
     }
 
 
@@ -157,21 +159,26 @@ public:
     value_type const& get(context_type::key_type const& key) const
     {
         context_type::map_type::const_iterator itr = ctx_->mapping_.find(key);
-        if (itr != ctx_->mapping_.end()
-            && itr->second < data_.size())
-        {
-            return data_[itr->second];
-        }
-        throw std::out_of_range("Key doesn't exist");
+        if (itr != ctx_->mapping_.end())
+            return get(itr->second);        
+        else        
+            throw std::out_of_range(std::string("Key does not exist: '") + key + "'");    
     }
-
+    
     value_type const& get(std::size_t index) const
     {
         if (index < data_.size())
             return data_[index];
         throw std::out_of_range("Index out of range");
     }
-
+    
+    boost::optional<value_type const&> get_optional(std::size_t index) const
+    {
+        if (index < data_.size())
+            return boost::optional<value_type const&>(data_[index]);
+        return boost::optional<value_type const&>();
+    }
+    
     std::size_t size() const
     {
         return data_.size();
@@ -254,12 +261,16 @@ public:
     std::string to_string() const
     {
         std::stringstream ss;
-        ss << "Feature (" << std::endl;
+        ss << "Feature ( id=" << id_ << std::endl;
         context_type::map_type::const_iterator itr = ctx_->mapping_.begin();
         context_type::map_type::const_iterator end = ctx_->mapping_.end();
         for ( ;itr!=end; ++itr)
         {
-            ss << "  " << itr->first  << ":" <<  data_[itr->second] << std::endl;
+            std::size_t index = itr->second;
+            if (index < data_.size())
+            {
+                ss << "  " << itr->first  << ":" <<  data_[itr->second] << std::endl;
+            }          
         }
         ss << ")" << std::endl;
         return ss.str();

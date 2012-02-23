@@ -27,7 +27,6 @@
 #include <mapnik/cairo_renderer.hpp>
 #include <mapnik/image_util.hpp>
 #include <mapnik/unicode.hpp>
-#include <mapnik/placement_finder.hpp>
 #include <mapnik/markers_placement.hpp>
 #include <mapnik/arrow.hpp>
 #include <mapnik/config_error.hpp>
@@ -575,8 +574,8 @@ public:
                   cairo_face_manager & manager,
                   face_manager<freetype_engine> &font_manager)
     {
-        double sx = path.starting_x;
-        double sy = path.starting_y;
+        double sx = path.center.x;
+        double sy = path.center.y;
 
         path.rewind();
 
@@ -885,7 +884,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         }
     }
 
-    void cairo_renderer_base::render_marker(const int x, const int y, marker &marker, const agg::trans_affine & tr, double opacity)
+    void cairo_renderer_base::render_marker(pixel_position const& pos, marker const& marker, const agg::trans_affine & tr, double opacity)
 
     {
         cairo_context context(context_);
@@ -900,7 +899,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
             // apply symbol transformation to get to map space
             mtx *= tr;
             // render the marker at the center of the marker box
-            mtx.translate(x+0.5 * marker.width(), y+0.5 * marker.height());
+            mtx.translate(pos.x+0.5 * marker.width(), pos.y+0.5 * marker.height());
 
             typedef coord_transform2<CoordTransform,geometry_type> path_type;
             mapnik::path_ptr vmarker = *marker.get_vector_data();
@@ -982,7 +981,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         }
         else if (marker.is_bitmap())
         {
-            context.add_image(x, y, **marker.get_bitmap_data(), opacity);
+            context.add_image(pos.x, pos.y, **marker.get_bitmap_data(), opacity);
         }
     }
 
@@ -1032,7 +1031,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
                     boost::array<double,6> const& m = sym.get_transform();
                     mtx.load_from(&m[0]);
 
-                    render_marker(px,py,**marker, mtx, sym.get_opacity());
+                    render_marker(pixel_position(px,py),**marker, mtx, sym.get_opacity());
 
                     if (!sym.get_ignore_placement())
                         detector_.insert(label_ext);
@@ -1063,8 +1062,8 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         while ((placement = helper.get_placement())) {
             for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
             {
-                std::pair<int, int> marker_pos = helper.get_marker_position(placement->placements[ii]);
-                render_marker(marker_pos.first, marker_pos.second,
+                pixel_position marker_pos = helper.get_marker_position(placement->placements[ii]);
+                render_marker(marker_pos,
                               helper.get_marker(), helper.get_transform(),
                               sym.get_opacity());
                 context.add_text(placement->placements[ii], face_manager_, font_manager_);

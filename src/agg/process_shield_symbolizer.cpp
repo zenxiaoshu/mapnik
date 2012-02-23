@@ -54,13 +54,11 @@ void  agg_renderer<T>::process(shield_symbolizer const& sym,
     while ((placement = helper.get_placement())) {
         for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
         {
-            std::pair<int, int> marker_pos = helper.get_marker_position(placement->placements[ii]);
-            render_marker(marker_pos.first, marker_pos.second, helper.get_marker(), helper.get_transform(), sym.get_opacity());
+            pixel_position marker_pos = helper.get_marker_position(placement->placements[ii]);
+            render_marker(marker_pos, helper.get_marker(), helper.get_transform(), sym.get_opacity());
 
-            double x = placement->placements[ii].starting_x;
-            double y = placement->placements[ii].starting_y;
             ren.prepare_glyphs(&(placement->placements[ii]));
-            ren.render(x, y);
+            ren.render(placement->placements[ii].center);
         }
     }
 }
