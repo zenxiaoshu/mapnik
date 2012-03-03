@@ -25,35 +25,19 @@
 
 // mapnik
 
-// boost
-#include <boost/spirit/include/qi.hpp>
-
 // stl
 #include <string>
 
 namespace mapnik { namespace conversions {
 
-using namespace boost::spirit;
-
-static bool string2int(std::string const& value, int * result)
-{
-    if (value.empty())
-        return false;
-    std::string::const_iterator str_beg = value.begin();
-    std::string::const_iterator str_end = value.end();
-    bool r = qi::phrase_parse(str_beg,str_end,qi::int_,ascii::space,*result);
-    return r && (str_beg == str_end);
-}
-
-static bool string2double(std::string const& value, double * result)
-{
-    if (value.empty())
-        return false;
-    std::string::const_iterator str_beg = value.begin();
-    std::string::const_iterator str_end = value.end();
-    bool r = qi::phrase_parse(str_beg,str_end,qi::double_,ascii::space,*result);
-    return r && (str_beg == str_end);
-}
+bool string2int(const char * value, int & result);
+bool string2int(std::string const& value, int & result);
+    
+bool string2double(std::string const& value, double & result);
+bool string2double(const char * value, double & result);
+    
+bool string2float(std::string const& value, float & result);
+bool string2float(const char * value, float & result);
 
 }
 }

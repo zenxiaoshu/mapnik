@@ -29,7 +29,12 @@
 
 // boost
 #include <boost/utility.hpp>
+#include <boost/version.hpp>
 #include <boost/unordered_map.hpp>
+#if BOOST_VERSION >= 104600
+#include <boost/range/algorithm.hpp>
+#endif
+#include <boost/scoped_ptr.hpp>
 
 // stl
 #include <vector>
@@ -121,7 +126,7 @@ class hextree : private boost::noncopyable
     unsigned colors_;
     // flag indicating existance of invisible pixels (a < InsertPolicy::MIN_ALPHA)
     bool has_holes_;
-    node * root_;
+    boost::scoped_ptr<node> root_;
     // working palette for quantization, sorted on mean(r,g,b,a) for easier searching NN
     std::vector<rgba> sorted_pal_;
     // index remaping of sorted_pal_ indexes to indexes of returned image palette
@@ -154,10 +159,8 @@ public:
     }
 
     ~hextree()
-    {
-        delete root_;
-    }
-
+    {}
+    
     void setMaxColors(unsigned max_colors)
     {
         max_colors_ = max_colors;
@@ -200,7 +203,7 @@ public:
     {
         byte a = preprocessAlpha(data.a);
         unsigned level = 0;
-        node * cur_node = root_;
+        node * cur_node = root_.get();
         if (a < InsertPolicy::MIN_ALPHA)
         {
             has_holes_ = true;
@@ -255,8 +258,13 @@ public:
             int dist, newdist;
 
             // find closest match based on mean of r,g,b,a
+#if BOOST_VERSION >= 104600
             std::vector<rgba>::const_iterator pit =
-                std::lower_bound(sorted_pal_.begin(), sorted_pal_.end(), c, rgba::mean_sort_cmp());
+                boost::lower_bound(sorted_pal_, c, rgba::mean_sort_cmp());
+#else
+            std::vector<rgba>::const_iterator pit =
+                std::lower_bound(sorted_pal_.begin(),sorted_pal_.end(), c, rgba::mean_sort_cmp());
+#endif
             ind = pit-sorted_pal_.begin();
             if (ind == sorted_pal_.size())
                 ind--;
@@ -326,13 +334,14 @@ public:
         assign_node_colors();
 
         sorted_pal_.reserve(colors_);
-        create_palette_rek(sorted_pal_, root_);
-        delete root_;
-        root_ = new node();
-
+        create_palette_rek(sorted_pal_, root_.get());
+   
         // sort palette for binary searching in quantization
+#if BOOST_VERSION >= 104600
+        boost::sort(sorted_pal_, rgba::mean_sort_cmp());
+#else
         std::sort(sorted_pal_.begin(), sorted_pal_.end(), rgba::mean_sort_cmp());
-
+#endif
         // returned palette is rearanged, so that colors with a<255 are at the begining
         pal_remap_.resize(sorted_pal_.size());
         palette.clear();
@@ -452,7 +461,7 @@ private:
     // until all available colors are assigned to processed nodes
     void assign_node_colors()
     {
-        compute_cost(root_);
+        compute_cost(root_.get());
 
         int tries = 0;
 
@@ -461,7 +470,7 @@ private:
         root_->count = root_->pixel_count;
 
         std::set<node*,node_rev_cmp> colored_leaves_heap;
-        colored_leaves_heap.insert(root_);
+        colored_leaves_heap.insert(root_.get());
         while((!colored_leaves_heap.empty() && (colors_ < max_colors_) && (tries < 16)))
         {
             // select worst node to remove it from palette and replace with children
