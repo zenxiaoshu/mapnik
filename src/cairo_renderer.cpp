@@ -39,6 +39,7 @@
 #include <mapnik/expression_evaluator.hpp>
 #include <mapnik/warp.hpp>
 #include <mapnik/config.hpp>
+#include <mapnik/text_path.hpp>
 
 // cairo
 #include <cairomm/context.h>
@@ -581,17 +582,16 @@ public:
 
         for (int iii = 0; iii < path.num_nodes(); iii++)
         {
-            int c;
+            char_info_ptr c;
             double x, y, angle;
-            char_properties *format;
 
-            path.vertex(&c, &x, &y, &angle, &format);
+            path.vertex(&c, &x, &y, &angle);
 
-            face_set_ptr faces = font_manager.get_face_set(format->face_name, format->fontset);
-            float text_size = format->text_size;
+            face_set_ptr faces = font_manager.get_face_set(c->format->face_name, c->format->fontset);
+            float text_size = c->format->text_size;
             faces->set_character_sizes(text_size);
 
-            glyph_ptr glyph = faces->get_glyph(c);
+            glyph_ptr glyph = faces->get_glyph(c->c);
 
             if (glyph)
             {
@@ -609,11 +609,11 @@ public:
                 set_font_face(manager, glyph->get_face());
 
                 glyph_path(glyph->get_index(), sx + x, sy - y);
-                set_line_width(format->halo_radius);
+                set_line_width(c->format->halo_radius);
                 set_line_join(ROUND_JOIN);
-                set_color(format->halo_fill);
+                set_color(c->format->halo_fill);
                 stroke();
-                set_color(format->fill);
+                set_color(c->format->fill);
                 show_glyph(glyph->get_index(), sx + x, sy - y);
             }
         }
@@ -1058,15 +1058,15 @@ void cairo_renderer_base::start_map_processing(Map const& map)
 
         cairo_context context(context_);
 
-        text_placement_info_ptr placement;
-        while ((placement = helper.get_placement())) {
-            for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
+        while (helper.next()) {
+            placements_type &placements = helper.placements();
+            for (unsigned int ii = 0; ii < placements.size(); ++ii)
             {
-                pixel_position marker_pos = helper.get_marker_position(placement->placements[ii]);
+                pixel_position marker_pos = helper.get_marker_position(placements[ii]);
                 render_marker(marker_pos,
                               helper.get_marker(), helper.get_transform(),
                               sym.get_opacity());
-                context.add_text(placement->placements[ii], face_manager_, font_manager_);
+                context.add_text(placements[ii], face_manager_, font_manager_);
             }
         }
     }
@@ -1255,11 +1255,12 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         text_symbolizer_helper<face_manager<freetype_engine>, label_collision_detector4> helper(sym, *feature, prj_trans, detector_.extent().width(), detector_.extent().height(), 1.0 /*scale_factor*/, t_, font_manager_, detector_);
 
         cairo_context context(context_);
-        text_placement_info_ptr placement;
-        while ((placement = helper.get_placement())) {
-            for (unsigned int ii = 0; ii < placement->placements.size(); ++ii)
+
+        while (helper.next()) {
+            placements_type &placements = helper.placements();
+            for (unsigned int ii = 0; ii < placements.size(); ++ii)
             {
-                context.add_text(placement->placements[ii], face_manager_, font_manager_);
+                context.add_text(placements[ii], face_manager_, font_manager_);
             }
         }
     }
