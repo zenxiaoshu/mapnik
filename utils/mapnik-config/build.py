@@ -16,16 +16,16 @@ config_variables = '''#!/bin/sh
 
 ## variables
 
-CONFIG_PREFIX=%(prefix)s
+CONFIG_PREFIX="$( cd "$( dirname $( dirname "${BASH_SOURCE[0]}" ))" && pwd )"
 CONFIG_MAPNIK_LIBNAME=%(mapnik_libname)s
 CONFIG_MAPNIK_INCLUDE=${CONFIG_PREFIX}/include
 CONFIG_MAPNIK_LIB=${CONFIG_PREFIX}/%(libdir_schema)s
 CONFIG_MAPNIK_VERSION='%(version)s'
-CONFIG_MAPNIK_LDFLAGS='%(ldflags)s'
-CONFIG_DEP_LIBS='%(dep_libs)s'
-CONFIG_OTHER_INCLUDES='%(other_includes)s'
-CONFIG_FONTS='%(fonts)s'
-CONFIG_INPUT_PLUGINS='%(input_plugins)s'
+CONFIG_MAPNIK_LDFLAGS=''
+CONFIG_DEP_LIBS=''
+CONFIG_OTHER_INCLUDES="-I${CONFIG_PREFIX}/include -I${CONFIG_PREFIX}/include/freetype2 -DHAVE_JPEG -DBOOST_REGEX_HAS_ICU -DMAPNIK_THREADSAFE"
+CONFIG_FONTS="%(fonts)s"
+CONFIG_INPUT_PLUGINS="%(input_plugins)s"
 CONFIG_GIT_REVISION='%(git_revision)s'
 
 '''
