@@ -34,7 +34,6 @@
 // agg
 #include "agg_path_length.h"
 #include "agg_conv_clip_polyline.h"
-
 // boost
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
@@ -438,10 +437,11 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
                    current_placement->center.y - dy - ci.ymax);
 
             // if there is an overlap with existing envelopes, then exit - no placement
+
             if (!detector_.extent().intersects(e) ||
-                (!p.allow_overlap && !detector_.has_point_placement(e, pi.get_actual_minimum_distance()))
-               )
-            {
+                (!p.allow_overlap &&
+                 !detector_.has_point_placement(e, pi.get_actual_minimum_distance())))                
+            {              
                 return;
             }
 
@@ -907,7 +907,10 @@ bool placement_finder<DetectorT>::test_placement(std::auto_ptr<text_path> const&
                             y - (cwidth*sina + ci.height()*cosa));
 
         if (!detector_.extent().intersects(e) ||
-            !detector_.has_placement(e, info_.get_string(), pi.get_actual_minimum_distance()))
+            (!p.allow_overlap &&
+             !detector_.has_placement(e, info_.get_string(), pi.get_actual_minimum_distance())
+            )
+           )
         {
             //std::clog << "No Intersects:" << !dimensions_.intersects(e) << ": " << e << " @ " << dimensions_ << std::endl;
             //std::clog << "No Placements:" << !detector_.has_placement(e, info.get_string(), p.minimum_distance) << std::endl;
@@ -1014,7 +1017,8 @@ void placement_finder<DetectorT>::clear_placements()
     while (!envelopes_.empty()) envelopes_.pop();
 }
 
-typedef coord_transform2<CoordTransform,geometry_type> PathType;
+typedef agg::conv_clip_polyline<geometry_type> clipped_geometry_type;
+typedef coord_transform2<CoordTransform,clipped_geometry_type> PathType;
 typedef label_collision_detector4 DetectorType;
 
 template class placement_finder<DetectorType>;

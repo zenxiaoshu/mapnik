@@ -94,7 +94,7 @@ public:
         expr_grammar_(tr_)
         {}
 
-    void parse_map(Map & map, ptree const & sty, std::string const& base_path="");
+    void parse_map(Map & map, ptree const & sty, std::string const& base_path);
 private:
     void parse_map_include( Map & map, ptree const & include);
     void parse_style(Map & map, ptree const & sty);
@@ -181,7 +181,8 @@ void load_map(Map & map, std::string const& filename, bool strict)
     }
 #endif
     map_parser parser( strict, filename);
-    parser.parse_map(map, pt);
+    std::string base_path("");
+    parser.parse_map(map, pt, base_path);
 }
 
 void load_map_string(Map & map, std::string const& str, bool strict, std::string base_path)
@@ -1675,7 +1676,7 @@ void map_parser::parse_raster_symbolizer( rule & rule, ptree const & sym )
 
             if (css_tag.first == "RasterColorizer")
             {
-                raster_colorizer_ptr colorizer(new raster_colorizer());
+                raster_colorizer_ptr colorizer = boost::make_shared<raster_colorizer>();
                 raster_sym.set_colorizer(colorizer);
                 parse_raster_colorizer(colorizer, css_tag.second);
             }
