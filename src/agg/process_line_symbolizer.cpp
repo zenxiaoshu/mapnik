@@ -52,7 +52,7 @@ void agg_renderer<T>::process(line_symbolizer const& sym,
 {
     typedef agg::renderer_base<agg::pixfmt_rgba32_plain> ren_base;
     typedef agg::conv_clip_polyline<geometry_type> clipped_geometry_type;
-    typedef coord_transform2<CoordTransform,clipped_geometry_type> path_type;
+    typedef coord_transform2<CoordTransform,geometry_type> path_type;
 
     stroke const& stroke_ = sym.get_stroke();
     color const& col = stroke_.get_color();
@@ -86,9 +86,9 @@ void agg_renderer<T>::process(line_symbolizer const& sym,
             geometry_type & geom = feature->get_geometry(i);
             if (geom.num_points() > 1)
             {
-                clipped_geometry_type clipped(geom);
-                clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
-                path_type path(t_,clipped,prj_trans);
+                //clipped_geometry_type clipped(geom);
+                //clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
+                path_type path(t_,geom,prj_trans);
                 ras.add_path(path);
             }
         }
@@ -129,9 +129,9 @@ void agg_renderer<T>::process(line_symbolizer const& sym,
             geometry_type & geom = feature->get_geometry(i);
             if (geom.num_points() > 1)
             {
-                clipped_geometry_type clipped(geom);
-                clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
-                path_type path(t_,clipped,prj_trans);
+                //clipped_geometry_type clipped(geom);
+                //clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
+                path_type path(t_,geom,prj_trans);
                 
                 if (stroke_.has_dash())
                 {

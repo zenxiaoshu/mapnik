@@ -49,7 +49,7 @@ void agg_renderer<T>::process(polygon_pattern_symbolizer const& sym,
                               proj_transform const& prj_trans)
 {
     typedef agg::conv_clip_polygon<geometry_type> clipped_geometry_type;
-    typedef coord_transform2<CoordTransform,clipped_geometry_type> path_type;
+    typedef coord_transform2<CoordTransform,geometry_type> path_type;
     typedef agg::renderer_base<agg::pixfmt_rgba32_plain> ren_base;
     typedef agg::wrap_mode_repeat wrap_x_type;
     typedef agg::wrap_mode_repeat wrap_y_type;
@@ -136,9 +136,9 @@ void agg_renderer<T>::process(polygon_pattern_symbolizer const& sym,
         double x0=0,y0=0;
         if (num_geometries>0) // FIXME: hmm...? 
         {
-            clipped_geometry_type clipped(feature->get_geometry(0));
-            clipped.clip_box(query_extent_.minx(),query_extent_.miny(),query_extent_.maxx(),query_extent_.maxy());
-            path_type path(t_,clipped,prj_trans);
+            //clipped_geometry_type clipped(feature->get_geometry(0));
+            //clipped.clip_box(query_extent_.minx(),query_extent_.miny(),query_extent_.maxx(),query_extent_.maxy());
+            path_type path(t_,feature->get_geometry(0),prj_trans);
             path.vertex(&x0,&y0);
         }
         offset_x = unsigned(width_-x0);
@@ -153,9 +153,9 @@ void agg_renderer<T>::process(polygon_pattern_symbolizer const& sym,
         geometry_type & geom = feature->get_geometry(i);
         if (geom.num_points() > 2)
         {
-            clipped_geometry_type clipped(geom);
-            clipped.clip_box(query_extent_.minx(),query_extent_.miny(),query_extent_.maxx(),query_extent_.maxy());
-            path_type path(t_,clipped,prj_trans);
+            //clipped_geometry_type clipped(geom);
+            //clipped.clip_box(query_extent_.minx(),query_extent_.miny(),query_extent_.maxx(),query_extent_.maxy());
+            path_type path(t_,geom,prj_trans);
             ras_ptr->add_path(path);
             //if (writer.first) writer.first->add_polygon(path, *feature, t_, writer.second);
         }

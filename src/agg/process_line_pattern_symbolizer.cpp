@@ -53,7 +53,7 @@ void  agg_renderer<T>::process(line_pattern_symbolizer const& sym,
                                proj_transform const& prj_trans)
 {
     typedef agg::conv_clip_polyline<geometry_type> clipped_geometry_type;
-    typedef coord_transform2<CoordTransform,clipped_geometry_type> path_type;
+    typedef coord_transform2<CoordTransform,geometry_type> path_type;
     typedef agg::line_image_pattern<agg::pattern_filter_bilinear_rgba8> pattern_type;
     typedef agg::renderer_base<agg::pixfmt_rgba32_plain> renderer_base;
     typedef agg::renderer_outline_image<renderer_base, pattern_type> renderer_type;
@@ -92,9 +92,9 @@ void  agg_renderer<T>::process(line_pattern_symbolizer const& sym,
         geometry_type & geom = feature->get_geometry(i);
         if (geom.num_points() > 1)
         {
-            clipped_geometry_type clipped(geom);
-            clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
-            path_type path(t_,clipped,prj_trans);
+            //clipped_geometry_type clipped(geom);
+            //clipped.clip_box(ext.minx(),ext.miny(),ext.maxx(),ext.maxy());
+            path_type path(t_,geom,prj_trans);
             ras.add_path(path);
             //if (writer.first) writer.first->add_line(path, *feature, t_, writer.second);
         }
