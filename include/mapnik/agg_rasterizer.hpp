@@ -31,7 +31,6 @@
 
 namespace mapnik {
 
-//struct rasterizer :  agg::rasterizer_scanline_aa<agg::rasterizer_sl_no_clip>, boost::noncopyable {};
 struct rasterizer :  agg::rasterizer_scanline_aa<>, boost::noncopyable {};
 
 }
