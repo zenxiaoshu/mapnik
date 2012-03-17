@@ -91,8 +91,12 @@ public:
         {
             set_attr( sym_node, "rasterizer", sym.get_rasterizer() );
         }
+        if ( sym.smooth() != dfl.smooth() || explicit_defaults_ )
+        {
+            set_attr( sym_node, "smooth", sym.smooth() );
+        }
     }
-
+    
     void operator () ( line_pattern_symbolizer const& sym )
     {
         ptree & sym_node = rule_.push_back(
@@ -124,6 +128,10 @@ public:
         if ( sym.get_gamma_method() != dfl.get_gamma_method() || explicit_defaults_ )
         {
             set_attr( sym_node, "gamma-method", sym.get_gamma_method() );
+        }
+        if ( sym.smooth() != dfl.smooth() || explicit_defaults_ )
+        {
+            set_attr( sym_node, "smooth", sym.smooth() );
         }
         add_metawriter_attributes(sym_node, sym);
     }
@@ -631,9 +639,9 @@ void serialize_layer( ptree & map_node, const layer & layer, bool explicit_defau
         set_attr( layer_node, "srs", layer.srs() );
     }
 
-    if ( !layer.isActive() || explicit_defaults )
+    if ( !layer.active() || explicit_defaults )
     {
-        set_attr/*<bool>*/( layer_node, "status", layer.isActive() );
+        set_attr/*<bool>*/( layer_node, "status", layer.active() );
     }
 
     if ( layer.clear_label_cache() || explicit_defaults )
@@ -641,19 +649,19 @@ void serialize_layer( ptree & map_node, const layer & layer, bool explicit_defau
         set_attr/*<bool>*/( layer_node, "clear-label-cache", layer.clear_label_cache() );
     }
 
-    if ( layer.getMinZoom() )
+    if ( layer.min_zoom() )
     {
-        set_attr( layer_node, "minzoom", layer.getMinZoom() );
+        set_attr( layer_node, "minzoom", layer.min_zoom() );
     }
 
-    if ( layer.getMaxZoom() != std::numeric_limits<double>::max() )
+    if ( layer.max_zoom() != std::numeric_limits<double>::max() )
     {
-        set_attr( layer_node, "maxzoom", layer.getMaxZoom() );
+        set_attr( layer_node, "maxzoom", layer.max_zoom() );
     }
 
-    if ( layer.isQueryable() || explicit_defaults )
+    if ( layer.queryable() || explicit_defaults )
     {
-        set_attr( layer_node, "queryable", layer.isQueryable() );
+        set_attr( layer_node, "queryable", layer.queryable() );
     }
 
     if ( layer.cache_features() || explicit_defaults )

@@ -34,7 +34,6 @@
 // agg
 #include "agg_path_length.h"
 #include "agg_conv_clip_polyline.h"
-
 // boost
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
@@ -270,9 +269,9 @@ void placement_finder<DetectorT>::find_line_breaks()
             // wrap text at first wrap_char after (default) the wrap width or immediately before the current word
             if ((c == '\n') ||
                 (line_width > 0 &&
-                ((line_width > wrap_at && !ci.format->wrap_before) ||
+                 ((line_width > wrap_at && !ci.format->wrap_before) ||
                   ((line_width + last_wrap_char_width + word_width) > wrap_at && ci.format->wrap_before)) )
-               )
+                )
             {
                 add_line(line_width, line_height, first_line);
                 line_breaks_.push_back(last_wrap_char_pos);
@@ -385,6 +384,9 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
 
     // set for upper left corner of text envelope for the first line, bottom left of first character
     y = string_height_ / 2.0 - line_height;
+    // RTL text is converted to a mirrored representation in get_string_info()
+    // so we have to fix line break order here
+    if (info_.get_rtl()) y = -y;
 
     // adjust for desired justification
     if (p.jalign == J_LEFT)
@@ -409,7 +411,13 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
             line_width = line_sizes_[line_number].first;
             line_height= line_sizes_[line_number].second;
 
-            y -= line_height;  // move position down to line start
+            if (info_.get_rtl())
+            {
+                y += line_height;
+            } else
+            {
+                y -= line_height;  // move position down to line start
+            }
 
             // reset to begining of line position
             if (p.jalign == J_LEFT)
@@ -438,9 +446,10 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
                    current_placement->center.y - dy - ci.ymax);
 
             // if there is an overlap with existing envelopes, then exit - no placement
+
             if (!detector_.extent().intersects(e) ||
-                (!p.allow_overlap && !detector_.has_point_placement(e, pi.get_actual_minimum_distance()))
-               )
+                (!p.allow_overlap &&
+                 !detector_.has_point_placement(e, pi.get_actual_minimum_distance())))
             {
                 return;
             }
@@ -675,10 +684,10 @@ void placement_finder<DetectorT>::find_line_placements(PathT & shape_path)
 
 template <typename DetectorT>
 std::auto_ptr<text_path> placement_finder<DetectorT>::get_placement_offset(std::vector<vertex2d> const& path_positions,
-                                                                          std::vector<double> const& path_distances,
-                                                                          int & orientation,
-                                                                          unsigned index,
-                                                                          double distance)
+                                                                           std::vector<double> const& path_distances,
+                                                                           int & orientation,
+                                                                           unsigned index,
+                                                                           double distance)
 {
     //Check that the given distance is on the given index and find the correct index and distance if not
     while (distance < 0 && index > 1)
@@ -718,10 +727,10 @@ std::auto_ptr<text_path> placement_finder<DetectorT>::get_placement_offset(std::
     }
 
     std::auto_ptr<text_path> current_placement(
-                new text_path((old_x + dx*distance/segment_length),
-                              (old_y + dy*distance/segment_length)
-                             )
-                );
+        new text_path((old_x + dx*distance/segment_length),
+                      (old_y + dy*distance/segment_length)
+            )
+        );
 
     double angle = atan2(-dy, dx);
 
@@ -830,7 +839,7 @@ std::auto_ptr<text_path> placement_finder<DetectorT>::get_placement_offset(std::
             render_angle += M_PI;
         }
         current_placement->add_node(&ci,
-                                     render_x - current_placement->center.x,
+                                    render_x - current_placement->center.x,
                                     -render_y + current_placement->center.y,
                                     render_angle);
 
@@ -870,7 +879,7 @@ std::auto_ptr<text_path> placement_finder<DetectorT>::get_placement_offset(std::
 
 template <typename DetectorT>
 bool placement_finder<DetectorT>::test_placement(std::auto_ptr<text_path> const& current_placement,
-                                                int orientation)
+                                                 int orientation)
 {
     //Create and test envelopes
     bool status = true;
@@ -907,7 +916,10 @@ bool placement_finder<DetectorT>::test_placement(std::auto_ptr<text_path> const&
                             y - (cwidth*sina + ci.height()*cosa));
 
         if (!detector_.extent().intersects(e) ||
-            !detector_.has_placement(e, info_.get_string(), pi.get_actual_minimum_distance()))
+            (!p.allow_overlap &&
+             !detector_.has_placement(e, info_.get_string(), pi.get_actual_minimum_distance())
+                )
+            )
         {
             //std::clog << "No Intersects:" << !dimensions_.intersects(e) << ": " << e << " @ " << dimensions_ << std::endl;
             //std::clog << "No Placements:" << !detector_.has_placement(e, info.get_string(), p.minimum_distance) << std::endl;
@@ -1014,7 +1026,8 @@ void placement_finder<DetectorT>::clear_placements()
     while (!envelopes_.empty()) envelopes_.pop();
 }
 
-typedef coord_transform2<CoordTransform,geometry_type> PathType;
+typedef agg::conv_clip_polyline<geometry_type> clipped_geometry_type;
+typedef coord_transform2<CoordTransform,clipped_geometry_type> PathType;
 typedef label_collision_detector4 DetectorType;
 
 template class placement_finder<DetectorType>;
