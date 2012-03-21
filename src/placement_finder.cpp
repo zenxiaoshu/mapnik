@@ -305,23 +305,47 @@ template <typename DetectorT>
 void placement_finder<DetectorT>::init_alignment()
 {
     valign_ = p.valign;
-    if (valign_ == V_AUTO) {
+    if (valign_ == V_AUTO)
+    {
         if (p.displacement.second > 0.0)
+        {
             valign_ = V_BOTTOM;
-        else if (p.displacement.second < 0.0)
+        } else if (p.displacement.second < 0.0)
+        {
             valign_ = V_TOP;
-        else
+        } else
+        {
             valign_ = V_MIDDLE;
+        }
     }
 
     halign_ = p.halign;
-    if (halign_ == H_AUTO) {
+    if (halign_ == H_AUTO)
+    {
         if (p.displacement.first > 0.0)
+        {
             halign_ = H_RIGHT;
-        else if (p.displacement.first < 0.0)
+        } else if (p.displacement.first < 0.0)
+        {
             halign_ = H_LEFT;
-        else
+        } else
+        {
             halign_ = H_MIDDLE;
+        }
+    }
+
+    jalign_ = p.jalign;
+    if (jalign_ == J_AUTO)
+    {
+        if (p.displacement.first > 0.0)
+        {
+            jalign_ = J_LEFT;
+        } else if (p.displacement.first < 0.0)
+        {
+            jalign_ = J_RIGHT;
+        } else {
+            jalign_ = J_MIDDLE;
+        }
     }
 }
 
@@ -389,9 +413,9 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
     if (info_.get_rtl()) y = -y;
 
     // adjust for desired justification
-    if (p.jalign == J_LEFT)
+    if (jalign_ == J_LEFT)
         x = -(string_width_ / 2.0);
-    else if (p.jalign == J_RIGHT)
+    else if (jalign_ == J_RIGHT)
         x = (string_width_ / 2.0) - line_width;
     else /* J_MIDDLE */
         x = -(line_width / 2.0);
@@ -420,9 +444,9 @@ void placement_finder<DetectorT>::find_point_placement(double label_x,
             }
 
             // reset to begining of line position
-            if (p.jalign == J_LEFT)
+            if (jalign_ == J_LEFT)
                 x = -(string_width_ / 2.0);
-            else if (p.jalign == J_RIGHT)
+            else if (jalign_ == J_RIGHT)
                 x = (string_width_ / 2.0) - line_width;
             else
                 x = -(line_width / 2.0);
@@ -632,19 +656,27 @@ void placement_finder<DetectorT>::find_line_placements(PathT & shape_path)
                         if (displacement != 0)
                         {
                             //Average the angle of all characters and then offset them all by that angle
-                            //NOTE: This probably calculates a bad angle due to going around the circle, test this!
                             double anglesum = 0;
                             for (unsigned i = 0; i < current_placement->nodes_.size(); i++)
                             {
-                                anglesum += current_placement->nodes_[i].angle;
+                                double angle = current_placement->nodes_[i].angle;
+                                //Normalize angle in range -PI ... PI
+                                while (angle > M_PI) {
+                                    angle -= 2*M_PI;
+                                }
+                                anglesum += angle;
                             }
                             anglesum /= current_placement->nodes_.size(); //Now it is angle average
+                            double cosa = orientation * cos(anglesum);
+                            double sina = orientation * sin(anglesum);
 
                             //Offset all the characters by this angle
                             for (unsigned i = 0; i < current_placement->nodes_.size(); i++)
                             {
-                                current_placement->nodes_[i].pos.x += pi.get_scale_factor() * displacement*cos(anglesum+M_PI/2);
-                                current_placement->nodes_[i].pos.y += pi.get_scale_factor() * displacement*sin(anglesum+M_PI/2);
+                                current_placement->nodes_[i].pos.x -=
+                                        pi.get_scale_factor() * displacement * sina;
+                                current_placement->nodes_[i].pos.y +=
+                                        pi.get_scale_factor() * displacement * cosa;
                             }
                         }
 

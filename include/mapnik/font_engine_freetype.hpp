@@ -46,6 +46,7 @@ extern "C"
 #include <boost/make_shared.hpp>
 #include <boost/utility.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/foreach.hpp>
 #ifdef MAPNIK_THREADSAFE
 #include <boost/thread/mutex.hpp>
 #endif
@@ -168,13 +169,12 @@ public:
 
     glyph_ptr get_glyph(unsigned c) const
     {
-        for (std::vector<face_ptr>::const_iterator face = faces_.begin(); face != faces_.end(); ++face)
+        BOOST_FOREACH ( face_ptr const& face, faces_)            
         {
-            FT_UInt g = (*face)->get_char(c);
-
-            if (g) return boost::make_shared<font_glyph>(*face, g);
+            FT_UInt g = face->get_char(c);
+            if (g) return boost::make_shared<font_glyph>(face, g);
         }
-
+        
         // Final fallback to empty square if nothing better in any font
         return boost::make_shared<font_glyph>(*faces_.begin(), 0);
     }
@@ -185,17 +185,17 @@ public:
 
     void set_pixel_sizes(unsigned size)
     {
-        for (std::vector<face_ptr>::iterator face = faces_.begin(); face != faces_.end(); ++face)
+        BOOST_FOREACH ( face_ptr const& face, faces_)   
         {
-            (*face)->set_pixel_sizes(size);
+            face->set_pixel_sizes(size);
         }
     }
 
     void set_character_sizes(float size)
     {
-        for (std::vector<face_ptr>::iterator face = faces_.begin(); face != faces_.end(); ++face)
+        BOOST_FOREACH ( face_ptr const& face, faces_)  
         {
-            (*face)->set_character_sizes(size);
+            face->set_character_sizes(size);
         }
     }
 private:
