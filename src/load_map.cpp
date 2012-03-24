@@ -49,6 +49,7 @@
 #include <mapnik/symbolizer.hpp>
 #include <mapnik/rule.hpp>
 #include <mapnik/config_error.hpp>
+#include <mapnik/util/dasharray_parser.hpp>
 
 // boost
 #include <boost/optional.hpp>
@@ -166,8 +167,6 @@ void map_parser::parse_map(Map & map, xml_node const& pt, std::string const& bas
         xml_node const& map_node = pt.get_child("Map");
         try
         {
-            parameters extra_attr;
-
             // Check if relative paths should be interpreted as relative to/from XML location
             // Default is true, and map_parser::ensure_relative_to_xml will be called to modify path
             optional<boolean> paths_from_xml = map_node.get_opt_attr<boolean>("paths-from-xml");
@@ -240,15 +239,19 @@ void map_parser::parse_map(Map & map, xml_node const& pt, std::string const& bas
             optional<std::string> font_directory = map_node.get_opt_attr<std::string>("font-directory");
             if (font_directory)
             {
-                extra_attr["font-directory"] = *font_directory;
-                freetype_engine::register_fonts(ensure_relative_to_xml(font_directory), false);
+                if (!freetype_engine::register_fonts(ensure_relative_to_xml(font_directory), false))
+                {
+                    if (strict_)
+                    {
+                        throw config_error(std::string("Failed to load fonts from: ") + *font_directory);
+                    }
+                }
             }
 
             optional<std::string> min_version_string = map_node.get_opt_attr<std::string>("minimum-version");
 
             if (min_version_string)
             {
-                extra_attr["minimum-version"] = *min_version_string;
                 boost::char_separator<char> sep(".");
                 boost::tokenizer<boost::char_separator<char> > tokens(*min_version_string, sep);
                 unsigned i = 0;
@@ -284,8 +287,6 @@ void map_parser::parse_map(Map & map, xml_node const& pt, std::string const& bas
                 }
 
             }
-
-            map.set_extra_attributes(extra_attr);
         }
         catch (const config_error & ex)
         {
@@ -1223,39 +1224,29 @@ void map_parser::parse_stroke(stroke & strk, xml_node const & sym)
     optional<std::string> str = sym.get_opt_attr<std::string>("stroke-dasharray");
     if (str)
     {
-        tokenizer<> tok (*str);
         std::vector<double> dash_array;
-        tokenizer<>::iterator itr = tok.begin();
-        for (; itr != tok.end(); ++itr)
+        if (util::parse_dasharray((*str).begin(),(*str).end(),dash_array))
         {
-            try
+            if (!dash_array.empty())
             {
-                double f = boost::lexical_cast<double>(*itr);
-                dash_array.push_back(f);
-            }
-            catch (boost::bad_lexical_cast &)
-            {
-                throw config_error(std::string("Failed to parse dasharray ") +
-                                   "'. Expected a " +
-                                   "list of floats but got '" + (*str) + "'");
-            }
-        }
-        if (dash_array.size())
-        {
-            size_t size = dash_array.size();
-            if (size % 2)
-            {
-                for (size_t i=0; i < size ;++i)
+                size_t size = dash_array.size();
+                if (size % 2 == 1) 
+                    dash_array.insert(dash_array.end(),dash_array.begin(),dash_array.end());
+                
+                std::vector<double>::const_iterator pos = dash_array.begin();
+                while (pos != dash_array.end())
                 {
-                    dash_array.push_back(dash_array[i]);
+                    if (*pos > 0.0 || *(pos+1) > 0.0) // avoid both dash and gap eq 0.0                        
+                        strk.add_dash(*pos,*(pos + 1));
+                    pos +=2;
                 }
-            }
-            std::vector<double>::const_iterator pos = dash_array.begin();
-            while (pos != dash_array.end())
-            {
-                strk.add_dash(*pos,*(pos + 1));
-                pos +=2;
-            }
+            }   
+        }
+        else
+        {
+            throw config_error(std::string("Failed to parse dasharray ") +
+                               "'. Expected a " +
+                               "list of floats or 'none' but got '" + (*str) + "'");
         }
     }
 }
