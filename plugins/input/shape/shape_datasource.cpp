@@ -134,7 +134,7 @@ void shape_datasource::bind() const
                 // I - long
                 // G - ole
                 // + - autoincrement
-                std::clog << "Shape Plugin: unknown type " << fd.type_ << std::endl;
+                if (debug_) std::clog << "Shape Plugin: unknown type " << fd.type_ << std::endl;
 #endif
                 break;
             }
@@ -147,17 +147,17 @@ void shape_datasource::bind() const
     }
     catch (const datasource_exception& ex)
     {
-        std::clog << "Shape Plugin: error processing field attributes, " << ex.what() << std::endl;
+        std::cerr << "Shape Plugin: error processing field attributes, " << ex.what() << std::endl;
         throw;
     }
     catch (const std::exception& ex)
     {
-        std::clog << "Shape Plugin: error processing field attributes, " << ex.what() << std::endl;
+        std::cerr << "Shape Plugin: error processing field attributes, " << ex.what() << std::endl;
         throw;
     }
     catch (...) // exception: pipe_select_interrupter: Too many open files
     {
-        std::clog << "Shape Plugin: error processing field attributes" << std::endl;
+        std::cerr << "Shape Plugin: error processing field attributes" << std::endl;
         throw;
     }
 
@@ -193,13 +193,16 @@ void  shape_datasource::init(shape_io& shape) const
     shape.shp().read_envelope(extent_);
 
 #ifdef MAPNIK_DEBUG_LOG
-    double zmin = shape.shp().read_double();
-    double zmax = shape.shp().read_double();
-    double mmin = shape.shp().read_double();
-    double mmax = shape.shp().read_double();
+    if (debug_)
+    {
+        double zmin = shape.shp().read_double();
+        double zmax = shape.shp().read_double();
+        double mmin = shape.shp().read_double();
+        double mmax = shape.shp().read_double();
 
-    std::clog << "Shape Plugin: Z min/max " << zmin << "," << zmax << std::endl;
-    std::clog << "Shape Plugin: M min/max " << mmin << "," << mmax << "\n";
+        std::clog << "Shape Plugin: Z min/max " << zmin << "," << zmax << std::endl;
+        std::clog << "Shape Plugin: M min/max " << mmin << "," << mmax << "\n";
+    }
 #else
     shape.shp().skip(4*8);
 #endif
@@ -221,9 +224,12 @@ void  shape_datasource::init(shape_io& shape) const
     //}
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Shape Plugin: extent=" << extent_ << std::endl;
-    std::clog << "Shape Plugin: file_length=" << file_length_ << std::endl;
-    std::clog << "Shape Plugin: shape_type=" << shape_type_ << std::endl;
+    if (debug_)
+    {
+        std::clog << "Shape Plugin: extent=" << extent_ << std::endl;
+        std::clog << "Shape Plugin: file_length=" << file_length_ << std::endl;
+        std::clog << "Shape Plugin: shape_type=" << shape_type_ << std::endl;
+    }
 #endif
 
 }

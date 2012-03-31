@@ -149,7 +149,7 @@ void geos_datasource::bind() const
     if (! extent_initialized_)
     {
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "GEOS Plugin: initializing extent from geometry" << std::endl;
+        if (debug_) std::clog << "GEOS Plugin: initializing extent from geometry" << std::endl;
 #endif
 
         if (GEOSGeomTypeId(*geometry_) == GEOS_POINT)
@@ -172,9 +172,12 @@ void geos_datasource::bind() const
             if (*envelope != NULL && GEOSisValid(*envelope))
             {
 #ifdef MAPNIK_DEBUG_LOG
-                char* wkt = GEOSGeomToWKT(*envelope);
-                std::clog << "GEOS Plugin: getting coord sequence from: " << wkt << std::endl;
-                GEOSFree(wkt);
+                if (debug_)
+                {
+                    char* wkt = GEOSGeomToWKT(*envelope);
+                    std::clog << "GEOS Plugin: getting coord sequence from: " << wkt << std::endl;
+                    GEOSFree(wkt);
+                }
 #endif
 
                 const GEOSGeometry* exterior = GEOSGetExteriorRing(*envelope);
@@ -184,7 +187,7 @@ void geos_datasource::bind() const
                     if (cs != NULL)
                     {
 #ifdef MAPNIK_DEBUG_LOG
-                        std::clog << "GEOS Plugin: iterating boundary points" << std::endl;
+                        if (debug_) std::clog << "GEOS Plugin: iterating boundary points" << std::endl;
 #endif
 
                         double x, y;
@@ -295,7 +298,7 @@ featureset_ptr geos_datasource::features(query const& q) const
       << "))";
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "GEOS Plugin: using extent: " << s.str() << std::endl;
+    if (debug_) std::clog << "GEOS Plugin: using extent: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,
@@ -314,7 +317,7 @@ featureset_ptr geos_datasource::features_at_point(coord2d const& pt) const
     s << "POINT(" << pt.x << " " << pt.y << ")";
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "GEOS Plugin: using point: " << s.str() << std::endl;
+    if (debug_) std::clog << "GEOS Plugin: using point: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,

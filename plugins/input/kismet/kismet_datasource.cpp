@@ -185,7 +185,7 @@ featureset_ptr kismet_datasource::features_at_point(coord2d const& pt) const
 void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
 {
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Kismet Plugin: enter run" << std::endl;
+    if (debug_) std::clog << "Kismet Plugin: enter run" << std::endl;
 #endif
 
     int sockfd, n;
@@ -252,7 +252,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
         std::string bufferObj(buffer); // TCP data send from kismet_server as STL string
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Kismet Plugin: buffer_obj=" << bufferObj << "[END]" << std::endl;
+        if (debug_) std::clog << "Kismet Plugin: buffer_obj=" << bufferObj << "[END]" << std::endl;
 #endif
 
         std::string::size_type found = 0;
@@ -266,7 +266,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
                 kismet_line.assign(bufferObj, search_start, found - search_start);
 
 #ifdef MAPNIK_DEBUG_LOG
-                std::clog << "Kismet Plugin: line=" << kismet_line << " [ENDL]" << std::endl;
+                if (debug_) std::clog << "Kismet Plugin: line=" << kismet_line << " [ENDL]" << std::endl;
 #endif
 
                 int param_number = 5; // the number of parameters to parse
@@ -281,8 +281,11 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
                             &bestlon) == param_number)
                 {
 #ifdef MAPNIK_DEBUG_LOG
-                    std::clog << "Kismet Plugin: ssid=" << ssid << ", bssid=" << bssid
-                              << ", crypt=" << crypt << ", bestlat=" << bestlat << ", bestlon=" << bestlon << std::endl;
+                    if (debug_)
+                    {
+                        std::clog << "Kismet Plugin: ssid=" << ssid << ", bssid=" << bssid
+                                  << ", crypt=" << crypt << ", bestlat=" << bestlat << ", bestlon=" << bestlon << std::endl;
+                    }
 #endif
 
                     kismet_network_data knd(ssid, bssid, bestlat, bestlon, crypt);
@@ -316,7 +319,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
     close(sockfd);
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Kismet Plugin: exit run" << std::endl;
+    if (debug_) std::clog << "Kismet Plugin: exit run" << std::endl;
 #endif
 }
 

@@ -236,15 +236,18 @@ void postgis_datasource::bind() const
                 srid_ = -1;
 
 #ifdef MAPNIK_DEBUG_LOG
-                std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
+                if (debug_) std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
 #endif
             }
 
             // At this point the geometry_field may still not be known
             // but we'll catch that where more useful...
 #ifdef MAPNIK_DEBUG_LOG
-            std::clog << "Postgis Plugin: using SRID=" << srid_ << std::endl;
-            std::clog << "Postgis Plugin: using geometry_column=" << geometryColumn_ << std::endl;
+            if (debug_)
+            {
+                std::clog << "Postgis Plugin: using SRID=" << srid_ << std::endl;
+                std::clog << "Postgis Plugin: using geometry_column=" << geometryColumn_ << std::endl;
+            }
 #endif
 
             // collect attribute desc
@@ -326,27 +329,30 @@ void postgis_datasource::bind() const
                         break;
                     default: // should not get here
 #ifdef MAPNIK_DEBUG_LOG
-                        s.str("");
-                        s << "SELECT oid, typname FROM pg_type WHERE oid = " << type_oid;
-
-                        /*
-                          if (show_queries_)
-                          {
-                          std::clog << boost::format("PostGIS: sending query: %s\n") % s.str();
-                          }
-                        */
-
-                        shared_ptr<ResultSet> rs_oid = conn->executeQuery(s.str());
-                        if (rs_oid->next())
+                        if (debug_)
                         {
-                            std::clog << "Postgis Plugin: unknown type = " << rs_oid->getValue("typname")
-                                      << " (oid:" << rs_oid->getValue("oid") << ")" << std::endl;
+                            s.str("");
+                            s << "SELECT oid, typname FROM pg_type WHERE oid = " << type_oid;
+
+                            /*
+                              if (show_queries_)
+                              {
+                              std::clog << boost::format("PostGIS: sending query: %s\n") % s.str();
+                              }
+                            */
+
+                            shared_ptr<ResultSet> rs_oid = conn->executeQuery(s.str());
+                            if (rs_oid->next())
+                            {
+                                std::clog << "Postgis Plugin: unknown type = " << rs_oid->getValue("typname")
+                                          << " (oid:" << rs_oid->getValue("oid") << ")" << std::endl;
+                            }
+                            else
+                            {
+                                std::clog << "Postgis Plugin: unknown oid type =" << type_oid << std::endl;
+                            }
+                            rs_oid->close();
                         }
-                        else
-                        {
-                            std::clog << "Postgis Plugin: unknown oid type =" << type_oid << std::endl;
-                        }
-                        rs_oid->close();
 #endif
                         break;
                     }

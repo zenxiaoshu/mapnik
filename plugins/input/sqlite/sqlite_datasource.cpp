@@ -213,7 +213,7 @@ void sqlite_datasource::bind() const
          iter != init_statements_.end(); ++iter)
     {
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
+        if (debug_) std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
 #endif
         dataset_->execute(*iter);
     }
@@ -318,8 +318,6 @@ void sqlite_datasource::bind() const
                   dataset_->execute("attach database '" + index_db + "' as " + index_table_);
                   }
                   }
-
-
                 */
                 boost::shared_ptr<sqlite_resultset> rs = dataset_->execute_query(query.str());
                 if (sqlite_utils::create_spatial_index(index_db,index_table_,rs))
@@ -602,8 +600,11 @@ featureset_ptr sqlite_datasource::features(query const& q) const
         }
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Sqlite Plugin: table: " << table_ << "\n\n";
-        std::clog << "Sqlite Plugin: query: " << s.str() << "\n\n";
+        if (debug_)
+        {
+            std::clog << "Sqlite Plugin: table: " << table_ << "\n\n";
+            std::clog << "Sqlite Plugin: query: " << s.str() << "\n\n";
+        }
 #endif
 
         boost::shared_ptr<sqlite_resultset> rs(dataset_->execute_query(s.str()));
@@ -683,7 +684,7 @@ featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
         }
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Sqlite Plugin: " << s.str() << std::endl;
+        if (debug_) std::clog << "Sqlite Plugin: " << s.str() << std::endl;
 #endif
 
         boost::shared_ptr<sqlite_resultset> rs(dataset_->execute_query(s.str()));

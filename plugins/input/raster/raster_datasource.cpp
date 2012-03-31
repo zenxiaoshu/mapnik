@@ -55,7 +55,7 @@ raster_datasource::raster_datasource(const parameters& params, bool bind)
       extent_initialized_(false)
 {
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Raster Plugin: Initializing..." << std::endl;
+    if (debug_) std::clog << "Raster Plugin: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -153,7 +153,7 @@ void raster_datasource::bind() const
     }
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Raster Plugin: RASTER SIZE(" << width_ << "," << height_ << ")" << std::endl;
+    if (debug_) std::clog << "Raster Plugin: RASTER SIZE(" << width_ << "," << height_ << ")" << std::endl;
 #endif
 
     is_bound_ = true;
@@ -200,13 +200,13 @@ featureset_ptr raster_datasource::features(query const& q) const
     const int height = int(ext.maxy() + 0.5) - int(ext.miny() + 0.5);
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Raster Plugin: BOX SIZE(" << width << " " << height << ")" << std::endl;
+    if (debug_) std::clog << "Raster Plugin: BOX SIZE(" << width << " " << height << ")" << std::endl;
 #endif
 
     if (multi_tiles_)
     {
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Raster Plugin: MULTI-TILED policy" << std::endl;
+        if (debug_) std::clog << "Raster Plugin: MULTI-TILED policy" << std::endl;
 #endif
 
         tiled_multi_file_policy policy(filename_, format_, tile_size_, extent_, q.get_bbox(), width_, height_, tile_stride_);
@@ -216,7 +216,7 @@ featureset_ptr raster_datasource::features(query const& q) const
     else if (width * height > 512*512)
     {
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Raster Plugin: TILED policy" << std::endl;
+        if (debug_) std::clog << "Raster Plugin: TILED policy" << std::endl;
 #endif
 
         tiled_file_policy policy(filename_, format_, 256, extent_, q.get_bbox(), width_, height_);
@@ -226,7 +226,7 @@ featureset_ptr raster_datasource::features(query const& q) const
     else
     {
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Raster Plugin: SINGLE FILE" << std::endl;
+        if (debug_) std::clog << "Raster Plugin: SINGLE FILE" << std::endl;
 #endif
 
         raster_info info(filename_, format_, extent_, width_, height_);
@@ -239,7 +239,7 @@ featureset_ptr raster_datasource::features(query const& q) const
 featureset_ptr raster_datasource::features_at_point(coord2d const&) const
 {
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Raster Plugin: feature_at_point not supported for raster.input" << std::endl;
+    if (debug_) std::clog << "Raster Plugin: feature_at_point not supported for raster.input" << std::endl;
 #endif
 
     return featureset_ptr();

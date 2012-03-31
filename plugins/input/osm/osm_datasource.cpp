@@ -82,7 +82,7 @@ void osm_datasource::bind() const
     {
         // if we supplied a url and a bounding box, load from the url
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "Osm Plugin: loading_from_url: url=" << url << " bbox=" << bbox << std::endl;
+        if (debug_) std::clog << "Osm Plugin: loading_from_url: url=" << url << " bbox=" << bbox << std::endl;
 #endif
         if ((osm_data_ = dataset_deliverer::load_from_url(url, bbox, parser)) == NULL)
         {

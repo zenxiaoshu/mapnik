@@ -197,7 +197,7 @@ void occi_datasource::bind() const
         }
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "OCCI Plugin: " << s.str() << std::endl;
+        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -233,7 +233,7 @@ void occi_datasource::bind() const
         s << "SELECT " << fields_ << " FROM (" << table_name_ << ") WHERE rownum < 1";
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "OCCI Plugin: " << s.str() << std::endl;
+        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -325,15 +325,21 @@ void occi_datasource::bind() const
                     case oracle::occi::OCCI_SQLT_BLOB:
                     case oracle::occi::OCCI_SQLT_RSET:
 #ifdef MAPNIK_DEBUG_LOG
-                        std::clog << "OCCI Plugin: unsupported datatype "
-                                  << occi_enums::resolve_datatype(type_oid)
-                                  << " (type_oid=" << type_oid << ")" << std::endl;
+                        if (debug_)
+                        {
+                            std::clog << "OCCI Plugin: unsupported datatype "
+                                      << occi_enums::resolve_datatype(type_oid)
+                                      << " (type_oid=" << type_oid << ")" << std::endl;
+                        }
 #endif
                         break;
                     default:
 #ifdef MAPNIK_DEBUG_LOG
-                        std::clog << "OCCI Plugin: unknown datatype "
-                                  << "(type_oid=" << type_oid << ")" << std::endl;
+                        if (debug_)
+                        {
+                            std::clog << "OCCI Plugin: unknown datatype "
+                                      << "(type_oid=" << type_oid << ")" << std::endl;
+                        }
 #endif
                         break;
                     }
@@ -377,7 +383,7 @@ box2d<double> occi_datasource::envelope() const
         s << " TABLE(SDO_UTIL.GETVERTICES(a.shape)) c";
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "OCCI Plugin: " << s.str() << std::endl;
+        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -421,7 +427,7 @@ box2d<double> occi_datasource::envelope() const
         s << " WHERE LOWER(m.table_name) = LOWER('" << table_name_ << "') AND dim.sdo_dimname = 'Y'";
 
 #ifdef MAPNIK_DEBUG_LOG
-        std::clog << "OCCI Plugin: " << s.str() << std::endl;
+        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -536,7 +542,7 @@ featureset_ptr occi_datasource::features(query const& q) const
         else
         {
 #ifdef MAPNIK_DEBUG_LOG
-            std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
+            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -556,7 +562,7 @@ featureset_ptr occi_datasource::features(query const& q) const
         else
         {
 #ifdef MAPNIK_DEBUG_LOG
-            std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
+            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
@@ -564,7 +570,7 @@ featureset_ptr occi_datasource::features(query const& q) const
     s << query;
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "OCCI Plugin: " << s.str() << std::endl;
+    if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,
@@ -617,7 +623,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         else
         {
 #ifdef MAPNIK_DEBUG_LOG
-            std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
+            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -637,7 +643,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         else
         {
 #ifdef MAPNIK_DEBUG_LOG
-            std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
+            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
@@ -645,7 +651,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
     s << query;
 
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "OCCI Plugin: " << s.str() << std::endl;
+    if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,

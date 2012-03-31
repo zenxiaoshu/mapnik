@@ -308,7 +308,7 @@ void ogr_datasource::bind() const
             case OFTStringList:
             case OFTWideStringList: // deprecated !
 #ifdef MAPNIK_DEBUG_LOG
-                std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                if (debug_) std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
 
@@ -316,7 +316,7 @@ void ogr_datasource::bind() const
             case OFTTime:
             case OFTDateTime: // unhandled !
 #ifdef MAPNIK_DEBUG_LOG
-                std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                if (debug_) std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
 #endif
                 desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::Object));
                 break;

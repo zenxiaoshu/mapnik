@@ -78,7 +78,7 @@ rasterlite_datasource::rasterlite_datasource(parameters const& params, bool bind
       desc_(*params.get<std::string>("type"),"utf-8")
 {
 #ifdef MAPNIK_DEBUG_LOG
-    std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
+    if (debug_) std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -122,39 +122,42 @@ void rasterlite_datasource::bind() const
     extent_.init(x0,y0,x1,y1);
 
 #ifdef MAPNIK_DEBUG_LOG
-    int srid, auth_srid;
-    const char *auth_name;
-    const char *ref_sys_name;
-    const char *proj4text;
-
-    int tile_count;
-    double pixel_x_size, pixel_y_size;
-    int levels = rasterliteGetLevels (dataset);
-
-    if (rasterliteGetSrid(dataset, &srid, &auth_name, &auth_srid, &ref_sys_name, &proj4text) != RASTERLITE_OK)
+    if (debug_)
     {
-        std::string error (rasterliteGetLastError(dataset));
+        int srid, auth_srid;
+        const char *auth_name;
+        const char *ref_sys_name;
+        const char *proj4text;
 
-        rasterliteClose (dataset);
+        int tile_count;
+        double pixel_x_size, pixel_y_size;
+        int levels = rasterliteGetLevels (dataset);
 
-        throw datasource_exception(error);
-    }
-
-    std::clog << "Rasterlite Plugin: Data Source=" << rasterliteGetTablePrefix(dataset) << std::endl;
-    std::clog << "Rasterlite Plugin: SRID=" << srid << std::endl;
-    std::clog << "Rasterlite Plugin: Authority=" << auth_name << std::endl;
-    std::clog << "Rasterlite Plugin: AuthSRID=" << auth_srid << std::endl;
-    std::clog << "Rasterlite Plugin: RefSys Name=" << ref_sys_name << std::endl;
-    std::clog << "Rasterlite Plugin: Proj4Text=" << proj4text << std::endl;
-    std::clog << "Rasterlite Plugin: Extent(" << x0 << "," << y0 << " " << x1 << "," << y1 << ")" << std::endl;
-    std::clog << "Rasterlite Plugin: Levels=" << levels << std::endl;
-
-    for (int i = 0; i < levels; i++)
-    {
-        if (rasterliteGetResolution(dataset, i, &pixel_x_size, &pixel_y_size, &tile_count) == RASTERLITE_OK)
+        if (rasterliteGetSrid(dataset, &srid, &auth_name, &auth_srid, &ref_sys_name, &proj4text) != RASTERLITE_OK)
         {
-            std::clog << "Rasterlite Plugin: Level=" << i
-                      << " x=" << pixel_x_size << " y=" << pixel_y_size << " tiles=" << tile_count << std::endl;
+            std::string error (rasterliteGetLastError(dataset));
+
+            rasterliteClose (dataset);
+
+            throw datasource_exception(error);
+        }
+
+        std::clog << "Rasterlite Plugin: Data Source=" << rasterliteGetTablePrefix(dataset) << std::endl;
+        std::clog << "Rasterlite Plugin: SRID=" << srid << std::endl;
+        std::clog << "Rasterlite Plugin: Authority=" << auth_name << std::endl;
+        std::clog << "Rasterlite Plugin: AuthSRID=" << auth_srid << std::endl;
+        std::clog << "Rasterlite Plugin: RefSys Name=" << ref_sys_name << std::endl;
+        std::clog << "Rasterlite Plugin: Proj4Text=" << proj4text << std::endl;
+        std::clog << "Rasterlite Plugin: Extent(" << x0 << "," << y0 << " " << x1 << "," << y1 << ")" << std::endl;
+        std::clog << "Rasterlite Plugin: Levels=" << levels << std::endl;
+
+        for (int i = 0; i < levels; i++)
+        {
+            if (rasterliteGetResolution(dataset, i, &pixel_x_size, &pixel_y_size, &tile_count) == RASTERLITE_OK)
+            {
+                std::clog << "Rasterlite Plugin: Level=" << i
+                          << " x=" << pixel_x_size << " y=" << pixel_y_size << " tiles=" << tile_count << std::endl;
+            }
         }
     }
 #endif
