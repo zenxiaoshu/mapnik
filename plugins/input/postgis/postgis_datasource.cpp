@@ -55,6 +55,9 @@ using mapnik::attribute_descriptor;
 
 postgis_datasource::postgis_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<bool>("debug", true)),
+#endif
       table_(*params_.get<std::string>("table", "")),
       schema_(""),
       geometry_table_(*params_.get<std::string>("geometry_table", "")),
@@ -232,14 +235,14 @@ void postgis_datasource::bind() const
             {
                 srid_ = -1;
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
 #endif
             }
 
             // At this point the geometry_field may still not be known
             // but we'll catch that where more useful...
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
             std::clog << "Postgis Plugin: using SRID=" << srid_ << std::endl;
             std::clog << "Postgis Plugin: using geometry_column=" << geometryColumn_ << std::endl;
 #endif
@@ -322,7 +325,7 @@ void postgis_datasource::bind() const
                         desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::String));
                         break;
                     default: // should not get here
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                         s.str("");
                         s << "SELECT oid, typname FROM pg_type WHERE oid = " << type_oid;
 

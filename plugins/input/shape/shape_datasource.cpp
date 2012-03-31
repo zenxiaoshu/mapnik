@@ -22,6 +22,7 @@
 
 // mapnik
 #include <mapnik/geom_util.hpp>
+#include <mapnik/boolean.hpp>
 
 // boost
 #include <boost/version.hpp>
@@ -51,6 +52,9 @@ using mapnik::attribute_descriptor;
 
 shape_datasource::shape_datasource(const parameters &params, bool bind)
     : datasource (params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       type_(datasource::Vector),
       file_length_(0),
       indexed_(false),
@@ -126,7 +130,7 @@ void shape_datasource::bind() const
                 break;
             }
             default:
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 // I - long
                 // G - ole
                 // + - autoincrement
@@ -188,7 +192,7 @@ void  shape_datasource::init(shape_io& shape) const
 
     shape.shp().read_envelope(extent_);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     double zmin = shape.shp().read_double();
     double zmax = shape.shp().read_double();
     double mmin = shape.shp().read_double();
@@ -216,7 +220,7 @@ void  shape_datasource::init(shape_io& shape) const
     //    std::clog << "### Notice: no .index file found for " + shape_name_ + ".shp, use the 'shapeindex' program to build an index for faster rendering\n";
     //}
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "Shape Plugin: extent=" << extent_ << std::endl;
     std::clog << "Shape Plugin: file_length=" << file_length_ << std::endl;
     std::clog << "Shape Plugin: shape_type=" << shape_type_ << std::endl;

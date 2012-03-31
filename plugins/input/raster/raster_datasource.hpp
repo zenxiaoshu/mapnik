@@ -42,6 +42,9 @@ public:
     mapnik::layer_descriptor get_descriptor() const;
     void bind() const;
 private:
+#ifdef MAPNIK_DEBUG_LOG
+    bool debug_;
+#endif
     mapnik::layer_descriptor desc_;
     std::string filename_;
     std::string format_;

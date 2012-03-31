@@ -51,6 +51,9 @@ public:
     static std::string name();
     void bind() const;
 private:
+#ifdef MAPNIK_DEBUG_LOG
+    bool debug_;
+#endif
     mutable box2d<double> extent_;
     mutable osm_dataset* osm_data_;
     mapnik::datasource::datasource_t type_;

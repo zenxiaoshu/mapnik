@@ -49,8 +49,7 @@ using mapnik::datasource_exception;
  */
 inline GDALDataset* gdal_datasource::open_dataset() const
 {
-
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GDAL Plugin: opening: " << dataset_name_ << std::endl;
 #endif
 
@@ -77,10 +76,13 @@ inline GDALDataset* gdal_datasource::open_dataset() const
 
 gdal_datasource::gdal_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       desc_(*params.get<std::string>("type"), "utf-8"),
       filter_factor_(*params_.get<double>("filter_factor", 0.0))
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GDAL Plugin: Initializing..." << std::endl;
 #endif
 
@@ -123,7 +125,7 @@ void gdal_datasource::bind() const
     boost::optional<std::string> bbox_s = params_.get<std::string>("bbox");
     if (bbox_s)
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "GDAL Plugin: bbox parameter=" << *bbox_s << std::endl;
 #endif
 
@@ -148,7 +150,7 @@ void gdal_datasource::bind() const
         dataset->GetGeoTransform(tr);
     }
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GDAL Plugin: geotransform=" << tr[0] << "," << tr[1] << ","
               << tr[2] << "," << tr[3] << ","
               << tr[4] << "," << tr[5] << std::endl;
@@ -187,7 +189,7 @@ void gdal_datasource::bind() const
 
     GDALClose(dataset);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GDAL Plugin: Raster Size=" << width_ << "," << height_ << std::endl;
     std::clog << "GDAL Plugin: Raster Extent=" << extent_ << std::endl;
 #endif

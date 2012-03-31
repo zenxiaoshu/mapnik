@@ -275,6 +275,7 @@ opts.AddVariables(
     # Note: setting DEBUG=True will override any custom OPTIMIZATION level
     BoolVariable('DEBUG', 'Compile a debug version of Mapnik', 'False'),
     BoolVariable('DEBUG_UNDEFINED', 'Compile a version of Mapnik using clang/llvm undefined behavior asserts', 'False'),
+    BoolVariable('DEBUG_LOG', 'Enable debug logging, even in release mode', 'False'),
     ListVariable('INPUT_PLUGINS','Input drivers to include',DEFAULT_PLUGINS,PLUGINS.keys()),
     ('WARNING_CXXFLAGS', 'Compiler flags you can set to reduce warning levels which are placed after -Wall.', ''),
     
@@ -325,7 +326,7 @@ opts.AddVariables(
     # Variables affecting rendering back-ends
     
     BoolVariable('RENDERING_STATS', 'Output rendering statistics during style processing', 'False'),
-    
+
     BoolVariable('INTERNAL_LIBAGG', 'Use provided libagg', 'True'),
 
     BoolVariable('SVG_RENDERER', 'build support for native svg renderer', 'False'),
@@ -1410,10 +1411,14 @@ if not preconfigured:
         
         # Common debugging flags.
         # http://lists.fedoraproject.org/pipermail/devel/2010-November/144952.html
-        debug_flags  = '-g -fno-omit-frame-pointer -DDEBUG -DMAPNIK_DEBUG'
+        debug_flags  = '-g -fno-omit-frame-pointer -DDEBUG -DMAPNIK_DEBUG -DMAPNIK_DEBUG_LOG'
         
         ndebug_flags = '-DNDEBUG'
        
+        # Enable debug logging in release mode
+        if env['DEBUG_LOG']:
+            ndebug_flags += " -DMAPNIK_DEBUG_LOG"
+
         
         # Customizing the C++ compiler flags depending on: 
         #  (1) the C++ compiler used; and

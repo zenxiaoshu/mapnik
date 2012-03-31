@@ -30,6 +30,7 @@
 // mapnik
 #include <mapnik/geom_util.hpp>
 #include <mapnik/query.hpp>
+#include <mapnik/boolean.hpp>
 
 // boost
 #include <boost/make_shared.hpp>
@@ -51,10 +52,13 @@ using mapnik::attribute_descriptor;
 DATASOURCE_PLUGIN(osm_datasource)
 
 osm_datasource::osm_datasource(const parameters& params, bool bind)
-: datasource (params),
-    extent_(),
-    type_(datasource::Vector),
-    desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8"))
+    : datasource (params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
+      extent_(),
+      type_(datasource::Vector),
+      desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8"))
 {
     if (bind)
     {
@@ -77,7 +81,7 @@ void osm_datasource::bind() const
     if (url != "" && bbox != "")
     {
         // if we supplied a url and a bounding box, load from the url
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Osm Plugin: loading_from_url: url=" << url << " bbox=" << bbox << std::endl;
 #endif
         if ((osm_data_ = dataset_deliverer::load_from_url(url, bbox, parser)) == NULL)
@@ -94,7 +98,9 @@ void osm_datasource::bind() const
             s << "OSM Plugin: Error loading from file '" << osm_filename << "'";
             throw datasource_exception(s.str());
         }
-    } else {
+    }
+    else
+    {
         throw datasource_exception("OSM Plugin: Neither 'file' nor 'url' and 'bbox' specified");
     }
 

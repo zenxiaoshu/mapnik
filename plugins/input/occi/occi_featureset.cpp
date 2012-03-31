@@ -180,14 +180,14 @@ feature_ptr occi_featureset::next()
             case oracle::occi::OCCI_SQLT_CLOB:
             case oracle::occi::OCCI_SQLT_BLOB:
             case oracle::occi::OCCI_SQLT_RSET:
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "OCCI Plugin: unsupported datatype "
                           << occi_enums::resolve_datatype(type_oid)
                           << " (type_oid=" << type_oid << ")" << std::endl;
 #endif
                 break;
             default: // shouldn't get here
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "OCCI Plugin: unknown datatype "
                           << "(type_oid=" << type_oid << ")" << std::endl;
 #endif
@@ -344,7 +344,7 @@ void occi_featureset::convert_geometry(SDOGeometry* geom, feature_ptr feature)
     break;
     case SDO_GTYPE_UNKNOWN:
     default:
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "OCCI Plugin: unknown <occi> "
                   << occi_enums::resolve_gtype(geomtype)
                   << "(gtype=" << gtype << ")" << std::endl;

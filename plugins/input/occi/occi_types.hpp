@@ -87,7 +87,7 @@ public:
     {
         if (env_ == 0)
         {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
             std::clog << "OCCI Plugin: occi_environment constructor" << std::endl;
 #endif
 
@@ -111,7 +111,7 @@ private:
     {
         if (env_)
         {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
             std::clog << "OCCI Plugin: occi_environment destructor" << std::endl;
 #endif
 

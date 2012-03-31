@@ -51,22 +51,25 @@ using mapnik::parameters;
 DATASOURCE_PLUGIN(sqlite_datasource)
 
 sqlite_datasource::sqlite_datasource(parameters const& params, bool bind)
-: datasource(params),
-    extent_(),
-    extent_initialized_(false),
-    type_(datasource::Vector),
-    table_(*params_.get<std::string>("table", "")),
-    fields_(*params_.get<std::string>("fields", "*")),
-    metadata_(*params_.get<std::string>("metadata", "")),
-    geometry_table_(*params_.get<std::string>("geometry_table", "")),
-    geometry_field_(*params_.get<std::string>("geometry_field", "")),
-    index_table_(*params_.get<std::string>("index_table", "")),
-    key_field_(*params_.get<std::string>("key_field", "")),
-    row_offset_(*params_.get<int>("row_offset", 0)),
-    row_limit_(*params_.get<int>("row_limit", 0)),
-    intersects_token_("!intersects!"),
-    desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
-    format_(mapnik::wkbAuto)
+    : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
+      extent_(),
+      extent_initialized_(false),
+      type_(datasource::Vector),
+      table_(*params_.get<std::string>("table", "")),
+      fields_(*params_.get<std::string>("fields", "*")),
+      metadata_(*params_.get<std::string>("metadata", "")),
+      geometry_table_(*params_.get<std::string>("geometry_table", "")),
+      geometry_field_(*params_.get<std::string>("geometry_field", "")),
+      index_table_(*params_.get<std::string>("index_table", "")),
+      key_field_(*params_.get<std::string>("key_field", "")),
+      row_offset_(*params_.get<int>("row_offset", 0)),
+      row_limit_(*params_.get<int>("row_limit", 0)),
+      intersects_token_("!intersects!"),
+      desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
+      format_(mapnik::wkbAuto)
 {
     /* TODO
        - throw if no primary key but spatial index is present?
@@ -209,7 +212,7 @@ void sqlite_datasource::bind() const
     for (std::vector<std::string>::const_iterator iter = init_statements_.begin();
          iter != init_statements_.end(); ++iter)
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
 #endif
         dataset_->execute(*iter);
@@ -598,7 +601,7 @@ featureset_ptr sqlite_datasource::features(query const& q) const
             s << " OFFSET " << row_offset_;
         }
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Sqlite Plugin: table: " << table_ << "\n\n";
         std::clog << "Sqlite Plugin: query: " << s.str() << "\n\n";
 #endif
@@ -679,7 +682,7 @@ featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
             s << " OFFSET " << row_offset_;
         }
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Sqlite Plugin: " << s.str() << std::endl;
 #endif
 

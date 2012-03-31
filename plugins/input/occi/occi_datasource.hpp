@@ -50,6 +50,9 @@ public:
     void bind() const;
 
 private:
+#ifdef MAPNIK_DEBUG_LOG
+    bool debug_;
+#endif
     mapnik::datasource::datasource_t type_;
     mutable std::string table_;
     mutable std::string table_name_;

@@ -72,9 +72,12 @@ inline void *rasterlite_datasource::open_dataset() const
 
 rasterlite_datasource::rasterlite_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       desc_(*params.get<std::string>("type"),"utf-8")
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
 #endif
 
@@ -118,7 +121,7 @@ void rasterlite_datasource::bind() const
 
     extent_.init(x0,y0,x1,y1);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     int srid, auth_srid;
     const char *auth_name;
     const char *ref_sys_name;

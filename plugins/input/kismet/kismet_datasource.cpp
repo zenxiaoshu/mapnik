@@ -73,6 +73,9 @@ const unsigned int queue_size = 20;
 
 kismet_datasource::kismet_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       extent_(),
       extent_initialized_(false),
       type_(datasource::Vector),
@@ -181,7 +184,7 @@ featureset_ptr kismet_datasource::features_at_point(coord2d const& pt) const
 
 void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "Kismet Plugin: enter run" << std::endl;
 #endif
 
@@ -248,7 +251,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
         buffer[n] = '\0';
         std::string bufferObj(buffer); // TCP data send from kismet_server as STL string
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Kismet Plugin: buffer_obj=" << bufferObj << "[END]" << std::endl;
 #endif
 
@@ -262,7 +265,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
             {
                 kismet_line.assign(bufferObj, search_start, found - search_start);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "Kismet Plugin: line=" << kismet_line << " [ENDL]" << std::endl;
 #endif
 
@@ -277,7 +280,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
                             &bestlat,
                             &bestlon) == param_number)
                 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                     std::clog << "Kismet Plugin: ssid=" << ssid << ", bssid=" << bssid
                               << ", crypt=" << crypt << ", bestlat=" << bestlat << ", bestlon=" << bestlon << std::endl;
 #endif
@@ -312,7 +315,7 @@ void kismet_datasource::run(const std::string& ip_host, const unsigned int port)
 
     close(sockfd);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "Kismet Plugin: exit run" << std::endl;
 #endif
 }

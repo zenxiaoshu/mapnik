@@ -58,6 +58,9 @@ using mapnik::filter_at_point;
 
 ogr_datasource::ogr_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       extent_(),
       type_(datasource::Vector),
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
@@ -304,7 +307,7 @@ void ogr_datasource::bind() const
             case OFTRealList:
             case OFTStringList:
             case OFTWideStringList: // deprecated !
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
@@ -312,7 +315,7 @@ void ogr_datasource::bind() const
             case OFTDate:
             case OFTTime:
             case OFTDateTime: // unhandled !
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
 #endif
                 desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::Object));

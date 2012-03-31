@@ -58,6 +58,9 @@ private:
     shape_datasource& operator=(const shape_datasource&);
     void init(shape_io& shape) const;
 private:
+#ifdef MAPNIK_DEBUG_LOG
+    bool debug_;
+#endif
     datasource::datasource_t type_;
     std::string shape_name_;
     mutable boost::shared_ptr<shape_io> shape_;

@@ -47,6 +47,9 @@ public:
 
 private:
     inline void* open_dataset() const;
+#ifdef MAPNIK_DEBUG_LOG
+    bool debug_;
+#endif
     mutable mapnik::box2d<double> extent_;
     std::string dataset_name_;
     std::string table_name_;

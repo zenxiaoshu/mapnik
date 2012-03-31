@@ -137,7 +137,7 @@ public:
         double pixel_x = extent.width() / double(width);
         double pixel_y = extent.height() / double(height);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Raster Plugin: PIXEL SIZE("<< pixel_x << "," << pixel_y << ")" << std::endl;
 #endif
 
@@ -160,7 +160,8 @@ public:
                 }
             }
         }
-#ifdef MAPNIK_DEBUG
+
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Raster Plugin: INFO SIZE=" << infos_.size() << " " << file << std::endl;
 #endif
     }
@@ -223,7 +224,7 @@ public:
         double pixel_x = extent.width() / double(width);
         double pixel_y = extent.height() / double(height);
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Raster Plugin: PIXEL SIZE("<< pixel_x << "," << pixel_y << ")" << std::endl;
 #endif
 
@@ -256,7 +257,8 @@ public:
                 }
             }
         }
-#ifdef MAPNIK_DEBUG
+
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "Raster Plugin: INFO SIZE=" << infos_.size() << " " << file_pattern << std::endl;
 #endif
     }

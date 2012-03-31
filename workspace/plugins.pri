@@ -67,7 +67,7 @@ SOURCES += \
   $$PWD/../plugins/input/ogr/ogr_converter.cpp \
   $$PWD/../plugins/input/ogr/ogr_featureset.cpp \
   $$PWD/../plugins/input/ogr/ogr_datasource.cpp \
-  $$PWD/../plugins/input/ogr/ogr_index_featureset.hpp \
+  $$PWD/../plugins/input/ogr/ogr_index_featureset.cpp \
   $$PWD/../plugins/input/osm/basiccurl.cpp \
   $$PWD/../plugins/input/osm/dataset_deliverer.cpp \
   $$PWD/../plugins/input/osm/osm.cpp \

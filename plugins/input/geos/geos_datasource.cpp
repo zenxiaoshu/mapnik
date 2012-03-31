@@ -86,6 +86,9 @@ void geos_error(const char* fmt, ...)
 
 geos_datasource::geos_datasource(parameters const& params, bool bind)
     : datasource(params),
+#ifdef MAPNIK_DEBUG_LOG
+      debug_(*params_.get<mapnik::boolean>("debug", true)),
+#endif
       extent_(),
       extent_initialized_(false),
       type_(datasource::Vector),
@@ -145,7 +148,7 @@ void geos_datasource::bind() const
     // try to obtain the extent from the geometry itself
     if (! extent_initialized_)
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
         std::clog << "GEOS Plugin: initializing extent from geometry" << std::endl;
 #endif
 
@@ -168,7 +171,7 @@ void geos_datasource::bind() const
             geos_feature_ptr envelope (GEOSEnvelope(*geometry_));
             if (*envelope != NULL && GEOSisValid(*envelope))
             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                 char* wkt = GEOSGeomToWKT(*envelope);
                 std::clog << "GEOS Plugin: getting coord sequence from: " << wkt << std::endl;
                 GEOSFree(wkt);
@@ -180,7 +183,7 @@ void geos_datasource::bind() const
                     const GEOSCoordSequence* cs = GEOSGeom_getCoordSeq(exterior);
                     if (cs != NULL)
                     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
                         std::clog << "GEOS Plugin: iterating boundary points" << std::endl;
 #endif
 
@@ -291,7 +294,7 @@ featureset_ptr geos_datasource::features(query const& q) const
       << extent.minx() << " " << extent.miny()
       << "))";
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GEOS Plugin: using extent: " << s.str() << std::endl;
 #endif
 
@@ -310,7 +313,7 @@ featureset_ptr geos_datasource::features_at_point(coord2d const& pt) const
     std::ostringstream s;
     s << "POINT(" << pt.x << " " << pt.y << ")";
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_DEBUG_LOG
     std::clog << "GEOS Plugin: using point: " << s.str() << std::endl;
 #endif
 
