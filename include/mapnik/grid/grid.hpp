@@ -72,7 +72,6 @@ private:
 
 public:
 
-
     hit_grid(int width, int height, std::string const& key, unsigned int resolution)
         :width_(width),
         height_(height),
@@ -136,7 +135,9 @@ public:
             }
             else
             {
-                std::clog << "should not get here: key '" << key_ << "' not found in feature properties\n";
+#ifdef MAPNIK_LOG
+                std::clog << "Mapnik LOG> hit_grid: Should not get here: key '" << key_ << "' not found in feature properties" << std::endl;
+#endif
             }
         }
 
@@ -153,7 +154,9 @@ public:
         }
         else
         {
-            std::clog << "### Warning: key '" << key_ << "' was blank for " << *feature << "\n";
+#ifdef MAPNIK_LOG
+            std::clog << "Mapnik LOG> hit_grid: Warning - key '" << key_ << "' was blank for " << *feature << std::endl;
+#endif
         }
     }
 

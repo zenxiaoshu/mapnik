@@ -101,7 +101,7 @@ public:
         while ( itr!=unusedPool_.end())
         {
 #ifdef MAPNIK_LOG
-            std::clog<<"borrow "<<(*itr).get()<<"\n";
+            std::clog << "Mapnik LOG> pool: Borrow instance=" << (*itr).get() << std::endl;
 #endif
             if ((*itr)->isOK())
             {
@@ -112,7 +112,7 @@ public:
             else
             {
 #ifdef MAPNIK_LOG
-                std::clog<<"bad connection (erase)" << (*itr).get()<<"\n";
+                std::clog << "Mapnik LOG> pool: Bad connection (erase) instance=" << (*itr).get() << std::endl;
 #endif
                 itr=unusedPool_.erase(itr);
             }
@@ -124,7 +124,7 @@ public:
             {
                 usedPool_.push_back(conn);
 #ifdef MAPNIK_LOG
-                std::clog << "create << " << conn.get() << "\n";
+                std::clog << "Mapnik LOG> pool: Create connection=" << conn.get() << std::endl;
 #endif
                 return conn;
             }
@@ -143,7 +143,7 @@ public:
             if (obj.get()==(*itr).get())
             {
 #ifdef MAPNIK_LOG
-                std::clog<<"return "<<(*itr).get()<<"\n";
+                std::clog << "Mapnik LOG> pool: Return instance=" << (*itr).get() << std::endl;
 #endif
                 unusedPool_.push_back(*itr);
                 usedPool_.erase(itr);

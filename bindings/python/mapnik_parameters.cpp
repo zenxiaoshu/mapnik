@@ -102,7 +102,9 @@ struct parameters_pickle_suite : boost::python::pickle_suite
             }
             else
             {
-                std::clog <<  "could not unpickle key: " << key << "\n";
+#ifdef MAPNIK_LOG
+                std::clog << "Mapnik LOG> parameters_pickle_suite: Could not unpickle key=" << key << std::endl;
+#endif
             }
         }
     }

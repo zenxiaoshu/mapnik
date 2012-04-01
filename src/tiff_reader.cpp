@@ -165,7 +165,10 @@ void tiff_reader::read_generic(unsigned /*x*/,unsigned /*y*/,image_data_32& /*im
     TIFF* tif = load_if_exists(file_name_);
     if (tif)
     {
-        std::clog << "TODO:tiff is not stripped or tiled\n";
+#ifdef MAPNIK_LOG
+        std::clog << "Mapnik LOG> tiff_reader: TODO - tiff is not stripped or tiled" << std::endl;
+#endif
+
         TIFFClose(tif);
     }
 }

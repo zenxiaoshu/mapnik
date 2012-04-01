@@ -643,7 +643,7 @@ cairo_renderer_base::cairo_renderer_base(Map const& m, Cairo::RefPtr<Cairo::Cont
       detector_(box2d<double>(-m.buffer_size() ,-m.buffer_size() , m.width() + m.buffer_size() ,m.height() + m.buffer_size()))
 {
 #ifdef MAPNIK_LOG
-    std::clog << "scale=" << m.scale() << "\n";
+    std::clog << "Mapnik LOG> cairo_renderer_base: Scale=" << m.scale() << std::endl;
 #endif
 }
 
@@ -666,7 +666,7 @@ cairo_renderer_base::~cairo_renderer_base() {}
 void cairo_renderer_base::start_map_processing(Map const& map)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "start map processing bbox=" << map.get_current_extent() << "\n";
+    std::clog << "Mapnik LOG> cairo_renderer_base: Start map processing bbox=" << map.get_current_extent() << std::endl;
 #endif
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 6, 0)
@@ -688,7 +688,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         void cairo_renderer<Cairo::Context>::end_map_processing(Map const& )
     {
 #ifdef MAPNIK_LOG
-        std::clog << "end map processing\n";
+        std::clog << "Mapnik LOG> cairo_renderer_base: End map processing" << std::endl;
 #endif
     }
 
@@ -696,7 +696,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         void cairo_renderer<Cairo::Surface>::end_map_processing(Map const& )
     {
 #ifdef MAPNIK_LOG
-        std::clog << "end map processing\n";
+        std::clog << "Mapnik LOG> cairo_renderer_base: End map processing" << std::endl;
 #endif
         context_->show_page();
     }
@@ -704,9 +704,9 @@ void cairo_renderer_base::start_map_processing(Map const& map)
     void cairo_renderer_base::start_layer_processing(layer const& lay, box2d<double> const& query_extent)
     {
 #ifdef MAPNIK_LOG
-        std::clog << "start layer processing : " << lay.name()  << "\n";
-        std::clog << "datasource = " << lay.datasource().get() << "\n";
-        std::clog << "query_extent = " << query_extent << "\n";
+        std::clog << "Mapnik LOG> cairo_renderer_base: Start processing layer=" << lay.name()  << std::endl;
+        std::clog << "Mapnik LOG> cairo_renderer_base: -- datasource=" << lay.datasource().get() << std::endl;
+        std::clog << "Mapnik LOG> cairo_renderer_base: -- query_extent=" << query_extent << std::endl;
 #endif
         if (lay.clear_label_cache())
         {
@@ -718,7 +718,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
     void cairo_renderer_base::end_layer_processing(layer const&)
     {
 #ifdef MAPNIK_LOG
-        std::clog << "end layer processing\n";
+        std::clog << "Mapnik LOG> cairo_renderer_base: End layer processing" << std::endl;
 #endif
     }
 
@@ -1277,8 +1277,11 @@ void cairo_renderer_base::start_map_processing(Map const& map)
             boost::optional<marker_ptr> mark = mapnik::marker_cache::instance()->find(filename, true);
             if (mark && *mark)
             {
-                if (!(*mark)->is_vector()) {
-                    std::clog << "### Warning only svg markers are supported in the markers_symbolizer\n";
+                if (!(*mark)->is_vector())
+                {
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> cairo_renderer_base: markers_symbolizer does not yet support SVG markers" << std::endl;
+#endif
                     return;
                 }
                 boost::optional<path_ptr> marker = (*mark)->get_vector_data();

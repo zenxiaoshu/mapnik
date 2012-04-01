@@ -115,7 +115,10 @@ bool freetype_engine::register_font(std::string const& file_name)
                 s << "which reports a family name of '" << std::string(face->family_name) << "' and lacks a style name";
             else if (face->style_name)
                 s << "which reports a style name of '" << std::string(face->style_name) << "' and lacks a family name";
-            std::clog << s.str() << std::endl;
+
+#ifdef MAPNIK_LOG
+            std::clog << "Mapnik LOG> grid_renderer: " << s.str() << std::endl;
+#endif
         }
     }
     if (face)
@@ -330,8 +333,8 @@ box2d<double> text_renderer<T>::prepare_glyphs(text_path *path)
 
 #ifdef MAPNIK_LOG
         // TODO Enable when we have support for setting verbosity
-        //std::clog << "prepare_glyphs: " << c << "," << x <<
-        //    "," << y << "," << angle << std::endl;
+        //std::clog << "Mapnik LOG> text_renderer: prepare_glyphs="
+        //          << c << "," << x << "," << y << "," << angle << std::endl;
 #endif
 
         FT_BBox glyph_bbox;

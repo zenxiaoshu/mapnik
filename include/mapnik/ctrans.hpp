@@ -240,8 +240,8 @@ struct MAPNIK_DECL coord_transform_parallel
                     dx_pre = cos(angle_a + pi_by_2);
                     dy_pre = sin(angle_a + pi_by_2);
 #ifdef MAPNIK_LOG
-                    std::clog << "offsetting line by: " << offset_ << "\n";
-                    std::clog << "initial dx=" << (dx_pre * offset_) << " dy=" << (dy_pre * offset_) << "\n";
+                    std::clog << "Mapnik LOG> coord_transform_parallel: Offsetting line by=" << offset_ << std::endl;
+                    std::clog << "Mapnik LOG> coord_transform_parallel: Initial dx=" << (dx_pre * offset_) << ",dy=" << (dy_pre * offset_) << std::endl;
 #endif
                     *x = m_pre_x + (dx_pre * offset_);
                     *y = m_pre_y + (dy_pre * offset_);
@@ -294,10 +294,10 @@ struct MAPNIK_DECL coord_transform_parallel
                         dx_curr = cos(angle_a + pi_by_2);
                         dy_curr = sin(angle_a + pi_by_2);
                         sin_curve = dx_curr*dy_pre-dy_curr*dx_pre;
-                        std::clog << "angle a: " << angle_a << "\n";
-                        std::clog << "angle b: " << angle_b << "\n";
-                        std::clog << "h: " << h << "\n";
-                        std::clog << "sin_curve: " << sin_curve << "\n";
+                        std::clog << "Mapnik LOG> coord_transform_parallel: angle a=" << angle_a << std::endl;
+                        std::clog << "Mapnik LOG> coord_transform_parallel: angle b=" << angle_b << std::endl;
+                        std::clog << "Mapnik LOG> coord_transform_parallel: h=" << h << std::endl;
+                        std::clog << "Mapnik LOG> coord_transform_parallel: sin_curve=" << sin_curve << std::endl;
 #endif
                         m_status = process;
                         break;
@@ -310,7 +310,7 @@ struct MAPNIK_DECL coord_transform_parallel
                       cos_curve = -dx_pre*dx_curr-dy_pre*dy_curr;
 
                       #ifdef MAPNIK_LOG
-                        std::clog << "sin_curve value: " << sin_curve << "\n";
+                        std::clog << "Mapnik LOG> coord_transform_parallel: sin_curve value=" << sin_curve << std::endl;
                       #endif
                       if(sin_curve > -0.3 && sin_curve < 0.3) {
                         angle_b = atan2((m_cur_y-m_next_y),(m_cur_x-m_next_x));

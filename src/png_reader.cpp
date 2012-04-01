@@ -136,7 +136,7 @@ void png_reader::init()
     height_=height;
 
 #ifdef MAPNIK_LOG
-    std::clog << "bit_depth=" << bit_depth_ << " color_type=" << color_type_ << std::endl;
+    std::clog << "Mapnik LOG> png_reader: bit_depth=" << bit_depth_ << ",color_type=" << color_type_ << std::endl;
 #endif
 
     png_destroy_read_struct(&png_ptr,&info_ptr,0);

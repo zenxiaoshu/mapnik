@@ -55,7 +55,7 @@ public:
             for  (unsigned i=0; i<(*pos_)->num_geometries();++i) {
                 geometry_type & geom = (*pos_)->get_geometry(i);
 #ifdef MAPNIK_LOG
-                std::clog << "bbox_=" << bbox_ << ", geom.envelope=" << geom.envelope() << "\n";
+                std::clog << "Mapnik LOG> memory_featureset: BBox=" << bbox_ << ",Envelope=" << geom.envelope() << std::endl;
 #endif
                 if (bbox_.intersects(geom.envelope()))
                 {

@@ -271,7 +271,9 @@ static void write_features(T const& grid_type,
         }
         else
         {
-            std::clog << "should not get here: key '" << key << "' not found in grid feature properties\n";
+#ifdef MAPNIK_LOG
+            std::clog << "Mapnik LOG> write_features: Should not get here: key " << key << " not found in grid feature properties" << std::endl;
+#endif
         }
     }
 }

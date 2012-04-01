@@ -176,7 +176,7 @@ void agg_renderer<T>::setup(Map const &m)
     }
 
 #ifdef MAPNIK_LOG
-    std::clog << "scale=" << m.scale() << "\n";
+    std::clog << "Mapnik LOG> agg_renderer: Scale=" << m.scale() << std::endl;
 #endif
 }
 
@@ -187,7 +187,7 @@ template <typename T>
 void agg_renderer<T>::start_map_processing(Map const& map)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "start map processing bbox=" << map.get_current_extent() << "\n";
+    std::clog << "Mapnik LOG> agg_renderer: Start map processing bbox=" << map.get_current_extent() << std::endl;
 #endif
     ras_ptr->clip_box(0,0,width_,height_);
 }
@@ -196,7 +196,7 @@ template <typename T>
 void agg_renderer<T>::end_map_processing(Map const& )
 {
 #ifdef MAPNIK_LOG
-    std::clog << "end map processing\n";
+    std::clog << "Mapnik LOG> agg_renderer: End map processing" << std::endl;
 #endif
 }
 
@@ -204,9 +204,9 @@ template <typename T>
 void agg_renderer<T>::start_layer_processing(layer const& lay, box2d<double> const& query_extent)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "start layer processing : " << lay.name()  << "\n";
-    std::clog << "datasource = " << lay.datasource().get() << "\n";
-    std::clog << "query_extent = " << query_extent << "\n";
+    std::clog << "Mapnik LOG> agg_renderer: Start processing layer=" << lay.name() << std::endl;
+    std::clog << "Mapnik LOG> agg_renderer: -- datasource=" << lay.datasource().get() << std::endl;
+    std::clog << "Mapnik LOG> agg_renderer: -- query_extent=" << query_extent << std::endl;
 #endif
     if (lay.clear_label_cache())
     {
@@ -219,7 +219,7 @@ template <typename T>
 void agg_renderer<T>::end_layer_processing(layer const&)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "end layer processing\n";
+    std::clog << "Mapnik LOG> agg_renderer: End layer processing" << std::endl;
 #endif
 }
 
@@ -258,8 +258,6 @@ void agg_renderer<T>::render_marker(pixel_position const& pos, marker const& mar
                                                    (*marker.get_vector_data())->attributes());
 
         svg_renderer.render(*ras_ptr, sl, renb, mtx, opacity, bbox);
-
-
     }
     else
     {

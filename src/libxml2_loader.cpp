@@ -99,8 +99,7 @@ public:
         /*
           if ( ! ctx->valid )
           {
-          std::clog << "### ERROR: Failed to validate DTD."
-          << std::endl;
+            std::clog << "Mapnik LOG> libxml2_loader: Failed to validate DTD." << std::endl;
           }
         */
         load(doc, node);

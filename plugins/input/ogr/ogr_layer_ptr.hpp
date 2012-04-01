@@ -76,7 +76,7 @@ public:
             is_valid_ = true;
 
 #ifdef MAPNIK_LOG
-            std::clog << "OGR Plugin: layer_from_name layer is " << layer_name_ << std::endl;
+            std::clog << "Mapnik LOG> ogr_layer_ptr: layer_from_name layer=" << layer_name_ << std::endl;
 #endif
         }
 
@@ -103,7 +103,7 @@ public:
                 is_valid_ = true;
 
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: layer_from_index layer is " << layer_name_ << std::endl;
+                std::clog << "Mapnik LOG> ogr_layer_ptr: layer_from_index layer=" << layer_name_ << std::endl;
 #endif
             }
         }
@@ -139,7 +139,7 @@ public:
                 is_valid_ = true;
 
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: layer_from_sql layer is " << layer_name_ << std::endl;
+                std::clog << "Mapnik LOG> ogr_layer_ptr: layer_from_sql layer=" << layer_name_ << std::endl;
 #endif
             }
         }
@@ -174,11 +174,11 @@ private:
             const std::string err = CPLGetLastErrorMsg();
             if (err.size() == 0)
             {
-                std::clog << "OGR Plugin: error getting layer" << std::endl;
+                std::clog << "Mapnik LOG> ogr_layer_ptr: Error getting layer" << std::endl;
             }
             else
             {
-                std::clog << "OGR Plugin: " << err << std::endl;
+                std::clog << "Mapnik LOG> ogr_layer_ptr: " << err << std::endl;
             }
         }
     }

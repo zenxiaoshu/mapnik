@@ -327,7 +327,7 @@ void metawriter_json::start(metawriter_property_map const& properties)
     filename_ = path_processor<metawriter_property_map>::evaluate(*fn_, properties);
 
 #ifdef MAPNIK_LOG
-    std::clog << "Metawriter JSON: filename=" << filename_ << "\n";
+    std::clog << "Mapnik LOG> metawriter_json: Filename=" << filename_ << std::endl;
 #endif
 
     metawriter_json_stream::start(properties);
@@ -350,7 +350,7 @@ void metawriter_json::stop()
     }
 #ifdef MAPNIK_LOG
     else if (count_ >= STARTED){
-        std::clog << "WARNING: File not open in metawriter_json::stop()!\n";
+        std::clog << "Mapnik LOG> metawriter_json: File not open when stopping" << std::endl;
     }
 #endif
 }

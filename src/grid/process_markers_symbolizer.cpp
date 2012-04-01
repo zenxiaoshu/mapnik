@@ -108,7 +108,9 @@ void grid_renderer<T>::process(markers_symbolizer const& sym,
                 geometry_type & geom = feature->get_geometry(i);
                 if (geom.num_points() <= 1)
                 {
-                    std::clog << "### Warning svg markers not supported yet for points within markers_symbolizer\n";
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> grid_renderer: markers_symbolizer points do not yet support SVG markers" << std::endl;
+#endif
                     continue;
                 }
 

@@ -128,7 +128,11 @@ text_symbolizer& text_symbolizer::operator=(text_symbolizer const& other)
     if (this == &other)
         return *this;
     placement_options_ = other.placement_options_; /*TODO: Copy options? */
-    std::clog << "TODO: Metawriter (text_symbolizer::operator=)\n";
+
+#ifdef MAPNIK_LOG
+    std::clog << "Mapnik LOG> text_symbolizer: TODO - Metawriter (text_symbolizer::operator=)" << std::endl;
+#endif
+
     return *this;
 }
 

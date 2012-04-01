@@ -89,7 +89,7 @@ featureset_ptr memory_datasource::features_at_point(coord2d const& pt) const
     box2d<double> box = box2d<double>(pt.x, pt.y, pt.x, pt.y);
 
 #ifdef MAPNIK_LOG
-    std::clog << "box=" << box << ", pt x=" << pt.x << ", y=" << pt.y << "\n";
+    std::clog << "Mapnik LOG> memory_datasource: Box=" << box << ", Point x=" << pt.x << ",y=" << pt.y << std::endl;
 #endif
 
     return boost::make_shared<memory_featureset>(box,*this);

@@ -103,18 +103,19 @@ datasource_ptr datasource_cache::create(const parameters& params, bool bind)
     }
 
 #ifdef MAPNIK_LOG
-    std::clog << "size = " << params.size() << "\n";
+    std::clog << "Mapnik LOG> datasource_cache: Size=" << params.size() << std::endl;
+
     parameters::const_iterator i = params.begin();
     for (;i!=params.end();++i)
     {
-        std::clog << i->first << "=" << i->second << "\n";
+        std::clog << "Mapnik LOG> datasource_cache: -- " << i->first << "=" << i->second << std::endl;
     }
 #endif
 
     ds=datasource_ptr(create_datasource(params, bind), datasource_deleter());
 
 #ifdef MAPNIK_LOG
-    std::clog<<"datasource="<<ds<<" type="<<type<<std::endl;
+    std::clog << "Mapnik LOG> datasource_cache: Datasource=" << ds << " type=" << type << std::endl;
 #endif
     return ds;
 }
@@ -181,22 +182,22 @@ void datasource_cache::register_datasources(const std::string& str)
                             if (ds_name && insert(ds_name(),module))
                             {
 #ifdef MAPNIK_LOG
-                                std::clog << "Datasource loader: registered: " << ds_name() << std::endl;
+                                std::clog << "Mapnik LOG> datasource_cache: Registered=" << ds_name() << std::endl;
 #endif
                                 registered_=true;
                             }
                             else if (!ds_name)
                             {
-                                std::clog << "Problem loading plugin library '" << itr->path().string() << "' (plugin is lacking compatible interface)" << std::endl;
+                                std::cerr << "Problem loading plugin library '" << itr->path().string() << "' (plugin is lacking compatible interface)" << std::endl;
                             }
                         }
                         else
                         {
 #if (BOOST_FILESYSTEM_VERSION == 3)
-                            std::clog << "Problem loading plugin library: " << itr->path().string()
+                            std::cerr << "Problem loading plugin library: " << itr->path().string()
                                       << " (dlopen failed - plugin likely has an unsatisfied dependency or incompatible ABI)" << std::endl;
 #else // v2
-                            std::clog << "Problem loading plugin library: " << itr->string()
+                            std::cerr << "Problem loading plugin library: " << itr->string()
                                       << " (dlopen failed - plugin likely has an unsatisfied dependency or incompatible ABI)" << std::endl;
 #endif
                         }

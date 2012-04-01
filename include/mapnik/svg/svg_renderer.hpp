@@ -145,7 +145,7 @@ public:
             unsigned g= stop_color.green();
             unsigned b= stop_color.blue();
             unsigned a= stop_color.alpha();
-            //std::clog << "r: " << r << " g: " << g << " b: " << b << "a: " << a << "\n";
+            //std::clog << "Mapnik LOG> svg_renderer: r=" << r << ",g=" << g << ",b=" << b << ",a=" << a << std::endl;
             m_gradient_lut.add_color(st.first, agg::rgba8(r, g, b, int(a * opacity)));
         }
         m_gradient_lut.build_lut();

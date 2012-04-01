@@ -122,7 +122,7 @@ template <typename T,
         destroyed_=true;
 
 #ifdef MAPNIK_LOG
-        std::clog << "destroyed singleton instance\n";
+        std::clog << "Mapnik LOG> singleton: Destroyed instance" << std::endl;
 #endif
     }
 
@@ -150,7 +150,7 @@ public:
                     pInstance_ = CreatePolicy<T>::create();
 
 #ifdef MAPNIK_LOG
-                    std::clog << "created singleton instance\n";
+                    std::clog << "Mapnik LOG> singleton: Created instance" << std::endl;
 #endif
 
                     // register destruction

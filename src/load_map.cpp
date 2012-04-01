@@ -231,9 +231,15 @@ void map_parser::parse_map(Map & map, xml_node const& pt, std::string const& bas
                     std::ostringstream s_err;
                     s_err << "failed to parse 'maximum-extent'";
                     if (strict_)
+                    {
                         throw config_error(s_err.str());
+                    }
                     else
-                        std::clog << "### WARNING: " << s_err.str() << std::endl;
+                    {
+#ifdef MAPNIK_LOG
+                        std::clog << "Mapnik LOG> map_parser: Warning - " << s_err.str() << std::endl;
+#endif
+                    }
                 }
             }
 
@@ -267,7 +273,9 @@ void map_parser::parse_map(Map & map, xml_node const& pt, std::string const& bas
                     }
                     catch (boost::bad_lexical_cast & ex)
                     {
-                        std::clog << *beg << " : " << ex.what() << "\n";
+#ifdef MAPNIK_LOG
+                        std::clog << "Mapnik LOG> map_parser: " << *beg << " : " << ex.what() << "\n";
+#endif
                         break;
                     }
                     if (i==2)
@@ -565,9 +573,15 @@ void map_parser::parse_layer(Map & map, xml_node const& lay)
                     std::ostringstream ss;
                     ss << "StyleName is empty in Layer: '" << lyr.name() << "'";
                     if (strict_)
+                    {
                         throw config_error(ss.str());
+                    }
                     else
-                        std::clog << "### WARNING: " << ss.str() << std::endl;
+                    {
+#ifdef MAPNIK_LOG
+                        std::clog << "Mapnik LOG> map_parser: Warning - " << ss.str() << std::endl;
+#endif
+                    }
                 }
                 else
                 {
@@ -797,9 +811,15 @@ void map_parser::parse_point_symbolizer(rule & rule, xml_node const & sym)
                         ss << "Could not parse transform from '" << transform_wkt
                            << "', expected string like: 'matrix(1, 0, 0, 1, 0, 0)'";
                         if (strict_)
+                        {
                             throw config_error(ss.str()); // value_error here?
+                        }
                         else
-                            std::clog << "### WARNING: " << ss << endl;
+                        {
+#ifdef MAPNIK_LOG
+                            std::clog << "Mapnik LOG> map_parser: Warning - " << ss << endl;
+#endif
+                        }
                     }
                     boost::array<double,6> matrix;
                     tr.store_to(&matrix[0]);
@@ -816,7 +836,9 @@ void map_parser::parse_point_symbolizer(rule & rule, xml_node const & sym)
                 }
                 else
                 {
-                    std::clog << "### WARNING: " << msg << endl;
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> map_parser: Warning - " << msg << endl;
+#endif
                 }
             }
         }
@@ -864,7 +886,9 @@ void map_parser::parse_markers_symbolizer(rule & rule, xml_node const& sym)
                 }
                 else
                 {
-                    std::clog << "### WARNING: " << msg << endl;
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> map_parser: Warning - " << msg << endl;
+#endif
                 }
             }
         }
@@ -882,9 +906,15 @@ void map_parser::parse_markers_symbolizer(rule & rule, xml_node const& sym)
                 ss << "Could not parse transform from '" << transform_wkt
                    << "', expected string like: 'matrix(1, 0, 0, 1, 0, 0)'";
                 if (strict_)
+                {
                     throw config_error(ss.str()); // value_error here?
+                }
                 else
-                    std::clog << "### WARNING: " << ss << endl;
+                {
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> map_parser: Warning - " << ss << endl;
+#endif
+                }
             }
             boost::array<double,6> matrix;
             tr.store_to(&matrix[0]);
@@ -981,7 +1011,9 @@ void map_parser::parse_line_pattern_symbolizer(rule & rule, xml_node const & sym
             }
             else
             {
-                std::clog << "### WARNING: " << msg << endl;
+#ifdef MAPNIK_LOG
+                std::clog << "Mapnik LOG> map_parser: Warning - " << msg << endl;
+#endif
             }
         }
     }
@@ -1040,7 +1072,9 @@ void map_parser::parse_polygon_pattern_symbolizer(rule & rule,
             }
             else
             {
-                std::clog << "### WARNING: " << msg << endl;
+#ifdef MAPNIK_LOG
+                std::clog << "Mapnik LOG> map_parser: Warning - " << msg << endl;
+#endif
             }
         }
     }
@@ -1109,9 +1143,15 @@ void map_parser::parse_shield_symbolizer(rule & rule, xml_node const& sym)
                 std::stringstream ss;
                 ss << "Could not parse transform from '" << transform_wkt << "', expected string like: 'matrix(1, 0, 0, 1, 0, 0)'";
                 if (strict_)
+                {
                     throw config_error(ss.str()); // value_error here?
+                }
                 else
-                    std::clog << "### WARNING: " << ss << endl;
+                {
+#ifdef MAPNIK_LOG
+                    std::clog << "Mapnik LOG> map_parser: Warning - " << ss << endl;
+#endif
+                }
             }
             boost::array<double,6> matrix;
             tr.store_to(&matrix[0]);
@@ -1175,7 +1215,9 @@ void map_parser::parse_shield_symbolizer(rule & rule, xml_node const& sym)
             }
             else
             {
-                std::clog << "### WARNING: " << msg << endl;
+#ifdef MAPNIK_LOG
+                std::clog << "Mapnik LOG> map_parser: Warning - " << msg << endl;
+#endif
             }
         }
         rule.append(shield_symbol);
@@ -1497,9 +1539,9 @@ std::string map_parser::ensure_relative_to_xml(boost::optional<std::string> opt_
 #endif
 
 #ifdef MAPNIK_LOG
-            std::clog << "\nModifying relative paths to be relative to xml...\n";
-            std::clog << "original base path: " << *opt_path << "\n";
-            std::clog << "relative base path: " << full.string() << "\n";
+            std::clog << "Mapnik LOG> map_parser: Modifying relative paths to be relative to xml..." << std::endl;
+            std::clog << "Mapnik LOG> map_parser: -- Original base path=" << *opt_path << std::endl;
+            std::clog << "Mapnik LOG> map_parser: -- Relative base path=" << full.string() << std::endl;
 #endif
             return full.string();
         }

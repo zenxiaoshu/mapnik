@@ -50,7 +50,7 @@ template <typename T>
 void svg_renderer<T>::start_map_processing(Map const& map)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "start map processing" << std::endl;
+    std::clog << "Mapnik LOG> svg_renderer: Start map processing" << std::endl;
 #endif
 
     // generate XML header.
@@ -78,7 +78,7 @@ void svg_renderer<T>::end_map_processing(Map const& map)
     generator_.generate_closing_root();
 
 #ifdef MAPNIK_LOG
-    std::clog << "end map processing" << std::endl;
+    std::clog << "Mapnik LOG> svg_renderer: End map processing" << std::endl;
 #endif
 }
 
@@ -86,7 +86,7 @@ template <typename T>
 void svg_renderer<T>::start_layer_processing(layer const& lay)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "start layer processing: " << lay.name() << std::endl;
+    std::clog << "Mapnik LOG> svg_renderer: Start layer processing=" << lay.name() << std::endl;
 #endif
 }
 
@@ -94,7 +94,7 @@ template <typename T>
 void svg_renderer<T>::end_layer_processing(layer const& lay)
 {
 #ifdef MAPNIK_LOG
-    std::clog << "end layer processing: " << lay.name() << std::endl;
+    std::clog << "Mapnik LOG> svg_renderer: End layer processing=" << lay.name() << std::endl;
 #endif
 }
 

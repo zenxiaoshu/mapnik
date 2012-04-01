@@ -116,7 +116,7 @@ public:
         int type = read_integer();
 
 #if defined(MAPNIK_LOG) && defined(MAPNIK_DEBUG_WKB)
-        std::clog << "wkb_reader: read " << wkb_geometry_type_string(type) << " " << type << std::endl;
+        std::clog << "Mapnik LOG> wkb_reader: Read=" << wkb_geometry_type_string(type) << "," << type << std::endl;
 #endif
 
         switch (type)

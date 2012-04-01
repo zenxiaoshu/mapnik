@@ -410,8 +410,8 @@ void Map::zoom_all()
                     {
                         success = true;
 #ifdef MAPNIK_LOG
-                        std::clog << " layer " << itr->name() << " original ext: " << itr->envelope() << "\n";
-                        std::clog << " layer " << itr->name() << " transformed to map srs: " << layer_ext << "\n";
+                        std::clog << "Mapnik LOG> map: Layer " << itr->name() << " original ext=" << itr->envelope() << "\n";
+                        std::clog << "Mapnik LOG> map: Layer " << itr->name() << " transformed to map srs=" << layer_ext << "\n";
 #endif
                         if (first)
                         {
@@ -439,7 +439,7 @@ void Map::zoom_all()
         }
         catch (proj_init_error & ex)
         {
-            std::clog << "proj_init_error:" << ex.what() << "\n";
+            std::clog << "Mapnik LOG> map: proj_init_error=" << ex.what() << "\n";
         }
     }
 }
@@ -581,7 +581,7 @@ featureset_ptr Map::query_point(unsigned index, double x, double y) const
             if (ds)
             {
 #ifdef MAPNIK_LOG
-                std::clog << " query at point tol = " << tol << " (" << x << "," << y << ")\n";
+                std::clog << "Mapnik LOG> map: Query at point tol=" << tol << "(" << x << "," << y << ")" << std::endl;
 #endif
                 featureset_ptr fs = ds->features_at_point(mapnik::coord2d(x,y));
                 if (fs)
@@ -591,9 +591,7 @@ featureset_ptr Map::query_point(unsigned index, double x, double y) const
         }
         catch (...)
         {
-#ifdef MAPNIK_LOG
-            std::clog << "exception caught in \"query_point\"\n";
-#endif
+            std::cerr << "Exception caught in \"query_point\"" << std::endl;
         }
     }
     return featureset_ptr();
@@ -627,7 +625,7 @@ featureset_ptr Map::query_map_point(unsigned index, double x, double y) const
             if (ds)
             {
 #ifdef MAPNIK_LOG
-                std::clog << " query at point tol = " << tol << " (" << x << "," << y << ")\n";
+                std::clog << "Mapnik LOG> map: Query at point tol=" << tol << "(" << x << "," << y << ")" << std::endl;
 #endif
                 featureset_ptr fs = ds->features_at_point(mapnik::coord2d(x,y));
                 if (fs)
@@ -637,9 +635,7 @@ featureset_ptr Map::query_map_point(unsigned index, double x, double y) const
         }
         catch (...)
         {
-#ifdef MAPNIK_LOG
-            std::clog << "exception caught in \"query_map_point\"\n";
-#endif
+            std::cerr << "Exception caught in \"query_map_point\"" << std::endl;
         }
     }
     return featureset_ptr();

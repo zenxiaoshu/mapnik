@@ -69,7 +69,9 @@ void  agg_renderer<T>::process(line_pattern_symbolizer const& sym,
 
     if (!(*mark)->is_bitmap())
     {
-        std::clog << "### Warning only images (not '" << filename << "') are supported in the line_pattern_symbolizer\n";
+#ifdef MAPNIK_LOG
+        std::clog << "Mapnik LOG> agg_renderer: Only images (not '" << filename << "') are supported in the line_pattern_symbolizer" << std::endl;
+#endif
         return;
     }
 
