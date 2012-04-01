@@ -49,18 +49,18 @@ class ResultSet : public IResultSet
 {
 public:
     ResultSet(PGresult *res)
-        : res_(res),
-          pos_(-1),
-          refCount_(new int(1))
+      : res_(res),
+        pos_(-1),
+        refCount_(new int(1))
     {
         numTuples_ = PQntuples(res_);
     }
 
     ResultSet(const ResultSet& rhs)
-        : res_(rhs.res_),
-          pos_(rhs.pos_),
-          numTuples_(rhs.numTuples_),
-          refCount_(rhs.refCount_)
+      : res_(rhs.res_),
+        pos_(rhs.pos_),
+        numTuples_(rhs.numTuples_),
+        refCount_(rhs.refCount_)
     {
         (*refCount_)++;
     }
@@ -75,9 +75,11 @@ public:
         if (--(refCount_) == 0)
         {
             close();
+
             delete refCount_;
             refCount_ = 0;
         }
+
         res_ = rhs.res_;
         pos_ = rhs.pos_;
         numTuples_ = rhs.numTuples_;
@@ -97,6 +99,7 @@ public:
         if (--(*refCount_) == 0)
         {
             PQclear(res_);
+
             delete refCount_;
             refCount_ = 0;
         }
