@@ -69,20 +69,20 @@ DATASOURCE_PLUGIN(occi_datasource)
 
 occi_datasource::occi_datasource(parameters const& params, bool bind)
     : datasource (params),
-#ifdef MAPNIK_DEBUG_LOG
-      debug_(*params_.get<mapnik::boolean>("debug", true)),
-#endif
       type_(datasource::Vector),
       fields_(*params_.get<std::string>("fields", "*")),
       geometry_field_(*params_.get<std::string>("geometry_field", "")),
       srid_initialized_(false),
       extent_initialized_(false),
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
+      use_wkb_(*params_.get<mapnik::boolean>("use_wkb", false)),
       row_limit_(*params_.get<int>("row_limit", 0)),
       row_prefetch_(*params_.get<int>("row_prefetch", 100)),
       pool_(0),
       conn_(0)
 {
+    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+
     if (! params_.get<std::string>("user")) throw datasource_exception("OCCI Plugin: no <user> specified");
     if (! params_.get<std::string>("password")) throw datasource_exception("OCCI Plugin: no <password> specified");
     if (! params_.get<std::string>("host")) throw datasource_exception("OCCI Plugin: no <host> string specified");
@@ -196,8 +196,8 @@ void occi_datasource::bind() const
             s << " AND LOWER(column_name) = LOWER('" << geometry_field_ << "')";
         }
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -232,8 +232,8 @@ void occi_datasource::bind() const
         std::ostringstream s;
         s << "SELECT " << fields_ << " FROM (" << table_name_ << ") WHERE rownum < 1";
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -324,8 +324,8 @@ void occi_datasource::bind() const
                     case oracle::occi::OCCI_SQLT_CLOB:
                     case oracle::occi::OCCI_SQLT_BLOB:
                     case oracle::occi::OCCI_SQLT_RSET:
-#ifdef MAPNIK_DEBUG_LOG
-                        if (debug_)
+#ifdef MAPNIK_LOG
+                        if (logging_enabled_)
                         {
                             std::clog << "OCCI Plugin: unsupported datatype "
                                       << occi_enums::resolve_datatype(type_oid)
@@ -334,8 +334,8 @@ void occi_datasource::bind() const
 #endif
                         break;
                     default:
-#ifdef MAPNIK_DEBUG_LOG
-                        if (debug_)
+#ifdef MAPNIK_LOG
+                        if (logging_enabled_)
                         {
                             std::clog << "OCCI Plugin: unknown datatype "
                                       << "(type_oid=" << type_oid << ")" << std::endl;
@@ -382,8 +382,8 @@ box2d<double> occi_datasource::envelope() const
         s << " (SELECT SDO_AGGR_MBR(" << geometry_field_ << ") shape FROM " << table_ << ") a, ";
         s << " TABLE(SDO_UTIL.GETVERTICES(a.shape)) c";
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -426,8 +426,8 @@ box2d<double> occi_datasource::envelope() const
         s << METADATA_TABLE << " m, TABLE(m.diminfo) dim ";
         s << " WHERE LOWER(m.table_name) = LOWER('" << table_name_ << "') AND dim.sdo_dimname = 'Y'";
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
         try
@@ -505,12 +505,20 @@ featureset_ptr occi_datasource::features(query const& q) const
     box2d<double> const& box = q.get_bbox();
 
     std::ostringstream s;
-    s << "SELECT " << geometry_field_;
+    s << "SELECT ";
+    if (use_wkb_)
+    {
+        s << "SDO_UTIL.TO_WKBGEOMETRY(" << geometry_field_ << ")";
+    }
+    else
+    {
+        s << geometry_field_;
+    }
     std::set<std::string> const& props = q.property_names();
     std::set<std::string>::const_iterator pos = props.begin();
     std::set<std::string>::const_iterator end = props.end();
     mapnik::context_ptr ctx = boost::make_shared<mapnik::context_type>();
-    for ( ;pos != end;++pos)
+    for (; pos != end; ++pos)
     {
         s << ", " << *pos;
         ctx->push(*pos);
@@ -541,8 +549,8 @@ featureset_ptr occi_datasource::features(query const& q) const
         }
         else
         {
-#ifdef MAPNIK_DEBUG_LOG
-            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
+#ifdef MAPNIK_LOG
+            if (logging_enabled_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -561,16 +569,16 @@ featureset_ptr occi_datasource::features(query const& q) const
         }
         else
         {
-#ifdef MAPNIK_DEBUG_LOG
-            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
+#ifdef MAPNIK_LOG
+            if (logging_enabled_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
 
     s << query;
 
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+    if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,
@@ -579,6 +587,7 @@ featureset_ptr occi_datasource::features(query const& q) const
                                                s.str(),
                                                desc_.get_encoding(),
                                                use_connection_pool_,
+                                               use_wkb_,
                                                row_prefetch_);
 }
 
@@ -587,7 +596,15 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
     if (! is_bound_) bind();
 
     std::ostringstream s;
-    s << "SELECT " << geometry_field_;
+    s << "SELECT ";
+    if (use_wkb_)
+    {
+        s << "SDO_UTIL.TO_WKBGEOMETRY(" << geometry_field_ << ")";
+    }
+    else
+    {
+        s << geometry_field_;
+    }
     std::vector<attribute_descriptor>::const_iterator itr = desc_.get_descriptors().begin();
     std::vector<attribute_descriptor>::const_iterator end = desc_.get_descriptors().end();
     mapnik::context_ptr ctx = boost::make_shared<mapnik::context_type>();
@@ -622,8 +639,8 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         }
         else
         {
-#ifdef MAPNIK_DEBUG_LOG
-            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
+#ifdef MAPNIK_LOG
+            if (logging_enabled_) std::clog << "OCCI Plugin: cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -642,16 +659,16 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         }
         else
         {
-#ifdef MAPNIK_DEBUG_LOG
-            if (debug_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
+#ifdef MAPNIK_LOG
+            if (logging_enabled_) std::clog << "OCCI Plugin: cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
 
     s << query;
 
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+    if (logging_enabled_) std::clog << "OCCI Plugin: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,
@@ -660,5 +677,6 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
                                                s.str(),
                                                desc_.get_encoding(),
                                                use_connection_pool_,
+                                               use_wkb_,
                                                row_prefetch_);
 }

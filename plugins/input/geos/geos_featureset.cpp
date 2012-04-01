@@ -104,7 +104,7 @@ feature_ptr geos_featureset::next()
                     break;
 
                 default:
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                     std::clog << "GEOS Plugin: unknown extent geometry_type=" << type << std::endl;
 #endif
                     break;

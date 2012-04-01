@@ -138,7 +138,7 @@ public:
 
     ~font_face()
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "~font_face: Clean up face \"" << family_name()
                   << " " << style_name() << "\"" << std::endl;
 #endif
@@ -225,7 +225,7 @@ public:
 
     ~stroker()
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "~stroker: destroy stroker:" << s_ << std::endl;
 #endif
         FT_Stroker_Done(s_);

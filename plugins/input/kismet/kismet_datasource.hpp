@@ -57,9 +57,6 @@ public:
 private:
     void run (const std::string& host, const unsigned int port);
 
-#ifdef MAPNIK_DEBUG_LOG
-    bool debug_;
-#endif
     mapnik::box2d<double> extent_;
     bool extent_initialized_;
     std::string host_;

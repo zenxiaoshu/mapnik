@@ -75,12 +75,12 @@ public:
             layer_ = ogr_layer;
             is_valid_ = true;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
             std::clog << "OGR Plugin: layer_from_name layer is " << layer_name_ << std::endl;
 #endif
         }
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         debug_print_last_error();
 #endif
     }
@@ -102,13 +102,13 @@ public:
                 layer_name_ = def->GetName();
                 is_valid_ = true;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "OGR Plugin: layer_from_index layer is " << layer_name_ << std::endl;
 #endif
             }
         }
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         debug_print_last_error();
 #endif
     }
@@ -138,13 +138,13 @@ public:
                 layer_name_ = def->GetName();
                 is_valid_ = true;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "OGR Plugin: layer_from_sql layer is " << layer_name_ << std::endl;
 #endif
             }
         }
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         debug_print_last_error();
 #endif
     }
@@ -166,7 +166,7 @@ public:
 
 private:
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     void debug_print_last_error()
     {
         if (! is_valid_)

@@ -76,7 +76,7 @@ public:
         {
             PQfinish(conn_);
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
             std::clog << "PostGIS: postgresql connection closed - " << conn_ << std::endl;
 #endif
             closed_ = true;
@@ -149,7 +149,7 @@ public:
         {
             PQfinish(conn_);
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
             std::clog << "PostGIS: datasource closed, also closing connection - " << conn_ << std::endl;
 #endif
             closed_ = true;

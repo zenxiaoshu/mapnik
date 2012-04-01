@@ -409,7 +409,7 @@ void Map::zoom_all()
                     if (prj_trans.backward(layer_ext))
                     {
                         success = true;
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                         std::clog << " layer " << itr->name() << " original ext: " << itr->envelope() << "\n";
                         std::clog << " layer " << itr->name() << " transformed to map srs: " << layer_ext << "\n";
 #endif
@@ -580,7 +580,7 @@ featureset_ptr Map::query_point(unsigned index, double x, double y) const
             mapnik::datasource_ptr ds = layer.datasource();
             if (ds)
             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                 std::clog << " query at point tol = " << tol << " (" << x << "," << y << ")\n";
 #endif
                 featureset_ptr fs = ds->features_at_point(mapnik::coord2d(x,y));
@@ -591,7 +591,7 @@ featureset_ptr Map::query_point(unsigned index, double x, double y) const
         }
         catch (...)
         {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
             std::clog << "exception caught in \"query_point\"\n";
 #endif
         }
@@ -626,7 +626,7 @@ featureset_ptr Map::query_map_point(unsigned index, double x, double y) const
             mapnik::datasource_ptr ds = layer.datasource();
             if (ds)
             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                 std::clog << " query at point tol = " << tol << " (" << x << "," << y << ")\n";
 #endif
                 featureset_ptr fs = ds->features_at_point(mapnik::coord2d(x,y));
@@ -637,7 +637,7 @@ featureset_ptr Map::query_map_point(unsigned index, double x, double y) const
         }
         catch (...)
         {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
             std::clog << "exception caught in \"query_map_point\"\n";
 #endif
         }

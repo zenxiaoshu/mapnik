@@ -47,7 +47,7 @@ bool osm_dataset::load_from_url(const std::string& url,
 {
     if (parser == "libxml2")
     {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::clog << "Osm Plugin: osm_dataset::load_from_url url=" << url << " bbox=" << bbox << std::endl;
 #endif
 
@@ -57,7 +57,7 @@ bool osm_dataset::load_from_url(const std::string& url,
 
         str << url << "?bbox=" << bbox;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::clog << "Osm Plugin: FULL URL " << str.str() << std::endl;
 #endif
 
@@ -69,7 +69,7 @@ bool osm_dataset::load_from_url(const std::string& url,
             memcpy(blx, resp->data, resp->nbytes);
             blx[resp->nbytes] = '\0';
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
             std::clog << "Osm Plugin: CURL RESPONSE: " << blx << std::endl;
 #endif
 
@@ -88,7 +88,7 @@ osm_dataset::~osm_dataset()
 
 void osm_dataset::clear()
 {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Osm Plugin: osm_dataset::clear()" << std::endl;
     std::clog << "Osm Plugin: deleting ways" << std::endl;
 #endif
@@ -99,7 +99,7 @@ void osm_dataset::clear()
         ways[count] = NULL;
     }
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Osm Plugin: deleting nodes" << std::endl;
 #endif
 
@@ -109,14 +109,14 @@ void osm_dataset::clear()
         nodes[count] = NULL;
     }
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Osm Plugin: clearing ways/nodes" << std::endl;
 #endif
 
     ways.clear();
     nodes.clear();
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Osm Plugin: done" << std::endl;
 #endif
 }

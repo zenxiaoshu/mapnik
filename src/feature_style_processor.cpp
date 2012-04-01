@@ -24,6 +24,7 @@
 #include <mapnik/feature_style_processor.hpp>
 #include <mapnik/box2d.hpp>
 #include <mapnik/datasource.hpp>
+#include <mapnik/memory_datasource.hpp>
 #include <mapnik/layer.hpp>
 #include <mapnik/attribute_collector.hpp>
 #include <mapnik/expression_evaluator.hpp>

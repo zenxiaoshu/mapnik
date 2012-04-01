@@ -61,10 +61,12 @@ occi_featureset::occi_featureset(StatelessConnectionPool* pool,
                                  std::string const& sqlstring,
                                  std::string const& encoding,
                                  bool use_connection_pool,
+                                 bool use_wkb,
                                  unsigned prefetch_rows)
     : tr_(new transcoder(encoding)),
       feature_id_(1),
-      ctx_(ctx)
+      ctx_(ctx),
+      use_wkb_(use_wkb)
 {
     if (use_connection_pool)
     {
@@ -96,10 +98,31 @@ feature_ptr occi_featureset::next()
         feature_ptr feature(feature_factory::create(ctx_,feature_id_));
         ++feature_id_;
 
-        boost::scoped_ptr<SDOGeometry> geom(dynamic_cast<SDOGeometry*>(rs_->getObject(1)));
-        if (geom.get())
+        if (use_wkb_)
         {
-            convert_geometry(geom.get(), feature);
+            Blob blob = rs_->getBlob (1);
+            blob.open (OCCI_LOB_READONLY);
+
+            int size = blob.length();
+            if (buffer_.size() < size)
+            {
+                buffer_.resize(size);
+            }
+
+            Stream* instream = blob.getStream(1,0);
+            instream->readBuffer(buffer_.data(), size);
+            blob.closeStream(instream);
+            blob.close();
+
+            geometry_utils::from_wkb(feature->paths(), buffer_.data(), size);
+        }
+        else
+        {
+            boost::scoped_ptr<SDOGeometry> geom(dynamic_cast<SDOGeometry*>(rs_->getObject(1)));
+            if (geom.get())
+            {
+                convert_geometry(geom.get(), feature);
+            }
         }
 
         std::vector<MetaData> listOfColumns = rs_->getColumnListMetaData();
@@ -180,14 +203,14 @@ feature_ptr occi_featureset::next()
             case oracle::occi::OCCI_SQLT_CLOB:
             case oracle::occi::OCCI_SQLT_BLOB:
             case oracle::occi::OCCI_SQLT_RSET:
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "OCCI Plugin: unsupported datatype "
                           << occi_enums::resolve_datatype(type_oid)
                           << " (type_oid=" << type_oid << ")" << std::endl;
 #endif
                 break;
             default: // shouldn't get here
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "OCCI Plugin: unknown datatype "
                           << "(type_oid=" << type_oid << ")" << std::endl;
 #endif
@@ -344,7 +367,7 @@ void occi_featureset::convert_geometry(SDOGeometry* geom, feature_ptr feature)
     break;
     case SDO_GTYPE_UNKNOWN:
     default:
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::clog << "OCCI Plugin: unknown <occi> "
                   << occi_enums::resolve_gtype(geomtype)
                   << "(gtype=" << gtype << ")" << std::endl;

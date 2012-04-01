@@ -26,7 +26,7 @@
 #include <mapnik/map.hpp>
 
 // stl
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
 #include <iostream>
 #endif
 #include <ostream>
@@ -49,7 +49,7 @@ svg_renderer<T>::~svg_renderer() {}
 template <typename T>
 void svg_renderer<T>::start_map_processing(Map const& map)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "start map processing" << std::endl;
 #endif
 
@@ -77,7 +77,7 @@ void svg_renderer<T>::end_map_processing(Map const& map)
     // generate SVG root element closing tag.
     generator_.generate_closing_root();
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "end map processing" << std::endl;
 #endif
 }
@@ -85,7 +85,7 @@ void svg_renderer<T>::end_map_processing(Map const& map)
 template <typename T>
 void svg_renderer<T>::start_layer_processing(layer const& lay)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "start layer processing: " << lay.name() << std::endl;
 #endif
 }
@@ -93,7 +93,7 @@ void svg_renderer<T>::start_layer_processing(layer const& lay)
 template <typename T>
 void svg_renderer<T>::end_layer_processing(layer const& lay)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "end layer processing: " << lay.name() << std::endl;
 #endif
 }

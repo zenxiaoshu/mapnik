@@ -9,7 +9,7 @@ TEMPLATE = lib
 INCLUDEPATH = \
     ../deps/agg/include \
     ../deps/threadpool \
-    ../include/mapnik
+    ../include \
 
 HEADERS += \
     ../include/mapnik/grid/grid.hpp \

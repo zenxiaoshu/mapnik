@@ -76,7 +76,7 @@ osm_dataset* dataset_deliverer::load_from_url(const string& url, const string& b
     }
     else if (bbox != last_bbox)
     {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::cerr << "Osm Plugin: BBOXES ARE DIFFERENT: " << last_bbox << "," << bbox << std::endl;
 #endif
 

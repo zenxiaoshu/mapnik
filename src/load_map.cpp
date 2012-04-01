@@ -143,7 +143,8 @@ void load_map(Map & map, std::string const& filename, bool strict)
     read_xml(filename, tree.root());
     map_parser parser(strict, filename);
     parser.parse_map(map, tree.root(), "");
-#ifdef MAPNIK_DEBUG
+
+#ifdef MAPNIK_LOG
     dump_xml(tree.root());
 #endif
 }
@@ -1495,7 +1496,7 @@ std::string map_parser::ensure_relative_to_xml(boost::optional<std::string> opt_
             boost::filesystem::path full = boost::filesystem::complete(xml_path.branch_path()/rel_path).normalize();
 #endif
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
             std::clog << "\nModifying relative paths to be relative to xml...\n";
             std::clog << "original base path: " << *opt_path << "\n";
             std::clog << "relative base path: " << full.string() << "\n";

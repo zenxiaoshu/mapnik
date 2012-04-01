@@ -44,7 +44,6 @@ class shape_datasource : public datasource
 public:
     shape_datasource(const parameters &params, bool bind=true);
     virtual ~shape_datasource();
-
     datasource::datasource_t type() const;
     static std::string name();
     featureset_ptr features(const query& q) const;
@@ -53,14 +52,10 @@ public:
     boost::optional<mapnik::datasource::geometry_t> get_geometry_type() const;
     layer_descriptor get_descriptor() const;
     void bind() const;
+
 private:
-    shape_datasource(const shape_datasource&);
-    shape_datasource& operator=(const shape_datasource&);
     void init(shape_io& shape) const;
-private:
-#ifdef MAPNIK_DEBUG_LOG
-    bool debug_;
-#endif
+
     datasource::datasource_t type_;
     std::string shape_name_;
     mutable boost::shared_ptr<shape_io> shape_;

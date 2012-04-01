@@ -33,6 +33,12 @@
 namespace mapnik
 {
 
+#ifdef MAPNIK_DEBUG
+#define MAPNIK_DEBUG_AS_BOOL true
+#else
+#define MAPNIK_DEBUG_AS_BOOL false
+#endif
+
 #ifdef BOOST_BIG_ENDIAN
 #define MAPNIK_BIG_ENDIAN
 #endif

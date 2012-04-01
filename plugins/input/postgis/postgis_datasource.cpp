@@ -55,9 +55,6 @@ using mapnik::attribute_descriptor;
 
 postgis_datasource::postgis_datasource(parameters const& params, bool bind)
     : datasource(params),
-#ifdef MAPNIK_DEBUG_LOG
-      debug_(*params_.get<bool>("debug", true)),
-#endif
       table_(*params_.get<std::string>("table", "")),
       schema_(""),
       geometry_table_(*params_.get<std::string>("geometry_table", "")),
@@ -84,6 +81,8 @@ postgis_datasource::postgis_datasource(parameters const& params, bool bind)
       intersect_max_scale_(*params_.get<int>("intersect_max_scale", 0))
       //show_queries_(*params_.get<mapnik::boolean>("show_queries",false))
 {
+    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+
     if (table_.empty())
     {
         throw mapnik::datasource_exception("Postgis Plugin: missing <table> parameter");
@@ -235,15 +234,15 @@ void postgis_datasource::bind() const
             {
                 srid_ = -1;
 
-#ifdef MAPNIK_DEBUG_LOG
-                if (debug_) std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
+#ifdef MAPNIK_LOG
+                if (logging_enabled_) std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
 #endif
             }
 
             // At this point the geometry_field may still not be known
             // but we'll catch that where more useful...
-#ifdef MAPNIK_DEBUG_LOG
-            if (debug_)
+#ifdef MAPNIK_LOG
+            if (logging_enabled_)
             {
                 std::clog << "Postgis Plugin: using SRID=" << srid_ << std::endl;
                 std::clog << "Postgis Plugin: using geometry_column=" << geometryColumn_ << std::endl;
@@ -328,8 +327,8 @@ void postgis_datasource::bind() const
                         desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::String));
                         break;
                     default: // should not get here
-#ifdef MAPNIK_DEBUG_LOG
-                        if (debug_)
+#ifdef MAPNIK_LOG
+                        if (logging_enabled_)
                         {
                             s.str("");
                             s << "SELECT oid, typname FROM pg_type WHERE oid = " << type_oid;

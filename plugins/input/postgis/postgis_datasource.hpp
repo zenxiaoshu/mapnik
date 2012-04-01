@@ -67,16 +67,11 @@ private:
     std::string populate_tokens(const std::string& sql) const;
     static std::string unquote(const std::string& sql);
     boost::shared_ptr<IResultSet> get_resultset(boost::shared_ptr<Connection> const &conn, std::string const& sql) const;
-    postgis_datasource(const postgis_datasource&);
-    postgis_datasource& operator=(const postgis_datasource&);
 
     static const std::string GEOMETRY_COLUMNS;
     static const std::string SPATIAL_REF_SYS;
     static const double FMAX;
 
-#ifdef MAPNIK_DEBUG_LOG
-    bool debug_;
-#endif
     const std::string uri_;
     const std::string username_;
     const std::string password_;

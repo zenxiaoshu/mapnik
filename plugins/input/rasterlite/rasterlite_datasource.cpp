@@ -45,7 +45,6 @@ using mapnik::layer_descriptor;
 using mapnik::datasource_exception;
 
 
-
 /*
  * Opens a GDALDataset and returns a pointer to it.
  * Caller is responsible for calling GDALClose on it
@@ -72,13 +71,12 @@ inline void *rasterlite_datasource::open_dataset() const
 
 rasterlite_datasource::rasterlite_datasource(parameters const& params, bool bind)
     : datasource(params),
-#ifdef MAPNIK_DEBUG_LOG
-      debug_(*params_.get<mapnik::boolean>("debug", true)),
-#endif
       desc_(*params.get<std::string>("type"),"utf-8")
 {
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_) std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
+    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+
+#ifdef MAPNIK_LOG
+    if (logging_enabled_) std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -121,8 +119,8 @@ void rasterlite_datasource::bind() const
 
     extent_.init(x0,y0,x1,y1);
 
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_)
+#ifdef MAPNIK_LOG
+    if (logging_enabled_)
     {
         int srid, auth_srid;
         const char *auth_name;

@@ -48,7 +48,7 @@
 #include "agg_trans_affine.h"
 
 // stl
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
 #include <iostream>
 #endif
 
@@ -70,7 +70,7 @@ grid_renderer<T>::grid_renderer(Map const& m, T & pixmap, double scale_factor, u
       detector_(box2d<double>(-m.buffer_size(), -m.buffer_size(), pixmap_.width() + m.buffer_size(), pixmap_.height() + m.buffer_size())),
       ras_ptr(new grid_rasterizer)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "scale=" << m.scale() << "\n";
 #endif
 }
@@ -79,19 +79,19 @@ template <typename T>
 grid_renderer<T>::~grid_renderer() {}
 
 template <typename T>
-void grid_renderer<T>::start_map_processing(Map const& map)
+void grid_renderer<T>::start_map_processing(Map const& m)
 {
-#ifdef MAPNIK_DEBUG
-    std::clog << "start map processing bbox="
-              << map.get_current_extent() << "\n";
+#ifdef MAPNIK_LOG
+    std::clog << "start map processing bbox=" << m.get_current_extent() << "\n";
 #endif
+
     ras_ptr->clip_box(0,0,width_,height_);
 }
 
 template <typename T>
-void grid_renderer<T>::end_map_processing(Map const& )
+void grid_renderer<T>::end_map_processing(Map const& m)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "end map processing\n";
 #endif
 }
@@ -99,11 +99,12 @@ void grid_renderer<T>::end_map_processing(Map const& )
 template <typename T>
 void grid_renderer<T>::start_layer_processing(layer const& lay, box2d<double> const& query_extent)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "start layer processing : " << lay.name()  << "\n";
     std::clog << "datasource = " << lay.datasource().get() << "\n";
     std::clog << "query_extent = " << query_extent << "\n";
 #endif
+
     if (lay.clear_label_cache())
     {
         detector_.clear();
@@ -113,7 +114,7 @@ void grid_renderer<T>::start_layer_processing(layer const& lay, box2d<double> co
 template <typename T>
 void grid_renderer<T>::end_layer_processing(layer const&)
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "end layer processing\n";
 #endif
 }

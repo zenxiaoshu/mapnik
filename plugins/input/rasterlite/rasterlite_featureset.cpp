@@ -53,7 +53,7 @@ rasterlite_featureset::rasterlite_featureset(void* dataset, rasterlite_query q)
 
 rasterlite_featureset::~rasterlite_featureset()
 {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Rasterlite Plugin: closing dataset" << std::endl;
 #endif
 
@@ -86,7 +86,7 @@ feature_ptr rasterlite_featureset::next()
 
 feature_ptr rasterlite_featureset::get_feature(mapnik::query const& q)
 {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Rasterlite Plugin: get_feature" << std::endl;
 #endif
 
@@ -104,7 +104,7 @@ feature_ptr rasterlite_featureset::get_feature(mapnik::query const& q)
     const double pixel_size = (intersect.width() >= intersect.height()) ?
         (intersect.width() / (double) width) : (intersect.height() / (double) height);
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
     std::clog << "Rasterlite Plugin: Raster extent=" << raster_extent << std::endl;
     std::clog << "Rasterlite Plugin: View extent=" << q.get_bbox() << std::endl;
     std::clog << "Rasterlite Plugin: Intersect extent=" << intersect << std::endl;
@@ -145,13 +145,13 @@ feature_ptr rasterlite_featureset::get_feature(mapnik::query const& q)
 
                 free (raster);
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "Rasterlite Plugin: done" << std::endl;
 #endif
             }
             else
             {
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 std::clog << "Rasterlite Plugin: error=" << rasterliteGetLastError (dataset_) << std::endl;
 #endif
             }

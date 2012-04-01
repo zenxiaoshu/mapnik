@@ -32,7 +32,7 @@ extern "C"
 #include <boost/scoped_array.hpp>
 #include <boost/utility.hpp>
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
 #include <iostream>
 #endif
 
@@ -134,9 +134,11 @@ void png_reader::init()
 
     width_=width;
     height_=height;
-#ifdef MAPNIK_DEBUG
-    std::clog<<"bit_depth="<<bit_depth_<<" color_type="<<color_type_<<std::endl;
+
+#ifdef MAPNIK_LOG
+    std::clog << "bit_depth=" << bit_depth_ << " color_type=" << color_type_ << std::endl;
 #endif
+
     png_destroy_read_struct(&png_ptr,&info_ptr,0);
     fclose(fp);
 }

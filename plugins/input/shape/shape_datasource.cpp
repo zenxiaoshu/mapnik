@@ -52,15 +52,14 @@ using mapnik::attribute_descriptor;
 
 shape_datasource::shape_datasource(const parameters &params, bool bind)
     : datasource (params),
-#ifdef MAPNIK_DEBUG_LOG
-      debug_(*params_.get<mapnik::boolean>("debug", true)),
-#endif
       type_(datasource::Vector),
       file_length_(0),
       indexed_(false),
       row_limit_(*params_.get<int>("row_limit",0)),
       desc_(*params.get<std::string>("type"), *params.get<std::string>("encoding","utf-8"))
 {
+    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+
     boost::optional<std::string> file = params.get<std::string>("file");
     if (!file) throw datasource_exception("Shape Plugin: missing <file> parameter");
 
@@ -130,11 +129,11 @@ void shape_datasource::bind() const
                 break;
             }
             default:
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
                 // I - long
                 // G - ole
                 // + - autoincrement
-                if (debug_) std::clog << "Shape Plugin: unknown type " << fd.type_ << std::endl;
+                if (logging_enabled_) std::clog << "Shape Plugin: unknown type " << fd.type_ << std::endl;
 #endif
                 break;
             }
@@ -192,8 +191,8 @@ void  shape_datasource::init(shape_io& shape) const
 
     shape.shp().read_envelope(extent_);
 
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_)
+#ifdef MAPNIK_LOG
+    if (logging_enabled_)
     {
         double zmin = shape.shp().read_double();
         double zmax = shape.shp().read_double();
@@ -223,8 +222,8 @@ void  shape_datasource::init(shape_io& shape) const
     //    std::clog << "### Notice: no .index file found for " + shape_name_ + ".shp, use the 'shapeindex' program to build an index for faster rendering\n";
     //}
 
-#ifdef MAPNIK_DEBUG_LOG
-    if (debug_)
+#ifdef MAPNIK_LOG
+    if (logging_enabled_)
     {
         std::clog << "Shape Plugin: extent=" << extent_ << std::endl;
         std::clog << "Shape Plugin: file_length=" << file_length_ << std::endl;

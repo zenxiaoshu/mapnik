@@ -42,15 +42,14 @@ public:
     boost::optional<mapnik::datasource::geometry_t> get_geometry_type() const;
     mapnik::layer_descriptor get_descriptor() const;
     void bind() const;
+
     template <typename T>
     void parse_csv(T& stream,
                    std::string const& escape,
                    std::string const& separator,
                    std::string const& quote) const;
+
 private:
-#ifdef MAPNIK_DEBUG_LOG
-    bool debug_;
-#endif
     mutable mapnik::layer_descriptor desc_;
     mutable mapnik::box2d<double> extent_;
     mutable std::string filename_;

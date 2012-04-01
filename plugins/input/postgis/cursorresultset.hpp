@@ -64,7 +64,7 @@ public:
             std::ostringstream s;
             s << "CLOSE " << cursorName_;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
             std::clog << "Postgis Plugin: " << s.str() << std::endl;
 #endif
             conn_->execute(s.str());
@@ -135,13 +135,13 @@ private:
         std::ostringstream s;
         s << "FETCH FORWARD " << fetch_size_ << " FROM " << cursorName_;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::clog << "Postgis Plugin: " << s.str() << std::endl;
 #endif
         rs_ = conn_->executeQuery(s.str());
         is_closed_ = false;
 
-#ifdef MAPNIK_DEBUG_LOG
+#ifdef MAPNIK_LOG
         std::clog << "Postgis Plugin: FETCH result (" << cursorName_ << "): " << rs_->size() << " rows" << std::endl;
 #endif
     }

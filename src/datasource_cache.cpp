@@ -74,6 +74,7 @@ datasource_ptr datasource_cache::create(const parameters& params, bool bind)
 #ifdef MAPNIK_THREADSAFE
     mutex::scoped_lock lock(mutex_);
 #endif
+
     datasource_ptr ds;
     std::map<std::string,boost::shared_ptr<PluginInfo> >::iterator itr=plugins_.find(*type);
     if ( itr == plugins_.end() )
@@ -81,11 +82,13 @@ datasource_ptr datasource_cache::create(const parameters& params, bool bind)
         throw config_error(std::string("Could not create datasource. No plugin ") +
                            "found for type '" + * type + "' (searched in: " + plugin_directories() + ")");
     }
+
     if ( ! itr->second->handle())
     {
         throw std::runtime_error(std::string("Cannot load library: ") +
                                  lt_dlerror());
     }
+
     // http://www.mr-edd.co.uk/blog/supressing_gcc_warnings
 #ifdef __GNUC__
     __extension__
@@ -98,7 +101,8 @@ datasource_ptr datasource_cache::create(const parameters& params, bool bind)
         throw std::runtime_error(std::string("Cannot load symbols: ") +
                                  lt_dlerror());
     }
-#ifdef MAPNIK_DEBUG
+
+#ifdef MAPNIK_LOG
     std::clog << "size = " << params.size() << "\n";
     parameters::const_iterator i = params.begin();
     for (;i!=params.end();++i)
@@ -106,9 +110,10 @@ datasource_ptr datasource_cache::create(const parameters& params, bool bind)
         std::clog << i->first << "=" << i->second << "\n";
     }
 #endif
+
     ds=datasource_ptr(create_datasource(params, bind), datasource_deleter());
 
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog<<"datasource="<<ds<<" type="<<type<<std::endl;
 #endif
     return ds;
@@ -175,7 +180,7 @@ void datasource_cache::register_datasources(const std::string& str)
                                 reinterpret_cast<datasource_name*>(lt_dlsym(module, "datasource_name"));
                             if (ds_name && insert(ds_name(),module))
                             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                                 std::clog << "Datasource loader: registered: " << ds_name() << std::endl;
 #endif
                                 registered_=true;

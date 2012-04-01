@@ -57,9 +57,6 @@ private:
     //        by factoring out bind() logic out from
     //        datasource impl !!!
 
-#ifdef MAPNIK_DEBUG_LOG
-    bool debug_;
-#endif
     mutable mapnik::box2d<double> extent_;
     mutable bool extent_initialized_;
     mapnik::datasource::datasource_t type_;

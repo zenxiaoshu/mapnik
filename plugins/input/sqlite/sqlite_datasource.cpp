@@ -52,9 +52,6 @@ DATASOURCE_PLUGIN(sqlite_datasource)
 
 sqlite_datasource::sqlite_datasource(parameters const& params, bool bind)
     : datasource(params),
-#ifdef MAPNIK_DEBUG_LOG
-      debug_(*params_.get<mapnik::boolean>("debug", true)),
-#endif
       extent_(),
       extent_initialized_(false),
       type_(datasource::Vector),
@@ -71,6 +68,8 @@ sqlite_datasource::sqlite_datasource(parameters const& params, bool bind)
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
       format_(mapnik::wkbAuto)
 {
+    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+
     /* TODO
        - throw if no primary key but spatial index is present?
        - remove auto-indexing
@@ -212,8 +211,8 @@ void sqlite_datasource::bind() const
     for (std::vector<std::string>::const_iterator iter = init_statements_.begin();
          iter != init_statements_.end(); ++iter)
     {
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
 #endif
         dataset_->execute(*iter);
     }
@@ -599,8 +598,8 @@ featureset_ptr sqlite_datasource::features(query const& q) const
             s << " OFFSET " << row_offset_;
         }
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_)
+#ifdef MAPNIK_LOG
+        if (logging_enabled_)
         {
             std::clog << "Sqlite Plugin: table: " << table_ << "\n\n";
             std::clog << "Sqlite Plugin: query: " << s.str() << "\n\n";
@@ -683,8 +682,8 @@ featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
             s << " OFFSET " << row_offset_;
         }
 
-#ifdef MAPNIK_DEBUG_LOG
-        if (debug_) std::clog << "Sqlite Plugin: " << s.str() << std::endl;
+#ifdef MAPNIK_LOG
+        if (logging_enabled_) std::clog << "Sqlite Plugin: " << s.str() << std::endl;
 #endif
 
         boost::shared_ptr<sqlite_resultset> rs(dataset_->execute_query(s.str()));

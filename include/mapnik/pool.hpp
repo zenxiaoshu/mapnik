@@ -100,7 +100,7 @@ public:
         typename ContType::iterator itr=unusedPool_.begin();
         while ( itr!=unusedPool_.end())
         {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
             std::clog<<"borrow "<<(*itr).get()<<"\n";
 #endif
             if ((*itr)->isOK())
@@ -111,7 +111,7 @@ public:
             }
             else
             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                 std::clog<<"bad connection (erase)" << (*itr).get()<<"\n";
 #endif
                 itr=unusedPool_.erase(itr);
@@ -123,7 +123,7 @@ public:
             if (conn->isOK())
             {
                 usedPool_.push_back(conn);
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                 std::clog << "create << " << conn.get() << "\n";
 #endif
                 return conn;
@@ -142,7 +142,7 @@ public:
         {
             if (obj.get()==(*itr).get())
             {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
                 std::clog<<"return "<<(*itr).get()<<"\n";
 #endif
                 unusedPool_.push_back(*itr);

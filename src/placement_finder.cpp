@@ -533,8 +533,8 @@ template <typename DetectorT>
 template <typename PathT>
 void placement_finder<DetectorT>::find_line_placements(PathT & shape_path)
 {
-#ifdef MAPNIK_DEBUG
-    if (!line_sizes_.empty())
+#ifdef MAPNIK_LOG
+    if (! line_sizes_.empty())
     {
         std::cerr << "WARNING: Internal error. Text contains line breaks, but line placement is used. Please file a bug report!\n";
     }

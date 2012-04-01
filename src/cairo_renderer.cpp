@@ -61,7 +61,7 @@
 
 
 // stl
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
 #include <iostream>
 #endif
 
@@ -642,7 +642,7 @@ cairo_renderer_base::cairo_renderer_base(Map const& m, Cairo::RefPtr<Cairo::Cont
       face_manager_(font_engine_,font_manager_),
       detector_(box2d<double>(-m.buffer_size() ,-m.buffer_size() , m.width() + m.buffer_size() ,m.height() + m.buffer_size()))
 {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
     std::clog << "scale=" << m.scale() << "\n";
 #endif
 }
@@ -663,14 +663,10 @@ cairo_renderer<Cairo::Surface>::cairo_renderer(Map const& m, Cairo::RefPtr<Cairo
 
 cairo_renderer_base::~cairo_renderer_base() {}
 
-#ifdef MAPNIK_DEBUG
 void cairo_renderer_base::start_map_processing(Map const& map)
 {
-    std::clog << "start map processing bbox="
-              << map.get_current_extent() << "\n";
-#else
-    void cairo_renderer_base::start_map_processing(Map const& /*map*/)
-    {
+#ifdef MAPNIK_LOG
+    std::clog << "start map processing bbox=" << map.get_current_extent() << "\n";
 #endif
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 6, 0)
@@ -691,7 +687,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
     template <>
         void cairo_renderer<Cairo::Context>::end_map_processing(Map const& )
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "end map processing\n";
 #endif
     }
@@ -699,7 +695,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
     template <>
         void cairo_renderer<Cairo::Surface>::end_map_processing(Map const& )
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "end map processing\n";
 #endif
         context_->show_page();
@@ -707,7 +703,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
 
     void cairo_renderer_base::start_layer_processing(layer const& lay, box2d<double> const& query_extent)
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "start layer processing : " << lay.name()  << "\n";
         std::clog << "datasource = " << lay.datasource().get() << "\n";
         std::clog << "query_extent = " << query_extent << "\n";
@@ -721,7 +717,7 @@ void cairo_renderer_base::start_map_processing(Map const& map)
 
     void cairo_renderer_base::end_layer_processing(layer const&)
     {
-#ifdef MAPNIK_DEBUG
+#ifdef MAPNIK_LOG
         std::clog << "end layer processing\n";
 #endif
     }
@@ -842,7 +838,6 @@ void cairo_renderer_base::start_map_processing(Map const& map)
 
                     frame->move_to(itr->get<0>(), itr->get<1>());
                     frame->line_to(itr->get<0>(), itr->get<1>() + height);
-
                 }
 
                 geom.rewind(0);
@@ -1355,17 +1350,17 @@ void cairo_renderer_base::start_map_processing(Map const& map)
         else
         {
             color const& fill_ = sym.get_fill();
-            unsigned r = fill_.red();
-            unsigned g = fill_.green();
-            unsigned b = fill_.blue();
-            unsigned a = fill_.alpha();
+            //unsigned r = fill_.red();
+            //unsigned g = fill_.green();
+            //unsigned b = fill_.blue();
+            //unsigned a = fill_.alpha();
             stroke const& stroke_ = sym.get_stroke();
             color const& col = stroke_.get_color();
             double strk_width = stroke_.get_width();
-            unsigned s_r=col.red();
-            unsigned s_g=col.green();
-            unsigned s_b=col.blue();
-            unsigned s_a=col.alpha();
+            //unsigned s_r=col.red();
+            //unsigned s_g=col.green();
+            //unsigned s_b=col.blue();
+            //unsigned s_a=col.alpha();
             double w = sym.get_width();
             double h = sym.get_height();
             double rx = w/2.0;
