@@ -307,7 +307,7 @@ void ogr_datasource::bind() const
             case OFTStringList:
             case OFTWideStringList: // deprecated !
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                if (logging_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
 
@@ -315,7 +315,7 @@ void ogr_datasource::bind() const
             case OFTTime:
             case OFTDateTime: // unhandled !
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                if (logging_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::Object));
                 break;
@@ -352,7 +352,7 @@ boost::optional<mapnik::datasource::geometry_t> ogr_datasource::get_geometry_typ
 #if GDAL_VERSION_NUM < 1800
         switch (wkbFlatten(layer->GetLayerDefn()->GetGeomType()))
 #else
-            switch (wkbFlatten(layer->GetGeomType()))
+        switch (wkbFlatten(layer->GetGeomType()))
 #endif
             {
             case wkbPoint:
@@ -534,8 +534,7 @@ featureset_ptr ogr_datasource::features_at_point(coord2d const& pt) const
                                                                              *layer,
                                                                              filter,
                                                                              index_name_,
-                                                                             desc_.get_encoding()
-                                      ));
+                                                                             desc_.get_encoding()));
         }
         else
         {
@@ -547,8 +546,7 @@ featureset_ptr ogr_datasource::features_at_point(coord2d const& pt) const
                                                       *dataset_,
                                                       *layer,
                                                       point,
-                                                      desc_.get_encoding()
-                                      ));
+                                                      desc_.get_encoding()));
         }
     }
 

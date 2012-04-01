@@ -146,7 +146,7 @@ feature_ptr shape_featureset<filterT>::next()
                 else
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "Shape Plugin: total shapes read=" << count_ << std::endl;
+                    std::clog << "Mapnik LOG> shape_featureset: Total shapes read=" << count_ << std::endl;
 #endif
                     return feature_ptr();
                 }
@@ -256,7 +256,7 @@ feature_ptr shape_featureset<filterT>::next()
     else
     {
 #ifdef MAPNIK_LOG
-        std::clog << "Shape Plugin: total shapes read=" << count_ << std::endl;
+        std::clog << "Mapnik LOG> shape_featureset: Total shapes read=" << count_ << std::endl;
 #endif
         return feature_ptr();
     }

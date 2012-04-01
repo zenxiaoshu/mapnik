@@ -69,7 +69,7 @@ void ogr_converter::convert_geometry(OGRGeometry* geom, feature_ptr feature)
     case wkbUnknown:
     default:
 #ifdef MAPNIK_LOG
-        std::clog << "OGR Plugin: unknown <ogr> geometry_type="
+        std::clog << "Mapnik LOG> ogr_converter: unknown <ogr> geometry_type="
                   << wkbFlatten(geom->getGeometryType()) << std::endl;
 #endif
         break;

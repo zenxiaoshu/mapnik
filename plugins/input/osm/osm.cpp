@@ -48,7 +48,7 @@ bool osm_dataset::load_from_url(const std::string& url,
     if (parser == "libxml2")
     {
 #ifdef MAPNIK_LOG
-        std::clog << "Osm Plugin: osm_dataset::load_from_url url=" << url << " bbox=" << bbox << std::endl;
+        std::clog << "Mapnik LOG> osm_dataset: load_from_url url=" << url << ",bbox=" << bbox << std::endl;
 #endif
 
         std::ostringstream str;
@@ -58,7 +58,7 @@ bool osm_dataset::load_from_url(const std::string& url,
         str << url << "?bbox=" << bbox;
 
 #ifdef MAPNIK_LOG
-        std::clog << "Osm Plugin: FULL URL " << str.str() << std::endl;
+        std::clog << "Mapnik LOG> osm_dataset: Full url=" << str.str() << std::endl;
 #endif
 
         CURL_LOAD_DATA* resp = grab_http_response(str.str().c_str());
@@ -70,7 +70,7 @@ bool osm_dataset::load_from_url(const std::string& url,
             blx[resp->nbytes] = '\0';
 
 #ifdef MAPNIK_LOG
-            std::clog << "Osm Plugin: CURL RESPONSE: " << blx << std::endl;
+            std::clog << "Mapnik LOG> osm_dataset: CURL Response=" << blx << std::endl;
 #endif
 
             delete[] blx;
@@ -89,35 +89,31 @@ osm_dataset::~osm_dataset()
 void osm_dataset::clear()
 {
 #ifdef MAPNIK_LOG
-    std::clog << "Osm Plugin: osm_dataset::clear()" << std::endl;
-    std::clog << "Osm Plugin: deleting ways" << std::endl;
+    std::clog << "Mapnik LOG> osm_dataset: Clear" << std::endl;
 #endif
 
+#ifdef MAPNIK_LOG
+    std::clog << "Mapnik LOG> osm_dataset: -- Deleting ways" << std::endl;
+#endif
     for (unsigned int count = 0; count < ways.size(); ++count)
     {
         delete ways[count];
         ways[count] = NULL;
     }
+    ways.clear();
 
 #ifdef MAPNIK_LOG
-    std::clog << "Osm Plugin: deleting nodes" << std::endl;
+    std::clog << "Mapnik LOG> osm_dataset: -- Deleting nodes" << std::endl;
 #endif
-
     for (unsigned int count = 0; count < nodes.size(); ++count)
     {
         delete nodes[count];
         nodes[count] = NULL;
     }
-
-#ifdef MAPNIK_LOG
-    std::clog << "Osm Plugin: clearing ways/nodes" << std::endl;
-#endif
-
-    ways.clear();
     nodes.clear();
 
 #ifdef MAPNIK_LOG
-    std::clog << "Osm Plugin: done" << std::endl;
+    std::clog << "Mapnik LOG> osm_dataset: Clear done" << std::endl;
 #endif
 }
 

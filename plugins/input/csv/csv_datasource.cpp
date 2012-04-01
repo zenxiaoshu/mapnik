@@ -223,7 +223,7 @@ void csv_datasource::parse_csv(T& stream,
                 sep = "\t";
 
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "CSV Plugin: auto detected tab separator\n";
+                if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: auto detected tab separator" << std::endl;
 #endif
             }
         }
@@ -235,7 +235,7 @@ void csv_datasource::parse_csv(T& stream,
                 sep = "|";
 
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "CSV Plugin: auto detected '|' separator\n";
+                if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: auto detected '|' separator" << std::endl;
 #endif
             }
             else // semicolons
@@ -246,7 +246,7 @@ void csv_datasource::parse_csv(T& stream,
                     sep = ";";
 
 #ifdef MAPNIK_LOG
-                    if (logging_enabled_) std::clog << "CSV Plugin: auto detected ';' separator\n";
+                    if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: auto detected ';' separator" << std::endl;
 #endif
                 }
             }
@@ -265,7 +265,7 @@ void csv_datasource::parse_csv(T& stream,
     if (quo.empty()) quo = "\"";
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "CSV Plugin: csv grammer: sep: '" << sep << "' quo: '" << quo << "' esc: '" << esc << "'\n";
+    if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: csv grammer: sep: '" << sep << "' quo: '" << quo << "' esc: '" << esc << std::endl;
 #endif
 
     boost::escaped_list_separator<char> grammer;
@@ -432,7 +432,7 @@ void csv_datasource::parse_csv(T& stream,
         if ((row_limit_ > 0) && (line_number > row_limit_))
         {
 #ifdef MAPNIK_LOG
-            if (logging_enabled_) std::clog << "CSV Plugin: row limit hit, exiting at feature: " << feature_count << "\n";
+            if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: row limit hit, exiting at feature: " << feature_count << std::endl;
 #endif
             break;
         }
@@ -449,7 +449,7 @@ void csv_datasource::parse_csv(T& stream,
                 ++line_number;
 
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "CSV Plugin: empty row encountered at line: " << line_number << "\n";
+                if (logging_enabled_) std::clog << "Mapnik LOG> csv_datasource: empty row encountered at line: " << line_number << std::endl;
 #endif
 
                 continue;

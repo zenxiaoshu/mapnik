@@ -50,7 +50,7 @@ using mapnik::datasource_exception;
 inline GDALDataset* gdal_datasource::open_dataset() const
 {
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "GDAL Plugin: opening: " << dataset_name_ << std::endl;
+    if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Opening " << dataset_name_ << std::endl;
 #endif
 
     GDALDataset *dataset;
@@ -82,7 +82,7 @@ gdal_datasource::gdal_datasource(parameters const& params, bool bind)
     logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "GDAL Plugin: Initializing..." << std::endl;
+    if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Initializing..." << std::endl;
 #endif
 
     GDALAllRegister();
@@ -125,7 +125,7 @@ void gdal_datasource::bind() const
     if (bbox_s)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "GDAL Plugin: bbox parameter=" << *bbox_s << std::endl;
+        if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: BBox Parameter=" << *bbox_s << std::endl;
 #endif
 
         bbox_override = extent_.from_string(*bbox_s);
@@ -152,7 +152,7 @@ void gdal_datasource::bind() const
 #ifdef MAPNIK_LOG
     if (logging_enabled_)
     {
-        std::clog << "GDAL Plugin: geotransform=" << tr[0] << "," << tr[1] << ","
+        std::clog << "Mapnik LOG> gdal_datasource Geotransform=" << tr[0] << "," << tr[1] << ","
                   << tr[2] << "," << tr[3] << ","
                   << tr[4] << "," << tr[5] << std::endl;
     }
@@ -194,8 +194,8 @@ void gdal_datasource::bind() const
 #ifdef MAPNIK_LOG
     if (logging_enabled_)
     {
-        std::clog << "GDAL Plugin: Raster Size=" << width_ << "," << height_ << std::endl;
-        std::clog << "GDAL Plugin: Raster Extent=" << extent_ << std::endl;
+        std::clog << "Mapnik LOG> gdal_datasource: Raster Size=" << width_ << "," << height_ << std::endl;
+        std::clog << "Mapnik LOG> gdal_datasource: Raster Extent=" << extent_ << std::endl;
     }
 #endif
 

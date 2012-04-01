@@ -64,7 +64,7 @@ DATASOURCE_PLUGIN(geos_datasource)
 void geos_notice(const char* fmt, ...)
 {
     va_list ap;
-    fprintf( stdout, "GEOS Plugin: (GEOS NOTICE) ");
+    fprintf( stdout, "Mapnik LOG> geos_datasource: (GEOS NOTICE) ");
 
     va_start (ap, fmt);
     vfprintf( stdout, fmt, ap);
@@ -75,7 +75,7 @@ void geos_notice(const char* fmt, ...)
 void geos_error(const char* fmt, ...)
 {
     va_list ap;
-    fprintf( stdout, "GEOS Plugin: (GEOS ERROR) ");
+    fprintf( stdout, "Mapnik LOG> geos_datasource: (GEOS ERROR) ");
 
     va_start (ap, fmt);
     vfprintf( stdout, fmt, ap);
@@ -148,7 +148,7 @@ void geos_datasource::bind() const
     if (! extent_initialized_)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "GEOS Plugin: initializing extent from geometry" << std::endl;
+        if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Initializing extent from geometry" << std::endl;
 #endif
 
         if (GEOSGeomTypeId(*geometry_) == GEOS_POINT)
@@ -174,7 +174,7 @@ void geos_datasource::bind() const
                 if (logging_enabled_)
                 {
                     char* wkt = GEOSGeomToWKT(*envelope);
-                    std::clog << "GEOS Plugin: getting coord sequence from: " << wkt << std::endl;
+                    std::clog << "Mapnik LOG> geos_datasource: Getting coord sequence from=" << wkt << std::endl;
                     GEOSFree(wkt);
                 }
 #endif
@@ -186,7 +186,7 @@ void geos_datasource::bind() const
                     if (cs != NULL)
                     {
 #ifdef MAPNIK_LOG
-                        if (logging_enabled_) std::clog << "GEOS Plugin: iterating boundary points" << std::endl;
+                        if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Iterating boundary points" << std::endl;
 #endif
 
                         double x, y;
@@ -297,7 +297,7 @@ featureset_ptr geos_datasource::features(query const& q) const
       << "))";
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "GEOS Plugin: using extent: " << s.str() << std::endl;
+    if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using extent=" << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,
@@ -316,7 +316,7 @@ featureset_ptr geos_datasource::features_at_point(coord2d const& pt) const
     s << "POINT(" << pt.x << " " << pt.y << ")";
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "GEOS Plugin: using point: " << s.str() << std::endl;
+    if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using point=" << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,

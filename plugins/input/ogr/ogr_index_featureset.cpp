@@ -77,7 +77,7 @@ ogr_index_featureset<filterT>::ogr_index_featureset(mapnik::context_ptr const & 
     std::sort(ids_.begin(),ids_.end());
 
 #ifdef MAPNIK_LOG
-    std::clog << "OGR Plugin: query size=" << ids_.size() << std::endl;
+    std::clog << "Mapnik LOG> ogr_index_featureset: Query size=" << ids_.size() << std::endl;
 #endif
 
     itr_ = ids_.begin();
@@ -113,7 +113,7 @@ feature_ptr ogr_index_featureset<filterT>::next()
 #ifdef MAPNIK_LOG
             else
             {
-                std::clog << "OGR Plugin: Warning - feature with null geometry: " << (*feat)->GetFID() << "\n";
+                std::clog << "Mapnik LOG> ogr_index_featureset: Feature with null geometry=" << (*feat)->GetFID() << "\n";
             }
 #endif
 
@@ -152,7 +152,7 @@ feature_ptr ogr_index_featureset<filterT>::next()
                 case OFTWideStringList: // deprecated !
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                    std::clog << "Mapnik LOG> ogr_index_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                     break;
                 }
@@ -160,7 +160,7 @@ feature_ptr ogr_index_featureset<filterT>::next()
                 case OFTBinary:
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                    std::clog << "Mapnik LOG> ogr_index_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                     //feature->put(name,feat->GetFieldAsBinary (i, size));
                     break;
@@ -171,7 +171,7 @@ feature_ptr ogr_index_featureset<filterT>::next()
                 case OFTDateTime:       // unhandled !
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                    std::clog << "Mapnik LOG> ogr_index_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                     break;
                 }

@@ -235,7 +235,7 @@ void postgis_datasource::bind() const
                 srid_ = -1;
 
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "Postgis Plugin: SRID warning, using srid=-1 for '" << table_ << "'" << std::endl;
+                if (logging_enabled_) std::clog << "Mapnik LOG> postgis_datasource: Table " << table_ << " is using SRID=-1" << std::endl;
 #endif
             }
 
@@ -244,8 +244,8 @@ void postgis_datasource::bind() const
 #ifdef MAPNIK_LOG
             if (logging_enabled_)
             {
-                std::clog << "Postgis Plugin: using SRID=" << srid_ << std::endl;
-                std::clog << "Postgis Plugin: using geometry_column=" << geometryColumn_ << std::endl;
+                std::clog << "Mapnik LOG> postgis_datasource: Using SRID=" << srid_ << std::endl;
+                std::clog << "Mapnik LOG> postgis_datasource: Using geometry_column=" << geometryColumn_ << std::endl;
             }
 #endif
 
@@ -343,12 +343,12 @@ void postgis_datasource::bind() const
                             shared_ptr<ResultSet> rs_oid = conn->executeQuery(s.str());
                             if (rs_oid->next())
                             {
-                                std::clog << "Postgis Plugin: unknown type = " << rs_oid->getValue("typname")
+                                std::clog << "Mapnik LOG> postgis_datasource: Unknown type=" << rs_oid->getValue("typname")
                                           << " (oid:" << rs_oid->getValue("oid") << ")" << std::endl;
                             }
                             else
                             {
-                                std::clog << "Postgis Plugin: unknown oid type =" << type_oid << std::endl;
+                                std::clog << "Mapnik LOG> postgis_datasource: Unknown type_oid=" << type_oid << std::endl;
                             }
                             rs_oid->close();
                         }
@@ -768,7 +768,9 @@ box2d<double> postgis_datasource::envelope() const
                 }
                 else
                 {
-                    std::clog << boost::format("Postgis Plugin: warning: could not determine extent from query: %s\n") % s.str() << std::endl;
+#ifdef MAPNIK_LOG
+                    std::clog << boost::format("Mapnik LOG> postgis_datasource: Could not determine extent from query: %s") % s.str() << std::endl;
+#endif
                 }
             }
             rs->close();

@@ -58,7 +58,7 @@ shape_io::shape_io(const std::string& shape_name, bool open_index)
         catch (...)
         {
 #ifdef MAPNIK_LOG
-            std::clog << "Shape Plugin: warning - could not open index: '" + shape_name + INDEX + "'" << std::endl;
+            std::clog << "Mapnik LOG> shape_io: Could not open index=" << shape_name << INDEX << std::endl;
 #endif
         }
     }

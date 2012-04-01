@@ -105,7 +105,7 @@ feature_ptr ogr_featureset::next()
 #ifdef MAPNIK_LOG
         else
         {
-            std::clog << "OGR Plugin: feature with null geometry: "
+            std::clog << "Mapnik LOG> ogr_featureset: Feature with null geometry="
                       << (*feat)->GetFID() << std::endl;
         }
 #endif
@@ -146,7 +146,7 @@ feature_ptr ogr_featureset::next()
             case OFTWideStringList: // deprecated !
             {
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                std::clog << "Mapnik LOG> ogr_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
             }
@@ -154,7 +154,7 @@ feature_ptr ogr_featureset::next()
             case OFTBinary:
             {
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                std::clog << "Mapnik LOG> ogr_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 //feature->put(name,feat->GetFieldAsBinary (i, size));
                 break;
@@ -165,7 +165,7 @@ feature_ptr ogr_featureset::next()
             case OFTDateTime:       // unhandled !
             {
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: unhandled type_oid=" << type_oid << std::endl;
+                std::clog << "Mapnik LOG> ogr_featureset: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
             }
@@ -173,7 +173,7 @@ feature_ptr ogr_featureset::next()
             default: // unknown
             {
 #ifdef MAPNIK_LOG
-                std::clog << "OGR Plugin: unknown type_oid=" << type_oid << std::endl;
+                std::clog << "Mapnik LOG> ogr_featureset: Unknown type_oid=" << type_oid << std::endl;
 #endif
                 break;
             }
@@ -183,7 +183,8 @@ feature_ptr ogr_featureset::next()
     }
 
 #ifdef MAPNIK_LOG
-    std::clog << "OGR Plugin: " << count_ << " features" << std::endl;
+    std::clog << "Mapnik LOG> ogr_featureset: " << count_ << " features" << std::endl;
 #endif
+
     return feature_ptr();
 }

@@ -125,7 +125,7 @@ feature_ptr sqlite_featureset::next()
 
             default:
 #ifdef MAPNIK_LOG
-                std::clog << "Sqlite Plugin: field " << fld_name_str
+                std::clog << "Mapnik LOG> sqlite_featureset: Field=" << fld_name_str
                           << " unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;

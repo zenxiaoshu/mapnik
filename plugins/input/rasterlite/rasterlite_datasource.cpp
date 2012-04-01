@@ -76,7 +76,7 @@ rasterlite_datasource::rasterlite_datasource(parameters const& params, bool bind
     logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Rasterlite Plugin: Initializing..." << std::endl;
+    if (logging_enabled_) std::clog << "Mapnik LOG> rasterlite_datasource: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -140,20 +140,20 @@ void rasterlite_datasource::bind() const
             throw datasource_exception(error);
         }
 
-        std::clog << "Rasterlite Plugin: Data Source=" << rasterliteGetTablePrefix(dataset) << std::endl;
-        std::clog << "Rasterlite Plugin: SRID=" << srid << std::endl;
-        std::clog << "Rasterlite Plugin: Authority=" << auth_name << std::endl;
-        std::clog << "Rasterlite Plugin: AuthSRID=" << auth_srid << std::endl;
-        std::clog << "Rasterlite Plugin: RefSys Name=" << ref_sys_name << std::endl;
-        std::clog << "Rasterlite Plugin: Proj4Text=" << proj4text << std::endl;
-        std::clog << "Rasterlite Plugin: Extent(" << x0 << "," << y0 << " " << x1 << "," << y1 << ")" << std::endl;
-        std::clog << "Rasterlite Plugin: Levels=" << levels << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: Data Source=" << rasterliteGetTablePrefix(dataset) << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: SRID=" << srid << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: Authority=" << auth_name << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: AuthSRID=" << auth_srid << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: RefSys Name=" << ref_sys_name << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: Proj4Text=" << proj4text << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: Extent=" << x0 << "," << y0 << " " << x1 << "," << y1 << ")" << std::endl;
+        std::clog << "Mapnik LOG> rasterlite_datasource: Levels=" << levels << std::endl;
 
         for (int i = 0; i < levels; i++)
         {
             if (rasterliteGetResolution(dataset, i, &pixel_x_size, &pixel_y_size, &tile_count) == RASTERLITE_OK)
             {
-                std::clog << "Rasterlite Plugin: Level=" << i
+                std::clog << "Mapnik LOG> rasterlite_datasource: Level=" << i
                           << " x=" << pixel_x_size << " y=" << pixel_y_size << " tiles=" << tile_count << std::endl;
             }
         }

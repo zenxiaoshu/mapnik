@@ -195,7 +195,7 @@ feature_ptr postgis_featureset::next()
                     default:
                     {
 #ifdef MAPNIK_LOG
-                        std::clog << "Postgis Plugin: uknown OID = " << oid << std::endl;
+                        std::clog << "Mapnik LOG> postgis_featureset: Uknown type_oid=" << oid << std::endl;
 #endif
                         break;
                     }

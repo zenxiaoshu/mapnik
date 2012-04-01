@@ -212,7 +212,7 @@ void sqlite_datasource::bind() const
          iter != init_statements_.end(); ++iter)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Sqlite Plugin: Execute init sql: " << *iter << std::endl;
+        if (logging_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: Execute init sql=" << *iter << std::endl;
 #endif
         dataset_->execute(*iter);
     }
@@ -580,7 +580,8 @@ featureset_ptr sqlite_datasource::features(query const& q) const
                                                key_field_,
                                                index_table_,
                                                geometry_table_,
-                                               intersects_token_);        }
+                                               intersects_token_);
+        }
         else
         {
             query = populate_tokens(table_);
@@ -601,8 +602,8 @@ featureset_ptr sqlite_datasource::features(query const& q) const
 #ifdef MAPNIK_LOG
         if (logging_enabled_)
         {
-            std::clog << "Sqlite Plugin: table: " << table_ << "\n\n";
-            std::clog << "Sqlite Plugin: query: " << s.str() << "\n\n";
+            std::clog << "Mapnik LOG> sqlite_datasource: Table=" << table_ << "\n\n";
+            std::clog << "Mapnik LOG> sqlite_datasource: Query=" << s.str() << "\n\n";
         }
 #endif
 
@@ -683,7 +684,7 @@ featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
         }
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Sqlite Plugin: " << s.str() << std::endl;
+        if (logging_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: " << s.str() << std::endl;
 #endif
 
         boost::shared_ptr<sqlite_resultset> rs(dataset_->execute_query(s.str()));

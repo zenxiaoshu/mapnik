@@ -83,7 +83,7 @@ occi_featureset::occi_featureset(StatelessConnectionPool* pool,
     }
     catch (SQLException &ex)
     {
-        std::clog << "OCCI Plugin: error processing " << sqlstring << " : " << ex.getMessage() << std::endl;
+        std::cerr << "OCCI Plugin: error processing " << sqlstring << " : " << ex.getMessage() << std::endl;
     }
 }
 
@@ -204,14 +204,14 @@ feature_ptr occi_featureset::next()
             case oracle::occi::OCCI_SQLT_BLOB:
             case oracle::occi::OCCI_SQLT_RSET:
 #ifdef MAPNIK_LOG
-                std::clog << "OCCI Plugin: unsupported datatype "
+                std::clog << "Mapnik LOG> occi_featureset: Unsupported datatype "
                           << occi_enums::resolve_datatype(type_oid)
                           << " (type_oid=" << type_oid << ")" << std::endl;
 #endif
                 break;
             default: // shouldn't get here
 #ifdef MAPNIK_LOG
-                std::clog << "OCCI Plugin: unknown datatype "
+                std::clog << "Mapnik LOG> occi_featureset: Unknown datatype "
                           << "(type_oid=" << type_oid << ")" << std::endl;
 #endif
                 break;
@@ -231,20 +231,6 @@ void occi_featureset::convert_geometry(SDOGeometry* geom, feature_ptr feature)
     int dimensions = gtype / 1000;
     int lrsvalue = (gtype - dimensions * 1000) / 100;
     int geomtype = (gtype - dimensions * 1000 - lrsvalue * 100);
-
-#if 0
-    std::clog << "-----------Geometry Object ------------" << std::endl;
-    std::clog << "SDO GTYPE = " << gtype << std::endl;
-    std::clog << "SDO DIMENSIONS = " << dimensions << std::endl;
-    std::clog << "SDO LRS = " << lrsvalue << std::endl;
-    std::clog << "SDO GEOMETRY TYPE = " << geomtype << std::endl;
-
-    Number sdo_srid = geom->getSdo_srid();
-    if (sdo_srid.isNull())
-        std::clog << "SDO SRID = " << "Null" << std::endl;
-    else
-        std::clog << "SDO SRID = " << (int)sdo_srid << std::endl;
-#endif
 
     const std::vector<Number>& elem_info = geom->getSdo_elem_info();
     const std::vector<Number>& ordinates = geom->getSdo_ordinates();
@@ -368,7 +354,7 @@ void occi_featureset::convert_geometry(SDOGeometry* geom, feature_ptr feature)
     case SDO_GTYPE_UNKNOWN:
     default:
 #ifdef MAPNIK_LOG
-        std::clog << "OCCI Plugin: unknown <occi> "
+        std::clog << "Mapnik LOG> occi_featureset: Unknown oracle enum "
                   << occi_enums::resolve_gtype(geomtype)
                   << "(gtype=" << gtype << ")" << std::endl;
 #endif

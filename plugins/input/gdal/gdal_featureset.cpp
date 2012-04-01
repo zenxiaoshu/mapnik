@@ -74,7 +74,7 @@ gdal_featureset::gdal_featureset(GDALDataset& dataset,
 gdal_featureset::~gdal_featureset()
 {
 #ifdef MAPNIK_LOG
-    std::clog << "GDAL Plugin: closing dataset = " << &dataset_ << std::endl;
+    std::clog << "Mapnik LOG> gdal_featureset: Closing Dataset=" << &dataset_ << std::endl;
 #endif
 
     GDALClose(&dataset_);
@@ -87,7 +87,7 @@ feature_ptr gdal_featureset::next()
         first_ = false;
 
 #ifdef MAPNIK_LOG
-        std::clog << "GDAL Plugin: featureset, dataset = " << &dataset_ << std::endl;
+        std::clog << "Mapnik LOG> gdal_featureset: Next feature in Dataset=" << &dataset_ << std::endl;
 #endif
 
         query *q = boost::get<query>(&gquery_);
@@ -184,10 +184,10 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
     intersect = t.backward(feature_raster_extent);
 
 #ifdef MAPNIK_LOG
-    std::clog << "GDAL Plugin: Raster extent=" << raster_extent_ << std::endl;
-    std::clog << "GDAL Plugin: View extent=" << intersect << std::endl;
-    std::clog << "GDAL Plugin: Query resolution=" << boost::get<0>(q.resolution()) << "," << boost::get<1>(q.resolution()) << std::endl;
-    std::clog << boost::format("GDAL Plugin: StartX=%d StartY=%d Width=%d Height=%d") % x_off % y_off % width % height << std::endl;
+    std::clog << "Mapnik LOG> gdal_featureset: Raster extent=" << raster_extent_ << std::endl;
+    std::clog << "Mapnik LOG> gdal_featureset: View extent=" << intersect << std::endl;
+    std::clog << "Mapnik LOG> gdal_featureset: Query resolution=" << boost::get<0>(q.resolution()) << "," << boost::get<1>(q.resolution()) << std::endl;
+    std::clog << boost::format("Mapnik LOG> gdal_featureset: StartX=%d StartY=%d Width=%d Height=%d") % x_off % y_off % width % height << std::endl;
 #endif
 
     if (width > 0 && height > 0)
@@ -204,7 +204,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
             im_height *= filter_factor_;
 
 #ifdef MAPNIK_LOG
-            std::clog << "GDAL Plugin: applying layer filter_factor: " << filter_factor_ << "\n";
+            std::clog << "Mapnik LOG> gdal_featureset: Applying layer filter_factor=" << filter_factor_ << "\n";
 #endif
         }
         // otherwise respect symbolizer level factor applied to query, default of 1.0
@@ -229,8 +229,8 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
             image.set(0xffffffff);
 
 #ifdef MAPNIK_LOG
-            std::clog << "GDAL Plugin: Image Size=(" << im_width << "," << im_height << ")" << std::endl;
-            std::clog << "GDAL Plugin: Reading band " << band_ << std::endl;
+            std::clog << "Mapnik LOG> gdal_featureset: Image Size=(" << im_width << "," << im_height << ")" << std::endl;
+            std::clog << "Mapnik LOG> gdal_featureset: Reading band=" << band_ << std::endl;
 #endif
             typedef std::vector<int,int> pallete;
 
@@ -271,38 +271,38 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                     case GCI_RedBand:
                         red = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found red band" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found red band" << std::endl;
 #endif
                         break;
                     case GCI_GreenBand:
                         green = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found green band" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found green band" << std::endl;
 #endif
                         break;
                     case GCI_BlueBand:
                         blue = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found blue band" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found blue band" << std::endl;
 #endif
                         break;
                     case GCI_AlphaBand:
                         alpha = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found alpha band" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found alpha band" << std::endl;
 #endif
                         break;
                     case GCI_GrayIndex:
                         grey = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found gray band" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found gray band" << std::endl;
 #endif
                         break;
                     case GCI_PaletteIndex:
                     {
                         grey = band;
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found gray band, and colortable..." << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found gray band, and colortable..." << std::endl;
 #endif
                         GDALColorTable *color_table = band->GetColorTable();
 
@@ -310,14 +310,14 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                         {
                             int count = color_table->GetColorEntryCount();
 #ifdef MAPNIK_LOG
-                            std::clog << "GDAL Plugin: Color Table count = " << count << std::endl;
+                            std::clog << "Mapnik LOG> gdal_featureset: Color Table count=" << count << std::endl;
 #endif
                             for (int j = 0; j < count; j++)
                             {
                                 const GDALColorEntry *ce = color_table->GetColorEntry (j);
                                 if (! ce) continue;
 #ifdef MAPNIK_LOG
-                                std::clog << "GDAL Plugin: Color entry RGB (" << ce->c1 << "," <<ce->c2 << "," << ce->c3 << ")" << std::endl;
+                                std::clog << "Mapnik LOG> gdal_featureset: Color entry RGB=" << ce->c1 << "," <<ce->c2 << "," << ce->c3 << std::endl;
 #endif
                             }
                         }
@@ -325,13 +325,13 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                     }
                     case GCI_Undefined:
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Found undefined band (assumming gray band)" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Found undefined band (assumming gray band)" << std::endl;
 #endif
                         grey = band;
                         break;
                     default:
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: band type unknown!" << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Band type unknown!" << std::endl;
 #endif
                         break;
                     }
@@ -340,7 +340,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                 if (red && green && blue)
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "GDAL Plugin: processing rgb bands..." << std::endl;
+                    std::clog << "Mapnik LOG> gdal_featureset: Processing rgb bands..." << std::endl;
 #endif
                     int hasNoData;
                     float nodata = red->GetNoDataValue(&hasNoData);
@@ -380,7 +380,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                 else if (grey)
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "GDAL Plugin: processing gray band..." << std::endl;
+                    std::clog << "Mapnik LOG> gdal_featureset: Processing gray band..." << std::endl;
 #endif
                     int hasNoData;
                     float nodata = grey->GetNoDataValue(&hasNoData);
@@ -389,7 +389,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                     if (hasNoData && ! color_table)
                     {
 #ifdef MAPNIK_LOG
-                        std::clog << "\tno data value for layer: " << nodata << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: No data value for layer=" << nodata << std::endl;
 #endif
                         // first read the data in and create an alpha channel from the nodata values
                         float* imageData = (float*)image.getBytes();
@@ -422,7 +422,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                     if (color_table)
                     {
 #ifdef MAPNIK_LOG
-                        std::clog << "GDAL Plugin: Loading colour table..." << std::endl;
+                        std::clog << "Mapnik LOG> gdal_featureset: Loading colour table..." << std::endl;
 #endif
                         for (unsigned y = 0; y < image.height(); ++y)
                         {
@@ -444,7 +444,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
                 if (alpha)
                 {
 #ifdef MAPNIK_LOG
-                    std::clog << "GDAL Plugin: processing alpha band..." << std::endl;
+                    std::clog << "Mapnik LOG> gdal_featureset: processing alpha band..." << std::endl;
 #endif
                     alpha->RasterIO(GF_Read, x_off, y_off, width, height, image.getBytes() + 3,
                                     image.width(), image.height(), GDT_Byte, 4, 4 * image.width());
@@ -481,8 +481,8 @@ feature_ptr gdal_featureset::get_feature_at_point(mapnik::coord2d const& pt)
         if (x < raster_xsize && y < raster_ysize)
         {
 #ifdef MAPNIK_LOG
-            std::clog << boost::format("GDAL Plugin: pt.x=%f pt.y=%f") % pt.x % pt.y << std::endl;
-            std::clog << boost::format("GDAL Plugin: x=%f y=%f") % x % y << std::endl;
+            std::clog << boost::format("Mapnik LOG> gdal_featureset: pt.x=%f pt.y=%f") % pt.x % pt.y << std::endl;
+            std::clog << boost::format("Mapnik LOG> gdal_featureset: x=%f y=%f") % x % y << std::endl;
 #endif
             GDALRasterBand* band = dataset_.GetRasterBand(band_);
             int hasNoData;
@@ -511,18 +511,18 @@ void gdal_featureset::get_overview_meta(GDALRasterBand* band)
     int band_overviews = band->GetOverviewCount();
     if (band_overviews > 0)
     {
-        std::clog << "GDAL Plugin: "<< band_overviews << " overviews found!" << std::endl;
+        std::clog << "Mapnik LOG> gdal_featureset: "<< band_overviews << " overviews found!" << std::endl;
 
         for (int b = 0; b < band_overviews; b++)
         {
             GDALRasterBand * overview = band->GetOverview(b);
-            std::clog << boost::format("GDAL Plugin: Overview=%d Width=%d Height=%d")
+            std::clog << boost::format("Mapnik LOG> gdal_featureset: Overview=%d Width=%d Height=%d")
                 % b % overview->GetXSize() % overview->GetYSize() << std::endl;
         }
     }
     else
     {
-        std::clog << "GDAL Plugin: No overviews found!" << std::endl;
+        std::clog << "Mapnik LOG> gdal_featureset: No overviews found!" << std::endl;
     }
 
     int bsx,bsy;
@@ -530,7 +530,7 @@ void gdal_featureset::get_overview_meta(GDALRasterBand* band)
     band->GetBlockSize(&bsx, &bsy);
     scale = band->GetScale();
 
-    std::clog << boost::format("GDAL Plugin: Block=%dx%d Scale=%f Type=%s Color=%s") % bsx % bsy % scale
+    std::clog << boost::format("Mapnik LOG> gdal_featureset: Block=%dx%d Scale=%f Type=%s Color=%s") % bsx % bsy % scale
         % GDALGetDataTypeName(band->GetRasterDataType())
         % GDALGetColorInterpretationName(band->GetColorInterpretation()) << std::endl;
 }

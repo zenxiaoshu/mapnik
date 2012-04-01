@@ -133,7 +133,7 @@ void shape_datasource::bind() const
                 // I - long
                 // G - ole
                 // + - autoincrement
-                if (logging_enabled_) std::clog << "Shape Plugin: unknown type " << fd.type_ << std::endl;
+                if (logging_enabled_) std::clog << "Mapnik LOG> shape_datasource: Unknown type=" << fd.type_ << std::endl;
 #endif
                 break;
             }
@@ -199,8 +199,8 @@ void  shape_datasource::init(shape_io& shape) const
         double mmin = shape.shp().read_double();
         double mmax = shape.shp().read_double();
 
-        std::clog << "Shape Plugin: Z min/max " << zmin << "," << zmax << std::endl;
-        std::clog << "Shape Plugin: M min/max " << mmin << "," << mmax << "\n";
+        std::clog << "Mapnik LOG> shape_datasource: Z min/max=" << zmin << "," << zmax << std::endl;
+        std::clog << "Mapnik LOG> shape_datasource: M min/max=" << mmin << "," << mmax << std::endl;
     }
 #else
     shape.shp().skip(4*8);
@@ -225,9 +225,9 @@ void  shape_datasource::init(shape_io& shape) const
 #ifdef MAPNIK_LOG
     if (logging_enabled_)
     {
-        std::clog << "Shape Plugin: extent=" << extent_ << std::endl;
-        std::clog << "Shape Plugin: file_length=" << file_length_ << std::endl;
-        std::clog << "Shape Plugin: shape_type=" << shape_type_ << std::endl;
+        std::clog << "Mapnik LOG> shape_datasource: Extent=" << extent_ << std::endl;
+        std::clog << "Mapnik LOG> shape_datasource: File length=" << file_length_ << std::endl;
+        std::clog << "Mapnik LOG> shape_datasource: Shape type=" << shape_type_ << std::endl;
     }
 #endif
 
