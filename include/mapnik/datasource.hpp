@@ -88,7 +88,7 @@ public:
 
     datasource (parameters const& params)
       : params_(params),
-        logging_enabled_(false),
+        log_enabled_(false),
         is_bound_(false)
     {
     }
@@ -111,7 +111,7 @@ public:
      */
     bool log_enabled() const
     {
-        return logging_enabled_;
+        return log_enabled_;
     }
 
     /*!
@@ -133,7 +133,7 @@ public:
     virtual ~datasource() {}
 protected:
     parameters params_;
-    bool logging_enabled_;
+    bool log_enabled_;
     mutable bool is_bound_;
 };
 

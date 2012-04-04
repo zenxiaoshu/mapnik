@@ -23,7 +23,11 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+// mapnik
 #include <mapnik/datasource.hpp>
+#include <mapnik/timer.hpp>
+
+// boost
 #include <boost/make_shared.hpp>
 
 // std
@@ -85,6 +89,10 @@ public:
 
     bool execute(const std::string& sql) const
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, std::string("postgis_connection::execute ") + sql);
+#endif
+
         PGresult *result = PQexec(conn_, sql.c_str());
         bool ok = (result && (PQresultStatus(result) == PGRES_COMMAND_OK));
         PQclear(result);
@@ -93,6 +101,10 @@ public:
 
     boost::shared_ptr<ResultSet> executeQuery(const std::string& sql, int type = 0) const
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, std::string("postgis_connection::execute_query ") + sql);
+#endif
+
         PGresult* result = 0;
         if (type == 1)
         {

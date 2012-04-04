@@ -30,7 +30,6 @@
 #include <mapnik/expression_evaluator.hpp>
 #include <mapnik/utils.hpp>
 #include <mapnik/scale_denominator.hpp>
-
 #include <mapnik/agg_renderer.hpp>
 #include <mapnik/grid/grid_renderer.hpp>
 

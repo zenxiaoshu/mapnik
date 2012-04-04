@@ -73,10 +73,10 @@ rasterlite_datasource::rasterlite_datasource(parameters const& params, bool bind
     : datasource(params),
       desc_(*params.get<std::string>("type"),"utf-8")
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> rasterlite_datasource: Initializing..." << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> rasterlite_datasource: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -120,7 +120,7 @@ void rasterlite_datasource::bind() const
     extent_.init(x0,y0,x1,y1);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_)
+    if (log_enabled_)
     {
         int srid, auth_srid;
         const char *auth_name;

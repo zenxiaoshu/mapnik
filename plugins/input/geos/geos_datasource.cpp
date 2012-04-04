@@ -32,6 +32,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/geom_util.hpp>
+#include <mapnik/timer.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -94,7 +95,7 @@ geos_datasource::geos_datasource(parameters const& params, bool bind)
       geometry_data_name_("name"),
       geometry_id_(1)
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     boost::optional<std::string> geometry = params.get<std::string>("wkt");
     if (! geometry) throw datasource_exception("missing <wkt> parameter");
@@ -134,6 +135,10 @@ void geos_datasource::bind() const
 {
     if (is_bound_) return;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "geos_datasource::bind");
+#endif
+
     // open geos driver
     initGEOS(geos_notice, geos_error);
 
@@ -147,8 +152,12 @@ void geos_datasource::bind() const
     // try to obtain the extent from the geometry itself
     if (! extent_initialized_)
     {
+#ifdef MAPNIK_STATS
+       mapnik::progress_timer __stats2__(std::clog, "geos_datasource::bind(initialize_extent)");
+#endif
+
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Initializing extent from geometry" << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> geos_datasource: Initializing extent from geometry" << std::endl;
 #endif
 
         if (GEOSGeomTypeId(*geometry_) == GEOS_POINT)
@@ -171,7 +180,7 @@ void geos_datasource::bind() const
             if (*envelope != NULL && GEOSisValid(*envelope))
             {
 #ifdef MAPNIK_LOG
-                if (logging_enabled_)
+                if (log_enabled_)
                 {
                     char* wkt = GEOSGeomToWKT(*envelope);
                     std::clog << "Mapnik LOG> geos_datasource: Getting coord sequence from=" << wkt << std::endl;
@@ -186,7 +195,7 @@ void geos_datasource::bind() const
                     if (cs != NULL)
                     {
 #ifdef MAPNIK_LOG
-                        if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Iterating boundary points" << std::endl;
+                        if (log_enabled_) std::clog << "Mapnik LOG> geos_datasource: Iterating boundary points" << std::endl;
 #endif
 
                         double x, y;
@@ -247,6 +256,10 @@ boost::optional<mapnik::datasource::geometry_t> geos_datasource::get_geometry_ty
     if (! is_bound_) bind();
     boost::optional<mapnik::datasource::geometry_t> result;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "geos_datasource::get_geometry_type");
+#endif
+
     // get geometry type
     const int type = GEOSGeomTypeId(*geometry_);
     switch (type)
@@ -285,6 +298,10 @@ featureset_ptr geos_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "geos_datasource::features");
+#endif
+
     const mapnik::box2d<double> extent = q.get_bbox();
 
     std::ostringstream s;
@@ -297,7 +314,7 @@ featureset_ptr geos_datasource::features(query const& q) const
       << "))";
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using extent=" << s.str() << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using extent=" << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,
@@ -312,11 +329,15 @@ featureset_ptr geos_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "geos_datasource::features_at_point");
+#endif
+
     std::ostringstream s;
     s << "POINT(" << pt.x << " " << pt.y << ")";
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using point=" << s.str() << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> geos_datasource: Using point=" << s.str() << std::endl;
 #endif
 
     return boost::make_shared<geos_featureset>(*geometry_,

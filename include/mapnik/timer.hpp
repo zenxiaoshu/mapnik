@@ -30,6 +30,8 @@
 #include <iomanip>
 #include <ctime>
 
+
+
 namespace mapnik {
 
 // Measure times in both wall clock time and CPU times. Results are returned in milliseconds.
@@ -122,4 +124,5 @@ private:
 };
 
 };
+
 #endif // MAPNIK_TIMER_HPP

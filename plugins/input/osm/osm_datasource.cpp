@@ -57,7 +57,7 @@ osm_datasource::osm_datasource(const parameters& params, bool bind)
       type_(datasource::Vector),
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8"))
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     if (bind)
     {
@@ -81,7 +81,7 @@ void osm_datasource::bind() const
     {
         // if we supplied a url and a bounding box, load from the url
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> osm_datasource: loading_from_url url=" << url << ",bbox=" << bbox << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> osm_datasource: loading_from_url url=" << url << ",bbox=" << bbox << std::endl;
 #endif
 
         if ((osm_data_ = dataset_deliverer::load_from_url(url, bbox, parser)) == NULL)

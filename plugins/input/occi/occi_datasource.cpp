@@ -27,6 +27,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/sql_utils.hpp>
+#include <mapnik/timer.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -81,7 +82,7 @@ occi_datasource::occi_datasource(parameters const& params, bool bind)
       pool_(0),
       conn_(0)
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     if (! params_.get<std::string>("user")) throw datasource_exception("OCCI Plugin: no <user> specified");
     if (! params_.get<std::string>("password")) throw datasource_exception("OCCI Plugin: no <password> specified");
@@ -143,6 +144,10 @@ void occi_datasource::bind() const
 {
     if (is_bound_) return;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::bind");
+#endif
+
     // connect to environment
     if (use_connection_pool_)
     {
@@ -187,6 +192,10 @@ void occi_datasource::bind() const
     // get SRID and/or GEOMETRY_FIELD from metadata table only if we need to
     if (! srid_initialized_ || geometry_field_ == "")
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::get_srid_and_geometry_field");
+#endif
+
         std::ostringstream s;
         s << "SELECT srid, column_name FROM " << METADATA_TABLE << " WHERE";
         s << " LOWER(table_name) = LOWER('" << table_name_ << "')";
@@ -197,7 +206,7 @@ void occi_datasource::bind() const
         }
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
         try
@@ -229,11 +238,15 @@ void occi_datasource::bind() const
 
     // get columns description
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::get_column_description");
+#endif
+
         std::ostringstream s;
         s << "SELECT " << fields_ << " FROM (" << table_name_ << ") WHERE rownum < 1";
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
         try
@@ -325,7 +338,7 @@ void occi_datasource::bind() const
                     case oracle::occi::OCCI_SQLT_BLOB:
                     case oracle::occi::OCCI_SQLT_RSET:
 #ifdef MAPNIK_LOG
-                        if (logging_enabled_)
+                        if (log_enabled_)
                         {
                             std::clog << "Mapnik LOG> occi_datasource: Unsupported datatype "
                                       << occi_enums::resolve_datatype(type_oid)
@@ -335,7 +348,7 @@ void occi_datasource::bind() const
                         break;
                     default:
 #ifdef MAPNIK_LOG
-                        if (logging_enabled_)
+                        if (log_enabled_)
                         {
                             std::clog << "Mapnik LOG> occi_datasource: Unknown datatype "
                                       << "(type_oid=" << type_oid << ")" << std::endl;
@@ -377,13 +390,17 @@ box2d<double> occi_datasource::envelope() const
 
     if (estimate_extent && *estimate_extent)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::envelope(estimate_extent)");
+#endif
+
         std::ostringstream s;
         s << "SELECT MIN(c.x), MIN(c.y), MAX(c.x), MAX(c.y) FROM ";
         s << " (SELECT SDO_AGGR_MBR(" << geometry_field_ << ") shape FROM " << table_ << ") a, ";
         s << " TABLE(SDO_UTIL.GETVERTICES(a.shape)) c";
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
         try
@@ -417,6 +434,10 @@ box2d<double> occi_datasource::envelope() const
     }
     else if (use_spatial_index_)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::envelope(use_spatial_index)");
+#endif
+
         std::ostringstream s;
         s << "SELECT dim.sdo_lb, dim.sdo_ub FROM ";
         s << METADATA_TABLE << " m, TABLE(m.diminfo) dim ";
@@ -427,7 +448,7 @@ box2d<double> occi_datasource::envelope() const
         s << " WHERE LOWER(m.table_name) = LOWER('" << table_name_ << "') AND dim.sdo_dimname = 'Y'";
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
         try
@@ -502,6 +523,10 @@ featureset_ptr occi_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::features");
+#endif
+
     box2d<double> const& box = q.get_bbox();
 
     std::ostringstream s;
@@ -550,7 +575,7 @@ featureset_ptr occi_datasource::features(query const& q) const
         else
         {
 #ifdef MAPNIK_LOG
-            if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: cannot determine where to add the spatial filter declaration" << std::endl;
+            if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -570,7 +595,7 @@ featureset_ptr occi_datasource::features(query const& q) const
         else
         {
 #ifdef MAPNIK_LOG
-            if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the row limit declaration" << std::endl;
+            if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
@@ -578,7 +603,7 @@ featureset_ptr occi_datasource::features(query const& q) const
     s << query;
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,
@@ -594,6 +619,10 @@ featureset_ptr occi_datasource::features(query const& q) const
 featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::features_at_point");
+#endif
 
     std::ostringstream s;
     s << "SELECT ";
@@ -640,7 +669,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         else
         {
 #ifdef MAPNIK_LOG
-            if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the spatial filter declaration" << std::endl;
+            if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the spatial filter declaration" << std::endl;
 #endif
         }
     }
@@ -660,7 +689,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
         else
         {
 #ifdef MAPNIK_LOG
-            if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the row limit declaration" << std::endl;
+            if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: Cannot determine where to add the row limit declaration" << std::endl;
 #endif
         }
     }
@@ -668,7 +697,7 @@ featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
     s << query;
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> occi_datasource: " << s.str() << std::endl;
 #endif
 
     return boost::make_shared<occi_featureset>(pool_,

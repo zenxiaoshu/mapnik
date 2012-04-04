@@ -29,6 +29,7 @@
 #include <mapnik/boolean.hpp>
 #include <mapnik/sql_utils.hpp>
 #include <mapnik/util/geometry_to_ds_type.hpp>
+#include <mapnik/timer.hpp>
 #include <mapnik/wkb.hpp>
 
 // boost
@@ -68,7 +69,7 @@ sqlite_datasource::sqlite_datasource(parameters const& params, bool bind)
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
       format_(mapnik::wkbAuto)
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     /* TODO
        - throw if no primary key but spatial index is present?
@@ -88,6 +89,10 @@ sqlite_datasource::sqlite_datasource(parameters const& params, bool bind)
 void sqlite_datasource::bind() const
 {
     if (is_bound_) return;
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "sqlite_datasource::bind");
+#endif
 
     boost::optional<std::string> file = params_.get<std::string>("file");
     if (! file) throw datasource_exception("Sqlite Plugin: missing <file> parameter");
@@ -212,7 +217,7 @@ void sqlite_datasource::bind() const
          iter != init_statements_.end(); ++iter)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: Execute init sql=" << *iter << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: Execute init sql=" << *iter << std::endl;
 #endif
         dataset_->execute(*iter);
     }
@@ -285,6 +290,10 @@ void sqlite_datasource::bind() const
     has_spatial_index_ = false;
     if (use_spatial_index_)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats2__(std::clog, "sqlite_datasource::bind(use_spatial_index)");
+#endif
+
         if (boost::filesystem::exists(index_db))
         {
             dataset_->execute("attach database '" + index_db + "' as " + index_table_);
@@ -343,7 +352,6 @@ void sqlite_datasource::bind() const
 
     if (! extent_initialized_)
     {
-
         // TODO - clean this up - reducing arguments
         std::string query = populate_tokens(table_);
         if (!sqlite_utils::detect_extent(dataset_,
@@ -487,8 +495,12 @@ box2d<double> sqlite_datasource::envelope() const
 boost::optional<mapnik::datasource::geometry_t> sqlite_datasource::get_geometry_type() const
 {
     if (! is_bound_) bind();
-    boost::optional<mapnik::datasource::geometry_t> result;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "sqlite_datasource::get_geometry_type");
+#endif
+
+    boost::optional<mapnik::datasource::geometry_t> result;
     if (dataset_)
     {
         // finally, get geometry type by querying first feature
@@ -541,6 +553,10 @@ layer_descriptor sqlite_datasource::get_descriptor() const
 featureset_ptr sqlite_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "sqlite_datasource::features");
+#endif
 
     if (dataset_)
     {
@@ -599,7 +615,7 @@ featureset_ptr sqlite_datasource::features(query const& q) const
         }
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_)
+        if (log_enabled_)
         {
             std::clog << "Mapnik LOG> sqlite_datasource: Table=" << table_ << "\n\n";
             std::clog << "Mapnik LOG> sqlite_datasource: Query=" << s.str() << "\n\n";
@@ -621,6 +637,10 @@ featureset_ptr sqlite_datasource::features(query const& q) const
 featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "sqlite_datasource::features_at_point");
+#endif
 
     if (dataset_)
     {
@@ -683,7 +703,7 @@ featureset_ptr sqlite_datasource::features_at_point(coord2d const& pt) const
         }
 
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: " << s.str() << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> sqlite_datasource: " << s.str() << std::endl;
 #endif
 
         boost::shared_ptr<sqlite_resultset> rs(dataset_->execute_query(s.str()));

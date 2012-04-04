@@ -47,6 +47,7 @@ HEADERS += \
   $$PWD/../plugins/input/shape/shape_index_featureset.hpp \
   $$PWD/../plugins/input/shape/shape_io.hpp \
   $$PWD/../plugins/input/shape/shp_index.hpp \
+  $$PWD/../plugins/input/sqlite/sqlite_connection.hpp \
   $$PWD/../plugins/input/sqlite/sqlite_featureset.hpp \
   $$PWD/../plugins/input/sqlite/sqlite_datasource.hpp \
   $$PWD/../plugins/input/sqlite/sqlite_types.hpp

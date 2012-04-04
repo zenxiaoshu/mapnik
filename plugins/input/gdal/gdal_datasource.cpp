@@ -27,6 +27,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/geom_util.hpp>
+#include <mapnik/timer.hpp>
 
 #include <gdal_version.h>
 
@@ -50,7 +51,7 @@ using mapnik::datasource_exception;
 inline GDALDataset* gdal_datasource::open_dataset() const
 {
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Opening " << dataset_name_ << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Opening " << dataset_name_ << std::endl;
 #endif
 
     GDALDataset *dataset;
@@ -80,10 +81,10 @@ gdal_datasource::gdal_datasource(parameters const& params, bool bind)
       filter_factor_(*params_.get<double>("filter_factor", 0.0)),
       nodata_value_(params_.get<double>("nodata"))
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Initializing..." << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> gdal_datasource: Initializing..." << std::endl;
 #endif
 
     GDALAllRegister();
@@ -111,6 +112,10 @@ void gdal_datasource::bind() const
 {
     if (is_bound_) return;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::bind");
+#endif
+
     shared_dataset_ = *params_.get<mapnik::boolean>("shared", false);
     band_ = *params_.get<int>("band", -1);
 
@@ -126,7 +131,7 @@ void gdal_datasource::bind() const
     if (bbox_s)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> gdal_datasource: BBox Parameter=" << *bbox_s << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> gdal_datasource: BBox Parameter=" << *bbox_s << std::endl;
 #endif
 
         bbox_override = extent_.from_string(*bbox_s);
@@ -151,7 +156,7 @@ void gdal_datasource::bind() const
     }
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_)
+    if (log_enabled_)
     {
         std::clog << "Mapnik LOG> gdal_datasource Geotransform=" << tr[0] << "," << tr[1] << ","
                   << tr[2] << "," << tr[3] << ","
@@ -193,7 +198,7 @@ void gdal_datasource::bind() const
     GDALClose(dataset);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_)
+    if (log_enabled_)
     {
         std::clog << "Mapnik LOG> gdal_datasource: Raster Size=" << width_ << "," << height_ << std::endl;
         std::clog << "Mapnik LOG> gdal_datasource: Raster Extent=" << extent_ << std::endl;
@@ -238,6 +243,10 @@ featureset_ptr gdal_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::features");
+#endif
+
     gdal_query gq = q;
 
     // TODO - move to boost::make_shared, but must reduce # of args to <= 9
@@ -257,6 +266,10 @@ featureset_ptr gdal_datasource::features(query const& q) const
 featureset_ptr gdal_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::features_at_point");
+#endif
 
     gdal_query gq = pt;
 
