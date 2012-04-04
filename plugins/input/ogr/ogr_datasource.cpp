@@ -35,6 +35,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/geom_util.hpp>
+#include <mapnik/timer.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -63,7 +64,7 @@ ogr_datasource::ogr_datasource(parameters const& params, bool bind)
       desc_(*params_.get<std::string>("type"), *params_.get<std::string>("encoding", "utf-8")),
       indexed_(false)
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     boost::optional<std::string> file = params.get<std::string>("file");
     boost::optional<std::string> string = params.get<std::string>("string");
@@ -109,6 +110,10 @@ ogr_datasource::~ogr_datasource()
 void ogr_datasource::bind() const
 {
     if (is_bound_) return;
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "ogr_datasource::bind");
+#endif
 
     // initialize ogr formats
     OGRRegisterAll();
@@ -184,6 +189,10 @@ void ogr_datasource::bind() const
     }
     else if (layer_by_sql)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats_sql__(std::clog, "ogr_datasource::bind (layer_by_sql)");
+#endif
+
         layer_.layer_by_sql(dataset_, *layer_by_sql);
         layer_name_ = layer_.layer_name();
     }
@@ -262,13 +271,18 @@ void ogr_datasource::bind() const
         index_file.close();
     }
 #if 0
+#ifdef MAPNIK_LOG
     // TODO - enable this warning once the ogrindex tool is a bit more stable/mature
     else
     {
-        std::clog << "### Notice: no ogrindex file found for " << dataset_name_
-                  << ", use the 'ogrindex' program to build an index for faster rendering"
-                  << std::endl;
+        if (log_enabled_)
+        {
+            std::clog << "Mapnik LOG> ogr_datasource: no ogrindex file found for " << dataset_name_
+                      << ", use the 'ogrindex' program to build an index for faster rendering"
+                      << std::endl;
+        }
     }
+#endif // MAPNIK_LOG
 #endif
 
     // deal with attributes descriptions
@@ -307,7 +321,7 @@ void ogr_datasource::bind() const
             case OFTStringList:
             case OFTWideStringList: // deprecated !
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
+                if (log_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 break;
 
@@ -315,7 +329,7 @@ void ogr_datasource::bind() const
             case OFTTime:
             case OFTDateTime: // unhandled !
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
+                if (log_enabled_) std::clog << "Mapnik LOG> ogr_datasource: Unhandled type_oid=" << type_oid << std::endl;
 #endif
                 desc_.add_descriptor(attribute_descriptor(fld_name, mapnik::Object));
                 break;
@@ -466,6 +480,10 @@ featureset_ptr ogr_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "ogr_datasource::features");
+#endif
+
     if (dataset_ && layer_.is_valid())
     {
         // First we validate query fields: https://github.com/mapnik/mapnik/issues/792
@@ -512,6 +530,10 @@ featureset_ptr ogr_datasource::features(query const& q) const
 featureset_ptr ogr_datasource::features_at_point(coord2d const& pt) const
 {
     if (!is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "ogr_datasource::features_at_point");
+#endif
 
     if (dataset_ && layer_.is_valid())
     {

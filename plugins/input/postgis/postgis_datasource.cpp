@@ -81,7 +81,7 @@ postgis_datasource::postgis_datasource(parameters const& params, bool bind)
       intersect_max_scale_(*params_.get<int>("intersect_max_scale", 0))
       //show_queries_(*params_.get<mapnik::boolean>("show_queries",false))
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     if (table_.empty())
     {
@@ -305,14 +305,14 @@ void postgis_datasource::bind() const
                 srid_ = -1;
 
 #ifdef MAPNIK_LOG
-                if (logging_enabled_) std::clog << "Mapnik LOG> postgis_datasource: Table " << table_ << " is using SRID=-1" << std::endl;
+                if (log_enabled_) std::clog << "Mapnik LOG> postgis_datasource: Table " << table_ << " is using SRID=-1" << std::endl;
 #endif
             }
 
             // At this point the geometry_field may still not be known
             // but we'll catch that where more useful...
 #ifdef MAPNIK_LOG
-            if (logging_enabled_)
+            if (log_enabled_)
             {
                 std::clog << "Mapnik LOG> postgis_datasource: Using SRID=" << srid_ << std::endl;
                 std::clog << "Mapnik LOG> postgis_datasource: Using geometry_column=" << geometryColumn_ << std::endl;
@@ -398,7 +398,7 @@ void postgis_datasource::bind() const
                         break;
                     default: // should not get here
 #ifdef MAPNIK_LOG
-                        if (logging_enabled_)
+                        if (log_enabled_)
                         {
                             s.str("");
                             s << "SELECT oid, typname FROM pg_type WHERE oid = " << type_oid;

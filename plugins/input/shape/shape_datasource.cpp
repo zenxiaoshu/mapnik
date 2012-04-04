@@ -58,7 +58,7 @@ shape_datasource::shape_datasource(const parameters &params, bool bind)
       row_limit_(*params_.get<int>("row_limit",0)),
       desc_(*params.get<std::string>("type"), *params.get<std::string>("encoding","utf-8"))
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
     boost::optional<std::string> file = params.get<std::string>("file");
     if (!file) throw datasource_exception("Shape Plugin: missing <file> parameter");
@@ -133,7 +133,7 @@ void shape_datasource::bind() const
                 // I - long
                 // G - ole
                 // + - autoincrement
-                if (logging_enabled_) std::clog << "Mapnik LOG> shape_datasource: Unknown type=" << fd.type_ << std::endl;
+                if (log_enabled_) std::clog << "Mapnik LOG> shape_datasource: Unknown type=" << fd.type_ << std::endl;
 #endif
                 break;
             }
@@ -192,7 +192,7 @@ void  shape_datasource::init(shape_io& shape) const
     shape.shp().read_envelope(extent_);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_)
+    if (log_enabled_)
     {
         double zmin = shape.shp().read_double();
         double zmax = shape.shp().read_double();
@@ -223,7 +223,7 @@ void  shape_datasource::init(shape_io& shape) const
     //}
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_)
+    if (log_enabled_)
     {
         std::clog << "Mapnik LOG> shape_datasource: Extent=" << extent_ << std::endl;
         std::clog << "Mapnik LOG> shape_datasource: File length=" << file_length_ << std::endl;

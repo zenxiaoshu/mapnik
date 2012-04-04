@@ -326,6 +326,7 @@ opts.AddVariables(
     # Variables affecting rendering back-ends
     
     BoolVariable('RENDERING_STATS', 'Output rendering statistics during style processing', 'False'),
+    BoolVariable('ENABLE_STATS', 'Enable global statistics during map processing', 'False'),
 
     BoolVariable('INTERNAL_LIBAGG', 'Use provided libagg', 'True'),
 
@@ -1419,6 +1420,10 @@ if not preconfigured:
         if env['ENABLE_LOG']:
             ndebug_flags += " -DMAPNIK_LOG"
 
+        # Enable statistics reporting
+        if env['ENABLE_STATS']:
+            debug_flags += " -DMAPNIK_STATS"
+            ndebug_flags += " -DMAPNIK_STATS"
         
         # Customizing the C++ compiler flags depending on: 
         #  (1) the C++ compiler used; and

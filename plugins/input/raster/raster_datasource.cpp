@@ -51,10 +51,10 @@ raster_datasource::raster_datasource(const parameters& params, bool bind)
       desc_(*params.get<std::string>("type"), "utf-8"),
       extent_initialized_(false)
 {
-    logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
+    log_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Initializing..." << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Initializing..." << std::endl;
 #endif
 
     boost::optional<std::string> file = params.get<std::string>("file");
@@ -152,7 +152,7 @@ void raster_datasource::bind() const
     }
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Raster size=" << width_ << "," << height_ << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Raster size=" << width_ << "," << height_ << std::endl;
 #endif
 
     is_bound_ = true;
@@ -199,13 +199,13 @@ featureset_ptr raster_datasource::features(query const& q) const
     const int height = int(ext.maxy() + 0.5) - int(ext.miny() + 0.5);
 
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Box size=" << width << "," << height << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Box size=" << width << "," << height << std::endl;
 #endif
 
     if (multi_tiles_)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Multi-Tiled policy" << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Multi-Tiled policy" << std::endl;
 #endif
 
         tiled_multi_file_policy policy(filename_, format_, tile_size_, extent_, q.get_bbox(), width_, height_, tile_stride_);
@@ -215,7 +215,7 @@ featureset_ptr raster_datasource::features(query const& q) const
     else if (width * height > 512*512)
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Tiled policy" << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Tiled policy" << std::endl;
 #endif
 
         tiled_file_policy policy(filename_, format_, 256, extent_, q.get_bbox(), width_, height_);
@@ -225,7 +225,7 @@ featureset_ptr raster_datasource::features(query const& q) const
     else
     {
 #ifdef MAPNIK_LOG
-        if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: Single file" << std::endl;
+        if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: Single file" << std::endl;
 #endif
 
         raster_info info(filename_, format_, extent_, width_, height_);
@@ -238,7 +238,7 @@ featureset_ptr raster_datasource::features(query const& q) const
 featureset_ptr raster_datasource::features_at_point(coord2d const&) const
 {
 #ifdef MAPNIK_LOG
-    if (logging_enabled_) std::clog << "Mapnik LOG> raster_datasource: feature_at_point not supported" << std::endl;
+    if (log_enabled_) std::clog << "Mapnik LOG> raster_datasource: feature_at_point not supported" << std::endl;
 #endif
 
     return featureset_ptr();
