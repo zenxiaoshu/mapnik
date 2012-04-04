@@ -77,7 +77,8 @@ inline GDALDataset* gdal_datasource::open_dataset() const
 gdal_datasource::gdal_datasource(parameters const& params, bool bind)
     : datasource(params),
       desc_(*params.get<std::string>("type"), "utf-8"),
-      filter_factor_(*params_.get<double>("filter_factor", 0.0))
+      filter_factor_(*params_.get<double>("filter_factor", 0.0)),
+      nodata_value_(params_.get<double>("nodata"))
 {
     logging_enabled_ = *params_.get<mapnik::boolean>("log", MAPNIK_DEBUG_AS_BOOL);
 
@@ -249,7 +250,8 @@ featureset_ptr gdal_datasource::features(query const& q) const
                                               nbands_,
                                               dx_,
                                               dy_,
-                                              filter_factor_));
+                                              filter_factor_,
+                                              nodata_value_));
 }
 
 featureset_ptr gdal_datasource::features_at_point(coord2d const& pt) const
@@ -268,5 +270,6 @@ featureset_ptr gdal_datasource::features_at_point(coord2d const& pt) const
                                               nbands_,
                                               dx_,
                                               dy_,
-                                              filter_factor_));
+                                              filter_factor_,
+                                              nodata_value_));
 }

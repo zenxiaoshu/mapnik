@@ -101,7 +101,7 @@ feature_ptr occi_featureset::next()
         if (use_wkb_)
         {
             Blob blob = rs_->getBlob (1);
-            blob.open (OCCI_LOB_READONLY);
+            blob.open(oracle::occi::OCCI_LOB_READONLY);
 
             int size = blob.length();
             if (buffer_.size() < size)
@@ -109,7 +109,7 @@ feature_ptr occi_featureset::next()
                 buffer_.resize(size);
             }
 
-            Stream* instream = blob.getStream(1,0);
+            oracle::occi::Stream* instream = blob.getStream(1,0);
             instream->readBuffer(buffer_.data(), size);
             blob.closeStream(instream);
             blob.close();
