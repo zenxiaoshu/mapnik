@@ -134,7 +134,7 @@ private:
     std::map<std::string,font_set> fontsets_;
 };
 
-#include <mapnik/internal/dump_xml.hpp>
+//#include <mapnik/internal/dump_xml.hpp>
 void load_map(Map & map, std::string const& filename, bool strict)
 {
     // TODO - use xml encoding?
@@ -143,10 +143,7 @@ void load_map(Map & map, std::string const& filename, bool strict)
     read_xml(filename, tree.root());
     map_parser parser(strict, filename);
     parser.parse_map(map, tree.root(), "");
-
-#ifdef MAPNIK_LOG
-    dump_xml(tree.root());
-#endif
+    //dump_xml(tree.root());
 }
 
 void load_map_string(Map & map, std::string const& str, bool strict, std::string base_path)
