@@ -190,7 +190,7 @@ void ogr_datasource::bind() const
     else if (layer_by_sql)
     {
 #ifdef MAPNIK_STATS
-        mapnik::progress_timer __stats_sql__(std::clog, "ogr_datasource::bind (layer_by_sql)");
+        mapnik::progress_timer __stats_sql__(std::clog, "ogr_datasource::bind(layer_by_sql)");
 #endif
 
         layer_.layer_by_sql(dataset_, *layer_by_sql);
@@ -270,8 +270,8 @@ void ogr_datasource::bind() const
         indexed_ = true;
         index_file.close();
     }
-#if 0
 #ifdef MAPNIK_LOG
+#if 0
     // TODO - enable this warning once the ogrindex tool is a bit more stable/mature
     else
     {
@@ -282,7 +282,11 @@ void ogr_datasource::bind() const
                       << std::endl;
         }
     }
+#endif
 #endif // MAPNIK_LOG
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats2__(std::clog, "ogr_datasource::bind(get_column_description)");
 #endif
 
     // deal with attributes descriptions

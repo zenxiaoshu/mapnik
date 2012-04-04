@@ -29,6 +29,7 @@
 #include <mapnik/boolean.hpp>
 #include <mapnik/sql_utils.hpp>
 #include <mapnik/util/conversions.hpp>
+#include <mapnik/timer.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -107,6 +108,10 @@ void postgis_datasource::bind() const
         return;
     }
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "postgis_datasource::bind");
+#endif
+
     boost::optional<int> initial_size = params_.get<int>("initial_size", 1);
     boost::optional<int> max_size = params_.get<int>("max_size", 10);
     boost::optional<mapnik::boolean> require_key = params_.get<mapnik::boolean>("require_key", false);
@@ -150,6 +155,10 @@ void postgis_datasource::bind() const
             geometryColumn_ = geometry_field_;
             if (geometryColumn_.empty() || srid_ == 0)
             {
+#ifdef MAPNIK_STATS
+                mapnik::progress_timer __stats2__(std::clog, "postgis_datasource::bind(get_srid_and_geometry_column)");
+#endif
+
                 std::ostringstream s;
                 s << "SELECT f_geometry_column, srid FROM "
                   << GEOMETRY_COLUMNS <<" WHERE f_table_name='"
@@ -234,6 +243,10 @@ void postgis_datasource::bind() const
             // detect primary key
             if (key_field_.empty())
             {
+#ifdef MAPNIK_STATS
+                mapnik::progress_timer __stats2__(std::clog, "postgis_datasource::bind(get_primary_key)");
+#endif
+
                 std::ostringstream s;
                 s << "SELECT a.attname, a.attnum, t.typname, t.typname in ('int2','int4','int8') "
                   "AS is_int FROM pg_class c, pg_attribute a, pg_type t, pg_namespace n, pg_index i "
@@ -320,9 +333,12 @@ void postgis_datasource::bind() const
 #endif
 
             // collect attribute desc
+#ifdef MAPNIK_STATS
+            mapnik::progress_timer __stats2__(std::clog, "postgis_datasource::bind(get_column_description)");
+#endif
+
             std::ostringstream s;
             s << "SELECT * FROM " << populate_tokens(table_) << " LIMIT 0";
-
 
             /*
               if (show_queries_)
@@ -330,7 +346,6 @@ void postgis_datasource::bind() const
               std::clog << boost::format("PostGIS: sending query: %s\n") % s.str();
               }
             */
-
 
             shared_ptr<ResultSet> rs = conn->executeQuery(s.str());
             int count = rs->getNumFields();
@@ -431,6 +446,23 @@ void postgis_datasource::bind() const
             rs->close();
 
             is_bound_ = true;
+        }
+    }
+}
+
+postgis_datasource::~postgis_datasource()
+{
+    if (is_bound_ && ! persist_connection_)
+    {
+        ConnectionManager* mgr = ConnectionManager::instance();
+        shared_ptr< Pool<Connection,ConnectionCreator> > pool = mgr->getPool(creator_.id());
+        if (pool)
+        {
+            shared_ptr<Connection> conn = pool->borrowObject();
+            if (conn)
+            {
+                conn->close();
+            }
         }
     }
 }
@@ -585,6 +617,10 @@ featureset_ptr postgis_datasource::features(const query& q) const
         bind();
     }
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "postgis_datasource::features");
+#endif
+
     box2d<double> const& box = q.get_bbox();
     double scale_denom = q.scale_denominator();
 
@@ -677,6 +713,10 @@ featureset_ptr postgis_datasource::features_at_point(coord2d const& pt) const
     {
         bind();
     }
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "postgis_datasource::features_at_point");
+#endif
 
     ConnectionManager* mgr = ConnectionManager::instance();
     shared_ptr< Pool<Connection,ConnectionCreator> > pool = mgr->getPool(creator_.id());
@@ -991,21 +1031,4 @@ boost::optional<mapnik::datasource::geometry_t> postgis_datasource::get_geometry
     }
 
     return result;
-}
-
-postgis_datasource::~postgis_datasource()
-{
-    if (is_bound_ && ! persist_connection_)
-    {
-        ConnectionManager* mgr = ConnectionManager::instance();
-        shared_ptr< Pool<Connection,ConnectionCreator> > pool = mgr->getPool(creator_.id());
-        if (pool)
-        {
-            shared_ptr<Connection> conn = pool->borrowObject();
-            if (conn)
-            {
-                conn->close();
-            }
-        }
-    }
 }

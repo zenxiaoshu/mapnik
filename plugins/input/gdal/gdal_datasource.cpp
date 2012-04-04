@@ -27,6 +27,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/geom_util.hpp>
+#include <mapnik/timer.hpp>
 
 #include <gdal_version.h>
 
@@ -110,6 +111,10 @@ gdal_datasource::gdal_datasource(parameters const& params, bool bind)
 void gdal_datasource::bind() const
 {
     if (is_bound_) return;
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::bind");
+#endif
 
     shared_dataset_ = *params_.get<mapnik::boolean>("shared", false);
     band_ = *params_.get<int>("band", -1);
@@ -238,6 +243,10 @@ featureset_ptr gdal_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::features");
+#endif
+
     gdal_query gq = q;
 
     // TODO - move to boost::make_shared, but must reduce # of args to <= 9
@@ -257,6 +266,10 @@ featureset_ptr gdal_datasource::features(query const& q) const
 featureset_ptr gdal_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "gdal_datasource::features_at_point");
+#endif
 
     gdal_query gq = pt;
 

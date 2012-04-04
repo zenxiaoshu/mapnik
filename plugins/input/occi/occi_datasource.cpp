@@ -27,6 +27,7 @@
 // mapnik
 #include <mapnik/boolean.hpp>
 #include <mapnik/sql_utils.hpp>
+#include <mapnik/timer.hpp>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -143,6 +144,10 @@ void occi_datasource::bind() const
 {
     if (is_bound_) return;
 
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::bind");
+#endif
+
     // connect to environment
     if (use_connection_pool_)
     {
@@ -187,6 +192,10 @@ void occi_datasource::bind() const
     // get SRID and/or GEOMETRY_FIELD from metadata table only if we need to
     if (! srid_initialized_ || geometry_field_ == "")
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::get_srid_and_geometry_field");
+#endif
+
         std::ostringstream s;
         s << "SELECT srid, column_name FROM " << METADATA_TABLE << " WHERE";
         s << " LOWER(table_name) = LOWER('" << table_name_ << "')";
@@ -229,6 +238,10 @@ void occi_datasource::bind() const
 
     // get columns description
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::get_column_description");
+#endif
+
         std::ostringstream s;
         s << "SELECT " << fields_ << " FROM (" << table_name_ << ") WHERE rownum < 1";
 
@@ -377,6 +390,10 @@ box2d<double> occi_datasource::envelope() const
 
     if (estimate_extent && *estimate_extent)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::envelope(estimate_extent)");
+#endif
+
         std::ostringstream s;
         s << "SELECT MIN(c.x), MIN(c.y), MAX(c.x), MAX(c.y) FROM ";
         s << " (SELECT SDO_AGGR_MBR(" << geometry_field_ << ") shape FROM " << table_ << ") a, ";
@@ -417,6 +434,10 @@ box2d<double> occi_datasource::envelope() const
     }
     else if (use_spatial_index_)
     {
+#ifdef MAPNIK_STATS
+        mapnik::progress_timer __stats__(std::clog, "occi_datasource::envelope(use_spatial_index)");
+#endif
+
         std::ostringstream s;
         s << "SELECT dim.sdo_lb, dim.sdo_ub FROM ";
         s << METADATA_TABLE << " m, TABLE(m.diminfo) dim ";
@@ -501,6 +522,10 @@ layer_descriptor occi_datasource::get_descriptor() const
 featureset_ptr occi_datasource::features(query const& q) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::features");
+#endif
 
     box2d<double> const& box = q.get_bbox();
 
@@ -594,6 +619,10 @@ featureset_ptr occi_datasource::features(query const& q) const
 featureset_ptr occi_datasource::features_at_point(coord2d const& pt) const
 {
     if (! is_bound_) bind();
+
+#ifdef MAPNIK_STATS
+    mapnik::progress_timer __stats__(std::clog, "occi_datasource::features_at_point");
+#endif
 
     std::ostringstream s;
     s << "SELECT ";
