@@ -566,7 +566,6 @@ featureset_ptr sqlite_datasource::features(query const& q) const
             s << ",[" << *pos << "]";
             ctx->push(*pos);
         }
-
         s << " FROM ";
 
         std::string query(table_);
