@@ -29,8 +29,9 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
-
-
+#ifndef WIN32
+#include <sys/time.h> // for gettimeofday() on unix
+#endif
 
 namespace mapnik {
 
