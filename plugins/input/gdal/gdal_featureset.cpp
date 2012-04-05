@@ -424,12 +424,7 @@ feature_ptr gdal_featureset::get_feature(mapnik::query const& q)
 #ifdef MAPNIK_LOG
                         std::clog << "Mapnik LOG> gdal_featureset: No data value for layer=" << nodata << std::endl;
 #endif
-
-                        if (hasNoData)
-                        {
-                            feature->put("NODATA",nodata);
-                        }
-
+                        feature->put("NODATA",nodata);
                         // first read the data in and create an alpha channel from the nodata values
                         float* imageData = (float*)image.getBytes();
                         grey->RasterIO(GF_Read, x_off, y_off, width, height,
