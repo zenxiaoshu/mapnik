@@ -87,6 +87,7 @@ HEADERS += \
     ../include/mapnik/css_color_grammar.hpp \
     ../include/mapnik/css_color_grammar_deprecated.hpp \
     ../include/mapnik/ctrans.hpp \
+    ../include/mapnik/debug.hpp \
     ../include/mapnik/datasource.hpp \
     ../include/mapnik/datasource_cache.hpp \
     ../include/mapnik/distance.hpp \
@@ -250,6 +251,7 @@ SOURCES += \
     ../src/config_error.cpp \
     ../src/conversions.cpp \
     ../src/datasource_cache.cpp \
+    ../src/debug.cpp \
     ../src/deepcopy.cpp \
     ../src/distance.cpp \
     ../src/expression.cpp \

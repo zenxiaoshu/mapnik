@@ -1165,7 +1165,7 @@ if not preconfigured:
             env.Append(CXXFLAGS = '-DBOOST_REGEX_HAS_ICU')
         else:
             env['SKIPPED_DEPS'].append('boost_regex_icu')
-    
+
     env['REQUESTED_PLUGINS'] = [ driver.strip() for driver in Split(env['INPUT_PLUGINS'])]
     
     if len(env['REQUESTED_PLUGINS']):
@@ -1413,18 +1413,21 @@ if not preconfigured:
         # Common debugging flags.
         # http://lists.fedoraproject.org/pipermail/devel/2010-November/144952.html
         debug_flags  = '-g -fno-omit-frame-pointer -DDEBUG -DMAPNIK_DEBUG -DMAPNIK_LOG'
-        
         ndebug_flags = '-DNDEBUG'
        
         # Enable logging in release mode
         if env['ENABLE_LOG']:
-            ndebug_flags += " -DMAPNIK_LOG"
+            ndebug_flags += ' -DMAPNIK_LOG'
 
         # Enable statistics reporting
         if env['ENABLE_STATS']:
-            debug_flags += " -DMAPNIK_STATS"
-            ndebug_flags += " -DMAPNIK_STATS"
+            debug_flags += ' -DMAPNIK_STATS'
+            ndebug_flags += ' -DMAPNIK_STATS'
         
+        # Add rdynamic to allow using statics between application and plugins
+        # http://stackoverflow.com/questions/8623657/multiple-instances-of-singleton-across-shared-libraries-on-linux
+        env.MergeFlags('-rdynamic')
+
         # Customizing the C++ compiler flags depending on: 
         #  (1) the C++ compiler used; and
         #  (2) whether debug binaries are requested.
